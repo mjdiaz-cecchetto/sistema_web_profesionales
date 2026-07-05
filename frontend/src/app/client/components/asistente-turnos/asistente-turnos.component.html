@@ -1,0 +1,339 @@
+<div class="min-h-screen bg-stone-50 sm:py-12 sm:px-6 lg:px-8 font-sans flex flex-col relative">
+  <div class="max-w-4xl w-full mx-auto bg-white sm:rounded-2xl sm:shadow-sm sm:border border-stone-100 sm:overflow-hidden flex flex-col flex-1 sm:flex-none">
+    
+    <!-- Header / Progress Bar -->
+    <div class="sticky top-0 z-20 bg-white/90 backdrop-blur-md px-4 sm:px-6 py-4 flex justify-between items-center border-b border-stone-100 shadow-sm sm:shadow-none">
+      <h2 class="text-lg sm:text-xl font-medium text-stone-800">Agendar Turno</h2>
+      <span class="text-xs sm:text-sm font-medium px-3 py-1 bg-teal-50 text-teal-700 rounded-full">Paso {{ pasoActual() }} de 4</span>
+    </div>
+
+    <div class="p-4 sm:p-8 flex-1 flex flex-col">
+      
+      <!-- Loading state -->
+      <div *ngIf="cargando()" class="flex flex-col items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600 mb-4"></div>
+        <p class="text-stone-500 text-sm">Cargando información...</p>
+      </div>
+
+      <!-- Content (Only visible if not loading) -->
+      <div *ngIf="!cargando()">
+        
+        <!-- STEP 1: Servicios -->
+        <div *ngIf="pasoActual() === 1" class="animate-fade-in flex-1">
+          <h3 class="text-lg font-medium text-stone-800 mb-6">Selecciona el motivo de tu consulta</h3>
+          <div class="space-y-3">
+            <div *ngFor="let servicio of servicios()" 
+                 (click)="seleccionarServicio(servicio)"
+                 [class.border-teal-500]="servicioSeleccionado()?.id === servicio.id"
+                 [class.bg-teal-50]="servicioSeleccionado()?.id === servicio.id"
+                 [class.bg-stone-50]="servicioSeleccionado()?.id !== servicio.id"
+                 [class.border-transparent]="servicioSeleccionado()?.id !== servicio.id"
+                 class="border-2 rounded-2xl p-4 sm:p-5 cursor-pointer hover:bg-stone-100 transition-all duration-200 group">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-medium text-stone-900 group-hover:text-teal-700 transition-colors">{{ servicio.name }}</h4>
+                  <p class="text-sm text-stone-500 mt-1 leading-relaxed">{{ servicio.description }}</p>
+                </div>
+                <span class="text-xs font-medium bg-white border border-stone-200 text-stone-600 px-3 py-1 rounded-full whitespace-nowrap ml-4 shadow-sm">
+                  {{ servicio.durationMinutes }} min
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Fecha y Hora -->
+        <div *ngIf="pasoActual() === 2" class="animate-fade-in flex-1">
+          <h3 class="text-lg font-medium text-stone-800 mb-6">Elige tu disponibilidad</h3>
+          
+          <div class="flex flex-col lg:flex-row gap-6 items-start">
+            <!-- Calendario (Izquierda) -->
+            <div class="w-full lg:w-[350px] shrink-0 rounded-2xl overflow-hidden bg-stone-50">
+              <!-- Cabecera del mes -->
+              <div class="flex justify-between items-center bg-teal-600 text-white p-3 font-medium">
+                <button (click)="cambiarMes(-1)" class="p-1 px-3 hover:bg-teal-700 rounded transition-colors">&lt;</button>
+                <span class="capitalize text-sm">{{ nombreMesActual() }}</span>
+                <button (click)="cambiarMes(1)" class="p-1 px-3 hover:bg-teal-700 rounded transition-colors">&gt;</button>
+              </div>
+              
+              <!-- Días de la semana -->
+              <div class="grid grid-cols-7 text-center text-xs font-semibold text-stone-400 py-3 bg-stone-50/50">
+                <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+              </div>
+              
+              <!-- Grilla de días -->
+              <div class="grid grid-cols-7 gap-0.5 p-2">
+                <div *ngFor="let dia of diasCalendario()" class="aspect-square flex items-center justify-center p-0.5">
+                  <ng-container *ngIf="dia.num">
+                    <button [disabled]="!dia.available" 
+                            (click)="fechaSeleccionada.set(dia.date)"
+                            [class.bg-teal-600]="fechaSeleccionada() === dia.date"
+                            [class.text-white]="fechaSeleccionada() === dia.date"
+                            [class.bg-teal-100]="dia.available && fechaSeleccionada() !== dia.date"
+                            [class.text-teal-900]="dia.available && fechaSeleccionada() !== dia.date"
+                            [class.hover:bg-teal-200]="dia.available && fechaSeleccionada() !== dia.date"
+                            [class.bg-red-50]="dia.isFullyBooked"
+                            [class.text-red-500]="dia.isFullyBooked"
+                            [class.border]="dia.isFullyBooked"
+                            [class.border-red-200]="dia.isFullyBooked"
+                            [class.bg-transparent]="!dia.available && !dia.isFullyBooked"
+                            [class.text-stone-300]="!dia.available && !dia.isFullyBooked"
+                            [class.cursor-not-allowed]="!dia.available"
+                            class="w-full h-full rounded-full text-sm sm:text-base font-medium transition-colors flex items-center justify-center">
+                      {{ dia.num }}
+                    </button>
+                  </ng-container>
+                </div>
+              </div>
+              
+              <!-- Leyenda -->
+              <div class="flex justify-center gap-3 py-3 bg-stone-50 border-t border-stone-200 text-xs text-stone-500 flex-wrap px-2">
+                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-teal-100"></div> Disponible</div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-red-50 border border-red-200"></div> Ocupado</div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-transparent border border-stone-200"></div> No disponible</div>
+              </div>
+            </div>
+
+            <!-- Horarios (Derecha) -->
+            <div class="w-full lg:flex-1 py-4 sm:p-6 min-h-[300px]">
+              <ng-container *ngIf="fechaSeleccionada(); else noFecha">
+                <div class="text-center sm:text-left mb-6">
+                  <p class="text-stone-800 font-semibold capitalize">{{ fechaSeleccionada() | date:'fullDate' }}</p>
+                  <p class="text-sm text-stone-500 mt-1">Horarios disponibles</p>
+                </div>
+                
+                <div *ngIf="turnosDisponiblesParaFecha().length > 0; else sinTurnos" class="flex flex-wrap justify-center sm:justify-start gap-3">
+                  <button *ngFor="let turno of turnosDisponiblesParaFecha()" 
+                          (click)="seleccionarTurno(turno)"
+                          [class.bg-teal-600]="turnoSeleccionado()?.id === turno.id"
+                          [class.text-white]="turnoSeleccionado()?.id === turno.id"
+                          [class.border-transparent]="turnoSeleccionado()?.id === turno.id"
+                          [class.bg-stone-50]="turnoSeleccionado()?.id !== turno.id"
+                          [class.text-stone-700]="turnoSeleccionado()?.id !== turno.id"
+                          class="border border-stone-200 rounded-full px-6 py-2.5 text-sm font-medium hover:border-teal-500 hover:text-teal-700 transition-colors">
+                    {{ turno.startTime }}
+                  </button>
+                </div>
+                <ng-template #sinTurnos>
+                  <p class="text-sm text-stone-500 italic py-4">No hay turnos disponibles para esta fecha.</p>
+                </ng-template>
+              </ng-container>
+              <ng-template #noFecha>
+                <div class="flex flex-col items-center justify-center h-full text-stone-300 text-sm py-12">
+                  <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                  Selecciona un día en el calendario
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Datos Personales -->
+        <div *ngIf="pasoActual() === 3" class="animate-fade-in flex-1">
+          <h3 class="text-lg font-medium text-stone-800 mb-2">Tus datos personales</h3>
+          <p class="text-sm text-stone-500 mb-6">Completa tus datos para confirmar el turno de <span class="font-medium text-stone-700">{{ servicioSeleccionado()?.name }}</span>.</p>
+          
+          <form [formGroup]="formularioPaciente">
+            <div class="grid grid-cols-1 gap-6 sm:gap-8 mb-6">
+              <!-- Sección: Información Personal y Cobertura Combinada -->
+              <div>
+                <h4 class="text-sm uppercase tracking-wider font-semibold text-stone-500 mb-3 border-b border-stone-100 pb-2">Información Personal</h4>
+                <div class="space-y-3">
+                  
+                  <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label class="block text-[11px] font-medium text-stone-500 mb-1">Nombre</label>
+                      <input type="text" formControlName="firstName" 
+                             [class.border-red-300]="formularioPaciente.get('firstName')?.invalid && (formularioPaciente.get('firstName')?.dirty || formularioPaciente.get('firstName')?.touched)"
+                             class="w-full px-3 py-2 bg-stone-50 border border-transparent rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all text-stone-800 text-sm">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-medium text-stone-500 mb-1">Apellido</label>
+                      <input type="text" formControlName="lastName" 
+                             [class.border-red-300]="formularioPaciente.get('lastName')?.invalid && (formularioPaciente.get('lastName')?.dirty || formularioPaciente.get('lastName')?.touched)"
+                             class="w-full px-3 py-2 bg-stone-50 border border-transparent rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all text-stone-800 text-sm">
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label class="block text-[11px] font-medium text-stone-500 mb-1">DNI</label>
+                      <input type="text" formControlName="dni" 
+                             [class.border-red-300]="formularioPaciente.get('dni')?.invalid && (formularioPaciente.get('dni')?.dirty || formularioPaciente.get('dni')?.touched)"
+                             class="w-full px-3 py-2 bg-stone-50 border border-transparent rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all text-stone-800 text-sm">
+                      <p *ngIf="formularioPaciente.get('dni')?.invalid && (formularioPaciente.get('dni')?.dirty || formularioPaciente.get('dni')?.touched)" class="text-red-500 text-[10px] mt-1">DNI inválido</p>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-medium text-stone-500 mb-1">Teléfono</label>
+                      <input type="tel" formControlName="phone" 
+                             [class.border-red-300]="formularioPaciente.get('phone')?.invalid && (formularioPaciente.get('phone')?.dirty || formularioPaciente.get('phone')?.touched)"
+                             class="w-full px-3 py-2 bg-stone-50 border border-transparent rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all text-stone-800 text-sm">
+                      <p *ngIf="formularioPaciente.get('phone')?.invalid && (formularioPaciente.get('phone')?.dirty || formularioPaciente.get('phone')?.touched)" class="text-red-500 text-[10px] mt-1">Solo números</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-medium text-stone-500 mb-1">Correo Electrónico</label>
+                    <input type="email" formControlName="email" 
+                           [class.border-red-300]="formularioPaciente.get('email')?.invalid && (formularioPaciente.get('email')?.dirty || formularioPaciente.get('email')?.touched)"
+                           class="w-full px-3 py-2 bg-stone-50 border border-transparent rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all text-stone-800 text-sm">
+                    <p *ngIf="formularioPaciente.get('email')?.invalid && (formularioPaciente.get('email')?.dirty || formularioPaciente.get('email')?.touched)" class="text-red-500 text-[10px] mt-1">Correo inválido</p>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label class="block text-[11px] font-medium text-stone-500 mb-1">Edad</label>
+                      <input type="number" formControlName="age" 
+                             [class.border-red-300]="formularioPaciente.get('age')?.invalid && (formularioPaciente.get('age')?.dirty || formularioPaciente.get('age')?.touched)"
+                             class="w-full px-3 py-2 bg-stone-50 border border-transparent rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all text-stone-800 text-sm">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-medium text-stone-500 mb-1">Sexo</label>
+                      <select formControlName="sex" 
+                              [class.border-red-300]="formularioPaciente.get('sex')?.invalid && (formularioPaciente.get('sex')?.dirty || formularioPaciente.get('sex')?.touched)"
+                              class="w-full px-3 py-2 bg-stone-50 border border-transparent rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition-all text-stone-800 text-sm">
+                        <option value="" disabled selected>Seleccionar...</option>
+                        <option value="M">Masculino</option>
+                        <option value="F">Femenino</option>
+                        <option value="X">Otro</option>
+                      </select>
+                    </div>
+                  </div>
+
+                </div>
+
+                <h4 class="text-sm uppercase tracking-wider font-semibold text-stone-500 mt-6 mb-3 border-b border-stone-100 pb-2">Cobertura</h4>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-[11px] font-medium text-stone-500 mb-1">Obra Social / Prepaga</label>
+                    <select formControlName="healthInsurance" 
+                            class="w-full px-3 py-2 bg-stone-50 border-transparent rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-stone-800 text-sm">
+                      <option value="" disabled selected>Selecciona tu cobertura...</option>
+                      <option *ngFor="let os of obrasSociales()" [value]="os">{{ os }}</option>
+                    </select>
+                  </div>
+
+                  <div class="flex items-center mt-1">
+                    <input type="checkbox" formControlName="isFirstVisit" id="firstVisit"
+                           class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-stone-300 rounded">
+                    <label for="firstVisit" class="ml-2 block text-sm text-stone-700">
+                      Es mi primera consulta con la profesional
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Sección: Resumen Final -->
+            <div class="bg-teal-50 border border-teal-100 text-teal-900 rounded-2xl p-5 mb-4 max-w-2xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
+              <div>
+                <span class="text-teal-600/80 text-xs uppercase tracking-wider block mb-1 font-semibold">Servicio</span>
+                <span class="font-medium text-sm">{{ servicioSeleccionado()?.name }}</span>
+              </div>
+              <div class="w-px h-8 bg-teal-200 hidden sm:block"></div>
+              <div class="text-left sm:text-right">
+                <span class="text-teal-600/80 text-xs uppercase tracking-wider block mb-1 font-semibold">Fecha y Hora</span>
+                <span class="font-medium text-sm capitalize">{{ turnoSeleccionado()?.date | date:'mediumDate' }} - {{ turnoSeleccionado()?.startTime }} hs</span>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- STEP 4: Confirmación -->
+        <div *ngIf="pasoActual() === 4" class="animate-fade-in text-center py-4 sm:py-8">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 mb-3">
+            <svg class="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-stone-900 mb-1">¡Turno Confirmado!</h3>
+          <p class="text-stone-500 text-sm mb-6">Los detalles fueron enviados a tu correo.</p>
+          
+          <div class="bg-stone-50 rounded-2xl p-4 sm:p-6 text-left max-w-sm mx-auto border border-stone-200 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-teal-500"></div>
+            
+            <div class="text-center mb-5 mt-2">
+               <p class="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1">Fecha y Hora</p>
+               <p class="font-bold text-stone-900 text-lg capitalize">{{ turnoSeleccionado()?.date | date:'longDate' }}</p>
+               <p class="text-teal-600 font-bold text-2xl mt-0.5">{{ turnoSeleccionado()?.startTime }} hs</p>
+            </div>
+
+            <div class="space-y-2.5 bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
+               <div class="flex justify-between items-center border-b border-stone-50 pb-2.5">
+                 <span class="text-[11px] text-stone-400 font-medium uppercase tracking-wide">Paciente</span>
+                 <span class="font-semibold text-stone-800 text-sm text-right truncate pl-4">{{ formularioPaciente.value.firstName }} {{ formularioPaciente.value.lastName }}</span>
+               </div>
+               <div class="flex justify-between items-center border-b border-stone-50 pb-2.5">
+                 <span class="text-[11px] text-stone-400 font-medium uppercase tracking-wide">DNI</span>
+                 <span class="font-medium text-stone-800 text-sm text-right">{{ formularioPaciente.value.dni }}</span>
+               </div>
+               <div class="flex justify-between items-center border-b border-stone-50 pb-2.5">
+                 <span class="text-[11px] text-stone-400 font-medium uppercase tracking-wide">Profesional</span>
+                 <span class="font-medium text-stone-800 text-sm text-right">Dra. Elena Ramos</span>
+               </div>
+               <div class="flex justify-between items-center border-b border-stone-50 pb-2.5">
+                 <span class="text-[11px] text-stone-400 font-medium uppercase tracking-wide">Motivo</span>
+                 <span class="font-medium text-stone-800 text-sm text-right">{{ servicioSeleccionado()?.name }}</span>
+               </div>
+               <div class="flex justify-between items-center">
+                 <span class="text-[11px] text-stone-400 font-medium uppercase tracking-wide">Cobertura</span>
+                 <span class="font-medium text-stone-800 text-sm text-right truncate pl-4">{{ formularioPaciente.value.healthInsurance }}</span>
+               </div>
+            </div>
+
+            <div class="mt-4 bg-teal-50/50 p-3 rounded-xl border border-teal-100 flex items-start gap-3">
+              <svg class="w-5 h-5 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <p class="text-[11px] text-teal-900 leading-relaxed font-medium">Instrucciones enviadas por correo. Reprogramaciones con 24hs de anticipación.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+    <!-- Navigation Footer -->
+    <div *ngIf="!cargando() && pasoActual() < 4" class="sticky bottom-0 z-20 bg-white p-4 sm:px-8 sm:py-6 border-t border-stone-100 flex flex-col-reverse sm:flex-row justify-between items-center gap-3 mt-auto shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.05)] sm:shadow-none">
+      <button (click)="pasoAnterior()"
+              class="w-full sm:w-auto px-6 py-3 text-sm font-semibold text-stone-500 hover:text-stone-900 bg-stone-50 sm:bg-transparent hover:bg-stone-100 rounded-xl transition-all">
+        {{ pasoActual() === 1 ? 'Volver al inicio' : 'Atrás' }}
+      </button>
+      
+      <button *ngIf="pasoActual() === 1" 
+              (click)="pasoSiguiente()" 
+              [disabled]="!servicioSeleccionado()"
+              [class.opacity-50]="!servicioSeleccionado()"
+              [class.cursor-not-allowed]="!servicioSeleccionado()"
+              class="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-xl text-sm font-medium transition-all shadow-sm">
+        Continuar
+      </button>
+      
+      <button *ngIf="pasoActual() === 2" 
+              (click)="pasoSiguiente()" 
+              [disabled]="!turnoSeleccionado()"
+              [class.opacity-50]="!turnoSeleccionado()"
+              [class.cursor-not-allowed]="!turnoSeleccionado()"
+              class="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-xl text-sm font-medium transition-all shadow-sm">
+        Continuar
+      </button>
+      
+      <button *ngIf="pasoActual() === 3" 
+              (click)="confirmarReserva()" 
+              [disabled]="formularioPaciente.invalid || enviando()"
+              [class.opacity-50]="formularioPaciente.invalid || enviando()"
+              [class.cursor-not-allowed]="formularioPaciente.invalid || enviando()"
+              class="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-xl text-sm font-medium transition-all shadow-sm flex items-center justify-center">
+        <span *ngIf="enviando()" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+        Confirmar Turno
+      </button>
+    </div>
+
+    <!-- Botón Volver al inicio en paso 4 -->
+    <div *ngIf="pasoActual() === 4" class="sticky bottom-0 z-20 bg-white p-6 sm:p-8 border-t border-stone-100 flex justify-center mt-auto shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.05)] sm:shadow-none">
+      <button (click)="reiniciarTurnero()" class="text-teal-600 hover:text-teal-800 font-semibold text-sm transition-colors px-6 py-3 bg-teal-50 hover:bg-teal-100 rounded-xl w-full sm:w-auto">
+        Volver al inicio
+      </button>
+    </div>
+
+  </div>
+</div>

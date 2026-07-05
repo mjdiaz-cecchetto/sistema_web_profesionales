@@ -1,0 +1,198 @@
+<!-- Header Navegación -->
+<header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-stone-100">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-20">
+      <!-- Logo -->
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        </div>
+        <span class="font-bold text-xl text-stone-900 tracking-tight">Plataforma</span>
+      </div>
+      
+      <!-- Enlaces y Botones -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#funciones" class="text-sm font-medium text-stone-600 hover:text-teal-600 transition-colors">Funciones</a>
+        <a href="#demo" class="text-sm font-medium text-stone-600 hover:text-teal-600 transition-colors">Demo Paciente</a>
+        <div class="flex items-center gap-4">
+          <button class="text-sm font-semibold text-stone-700 hover:text-teal-600 transition-colors">Ingresar</button>
+          <button class="text-sm font-semibold bg-teal-600 text-white px-5 py-2.5 rounded-full hover:bg-teal-700 transition-colors shadow-sm">
+            Crear cuenta gratis
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="bg-stone-50 py-24 sm:py-32 relative overflow-hidden">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+    <div class="inline-block mb-6 px-4 py-1.5 rounded-full bg-teal-100/50 border border-teal-200 text-teal-800 text-sm font-semibold tracking-wide">
+      Especial para Profesionales
+    </div>
+    <h1 class="text-4xl sm:text-6xl font-extrabold text-stone-900 tracking-tight mb-8 leading-tight">
+      Agenda, pacientes y turnos online <span class="text-teal-600">en un solo lugar.</span>
+    </h1>
+    <p class="text-lg sm:text-xl text-stone-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+      Creá tu perfil profesional, organizá tus pacientes y permití que reserven turnos automáticamente desde tu link público. Gratis durante la fase beta.
+    </p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <button class="w-full sm:w-auto px-8 py-4 bg-teal-600 text-white font-semibold rounded-full hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20 text-lg">
+        Crear mi consultorio gratis
+      </button>
+      <a routerLink="/client" class="w-full sm:w-auto px-8 py-4 bg-white text-stone-700 font-semibold rounded-full border border-stone-200 hover:border-teal-500 hover:text-teal-700 transition-all text-lg">
+        Ver demo de paciente
+      </a>
+    </div>
+  </div>
+  
+  <!-- Decoración de fondo abstracta -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-teal-100 rounded-full blur-[120px] opacity-40 pointer-events-none"></div>
+</section>
+
+<!-- Funciones (Features) -->
+<section id="funciones" class="py-24 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-20 max-w-3xl mx-auto">
+      <h2 class="text-3xl sm:text-4xl font-bold text-stone-900 mb-6">Confianza clínica y organización</h2>
+      <p class="text-lg text-stone-500">Organizá tu consultorio y recibí turnos desde tu perfil profesional, manteniendo privada la información sensible de tus pacientes.</p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+      
+      <!-- Feature 1 -->
+      <div class="bg-stone-50 rounded-3xl p-8 border border-stone-100 hover:shadow-md transition-shadow">
+        <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center mb-6">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <h3 class="text-xl font-bold text-stone-900 mb-3">Historia clínica privada</h3>
+        <p class="text-stone-500 leading-relaxed">Guardá la información sensible de cada paciente en un espacio protegido y accesible solo para vos con encriptación.</p>
+      </div>
+      
+      <!-- Feature 2 -->
+      <div class="bg-stone-50 rounded-3xl p-8 border border-stone-100 hover:shadow-md transition-shadow">
+        <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center mb-6">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        </div>
+        <h3 class="text-xl font-bold text-stone-900 mb-3">Agenda Profesional</h3>
+        <p class="text-stone-500 leading-relaxed">Configurá disponibilidad, organizá sesiones y evitá solapamientos. Tus pacientes eligen solo en los huecos libres.</p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="bg-stone-50 rounded-3xl p-8 border border-stone-100 hover:shadow-md transition-shadow">
+        <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center mb-6">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        </div>
+        <h3 class="text-xl font-bold text-stone-900 mb-3">Tu Link Público</h3>
+        <p class="text-stone-500 leading-relaxed">Comparte el enlace de tu Portal del Paciente en Instagram o WhatsApp. Sin fricciones para que te reserven turno.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Demo Section -->
+<section id="demo" class="py-24 bg-stone-50 border-t border-stone-100">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col lg:flex-row items-center gap-16">
+      <div class="lg:w-1/2">
+        <h2 class="text-3xl sm:text-4xl font-bold text-stone-900 mb-6">Agenda Online Sin Fricciones</h2>
+        <p class="text-lg text-stone-500 mb-8 leading-relaxed">Organizar tu semana nunca fue tan simple. Con nuestra agenda, configuras tu disponibilidad y tus pacientes reservan sus turnos online de forma autónoma con un diseño que los enamorará.</p>
+        
+        <ul class="space-y-4 mb-10">
+          <li class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <span class="text-stone-700">Diseño adaptado perfectamente a celulares.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <span class="text-stone-700">Turnos sin necesidad de que el paciente se registre.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <span class="text-stone-700">Conectado en tiempo real con tu disponibilidad.</span>
+          </li>
+        </ul>
+
+        <a routerLink="/client" class="inline-flex items-center gap-2 text-teal-600 font-semibold hover:text-teal-700 transition-colors">
+          Probar vista de paciente ahora
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+        </a>
+      </div>
+      
+      <!-- Mockup Visual -->
+      <div class="lg:w-1/2 w-full">
+        <div class="bg-white p-6 sm:p-10 rounded-3xl shadow-xl border border-stone-100 transform rotate-1 hover:rotate-0 transition-transform duration-500">
+          <div class="bg-stone-50 rounded-2xl p-6 border border-stone-100 mb-6">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-lg">
+                ER
+              </div>
+              <div>
+                <h4 class="font-bold text-stone-900">Dra. Elena Ramos</h4>
+                <p class="text-sm text-stone-500">Psicología Clínica · Adultos</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+               <div class="bg-teal-600 text-white text-center py-2 rounded-lg text-sm font-semibold">Lun</div>
+               <div class="bg-white border border-stone-200 text-stone-400 text-center py-2 rounded-lg text-sm font-semibold">Mar</div>
+               <div class="bg-white border border-stone-200 text-stone-400 text-center py-2 rounded-lg text-sm font-semibold">Mié</div>
+               <div class="bg-teal-100 text-teal-900 text-center py-2 rounded-lg text-sm font-semibold">Jue</div>
+            </div>
+            <div class="space-y-2">
+              <div class="w-full bg-white border border-stone-200 p-3 rounded-lg text-center text-sm font-medium text-stone-700">09:00 hs</div>
+              <div class="w-full bg-teal-600 p-3 rounded-lg text-center text-sm font-medium text-white shadow-sm">11:00 hs</div>
+            </div>
+          </div>
+          <button class="w-full bg-teal-600 text-white py-3 rounded-xl font-medium">Reservar Turno</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-24 bg-white">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-stone-900 mb-4">Preguntas Frecuentes</h2>
+      <p class="text-lg text-stone-500">Resolvemos tus dudas sobre el software para profesionales.</p>
+    </div>
+    
+    <div class="space-y-4">
+      <div *ngFor="let faq of faqs; let i = index" class="border border-stone-200 rounded-2xl overflow-hidden bg-stone-50 transition-all">
+        <button (click)="toggleFaq(i)" class="w-full px-6 py-5 text-left flex justify-between items-center bg-white hover:bg-stone-50 transition-colors">
+          <span class="font-semibold text-stone-900 pr-4">{{ faq.question }}</span>
+          <svg class="w-5 h-5 text-stone-400 transform transition-transform" [class.rotate-180]="faq.open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div *ngIf="faq.open" class="px-6 py-5 border-t border-stone-100 text-stone-600 leading-relaxed bg-stone-50">
+          {{ faq.answer }}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-stone-900 py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-6">
+    <div>
+      <div class="flex items-center justify-center sm:justify-start gap-2 mb-2">
+        <div class="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center">
+          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        </div>
+        <span class="font-bold text-lg text-white tracking-tight">Plataforma</span>
+      </div>
+      <p class="text-stone-400 text-sm">Tecnología con empatía para tu consultorio.</p>
+    </div>
+    
+    <div class="flex gap-6">
+      <a href="#" class="text-stone-400 hover:text-white transition-colors text-sm">Términos</a>
+      <a href="#" class="text-stone-400 hover:text-white transition-colors text-sm">Privacidad</a>
+      <a href="#" class="text-stone-400 hover:text-white transition-colors text-sm">Contacto</a>
+    </div>
+  </div>
+</footer>
