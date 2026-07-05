@@ -1,92 +1,282 @@
-<div class="min-h-screen bg-stone-50 font-sans text-stone-800 flex flex-col relative pb-20 sm:pb-0">
+<div class="min-h-screen bg-stone-50/50 font-sans text-stone-800 flex flex-col relative overflow-hidden pb-20 sm:pb-0">
   
-  <!-- Navbar -->
-  <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-stone-100 px-4 sm:px-6 py-4 flex justify-between items-center shadow-sm">
-    <h1 class="text-lg sm:text-xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
-      <div class="w-8 h-8 rounded-full overflow-hidden border border-stone-200 shrink-0">
-        <img [src]="profesional().avatarUrl" alt="Avatar">
-      </div>
-      {{ profesional().nombre }}
-    </h1>
-    <nav class="hidden sm:block">
-      <a routerLink="/client/turnos" class="bg-teal-600 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-teal-700 transition-colors shadow-sm">
-        Reservar Turno
-      </a>
-    </nav>
-  </header>
+  <!-- Elementos de Fondo Decorativos (Glows) -->
+  <div class="absolute top-[-10%] left-[-20%] w-[600px] h-[600px] bg-teal-100/40 rounded-full blur-[120px] pointer-events-none z-0"></div>
+  <div class="absolute top-[40%] right-[-10%] w-[500px] h-[500px] bg-teal-50/50 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
-  <main class="flex-grow animate-fade-in">
-    
-    <!-- Hero Section -->
-    <section class="bg-white px-4 py-16 sm:py-24 text-center border-b border-stone-100">
-      <div class="max-w-3xl mx-auto">
-        <div class="inline-block mb-4 px-4 py-1.5 rounded-full bg-teal-50 border border-teal-100 text-teal-800 text-xs font-bold tracking-wider uppercase">
-          {{ profesional().titulo }}
+  <!-- Navbar -->
+  <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-stone-100 px-4 sm:px-6 py-3.5 flex justify-between items-center shadow-sm">
+    <div class="max-w-7xl w-full mx-auto flex justify-between items-center">
+      <h1 class="text-lg sm:text-xl font-bold text-stone-900 tracking-tight flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-full overflow-hidden border border-stone-200 shadow-sm shrink-0">
+          <img [src]="profesional().avatarUrl" alt="Avatar Dra. Elena Ramos" class="w-full h-full object-cover">
         </div>
-        <h2 class="text-4xl md:text-5xl font-extrabold text-stone-900 mb-6 tracking-tight leading-tight">
-          {{ profesional().frasePrincipal }}
-        </h2>
-        <a routerLink="/client/turnos" class="hidden sm:inline-flex items-center justify-center bg-teal-600 text-white px-8 py-4 rounded-full text-lg font-bold hover:bg-teal-700 transition-all duration-300 shadow-lg shadow-teal-600/20 hover:-translate-y-0.5 mt-4">
-          Comenzar mi proceso
-          <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        <span class="bg-gradient-to-r from-stone-900 to-stone-700 bg-clip-text text-transparent">{{ profesional().nombre }}</span>
+      </h1>
+      
+      <div class="flex items-center gap-4">
+        <!-- Badge de Disponibilidad -->
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 relative flex shrink-0">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          Disponible Hoy
+        </span>
+        
+        <a routerLink="/client/turnos" class="hidden sm:inline-flex bg-teal-600 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-teal-700 hover:shadow-md hover:shadow-teal-600/10 transition-all">
+          Reservar Turno
         </a>
       </div>
-    </section>
+    </div>
+  </header>
 
-    <!-- Biografía / Enfoque -->
-    <section class="py-16 sm:py-24 px-4 max-w-3xl mx-auto">
-      <h3 class="text-sm font-bold text-teal-600 uppercase tracking-widest mb-4 text-center sm:text-left">Mi enfoque profesional</h3>
-      <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-stone-100 text-lg text-stone-600 leading-relaxed">
-        <p>{{ profesional().biografia }}</p>
+  <main class="flex-grow z-10 relative">
+    
+    <!-- Hero Section (Más compacto) -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        <!-- Info Izquierda -->
+        <div class="lg:col-span-7 space-y-5 text-center lg:text-left animate-fade-in-up">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-100 text-teal-800 text-xs font-bold tracking-wider uppercase">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            {{ profesional().titulo }}
+          </div>
+          
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-stone-900 tracking-tight leading-[1.15] max-w-2xl mx-auto lg:mx-0">
+            {{ profesional().frasePrincipal }}
+          </h2>
+          
+          <p class="text-sm sm:text-base text-stone-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+            Te acompaño a encontrar herramientas prácticas y un espacio de escucha activa en Palermo, Belgrano o de forma Online.
+          </p>
+          
+          <!-- Botones de Acción -->
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
+            <a routerLink="/client/turnos" class="animate-pulse-glow w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white px-6 py-3.5 rounded-xl text-base font-bold hover:bg-teal-700 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-teal-600/20">
+              Comenzar mi proceso
+              <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </a>
+            
+            <a href="#enfoque" class="w-full sm:w-auto inline-flex items-center justify-center bg-white text-stone-700 border border-stone-200 px-6 py-3.5 rounded-xl text-base font-semibold hover:border-teal-500 hover:text-teal-700 transition-all">
+              Conocerme más
+            </a>
+          </div>
+        </div>
+
+        <!-- Imagen Derecha con Tarjeta Flotante -->
+        <div class="lg:col-span-5 flex justify-center relative animate-fade-in py-4">
+          <div class="relative w-full max-w-[280px] sm:max-w-[320px] aspect-square rounded-[2rem] overflow-hidden shadow-xl border-4 border-white bg-stone-100 z-10 transition-transform duration-500 hover:scale-[1.01]">
+            <img [src]="profesional().avatarUrl" alt="Dra. Elena Ramos - Psicóloga" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-stone-900/10 via-transparent to-transparent pointer-events-none"></div>
+          </div>
+          
+          <!-- Tarjeta Flotante: Experiencia -->
+          <div class="animate-float absolute bottom-[4px] left-[0px] sm:left-[-16px] bg-white rounded-xl p-3 shadow-lg border border-stone-100 flex items-center gap-2.5 z-20 max-w-[170px]">
+            <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+              <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+            </div>
+            <div>
+              <p class="text-[10px] text-stone-400 font-semibold uppercase">Trayectoria</p>
+              <p class="text-xs font-bold text-stone-800">10+ Años Exp.</p>
+            </div>
+          </div>
+
+          <!-- Tarjeta Flotante: Próximo Turno -->
+          <div class="animate-float [animation-delay:3s] absolute top-[24px] right-[0px] sm:right-[-16px] bg-white/90 backdrop-blur-md rounded-xl p-3 shadow-lg border border-white/50 flex items-center gap-2 z-20 max-w-[180px]">
+            <div class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></div>
+            <div>
+              <p class="text-[10px] text-stone-500 font-medium">Turno más cercano</p>
+              <p class="text-xs font-bold text-teal-700">Hoy 17:00 hs</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <!-- Áreas de Atención (Servicios) -->
-    <section class="bg-stone-100 py-16 sm:py-24 px-4 border-y border-stone-200">
-      <div class="max-w-5xl mx-auto">
-        <div class="text-center mb-12">
-          <h3 class="text-3xl font-bold text-stone-900 mb-4">Áreas de atención</h3>
-          <p class="text-stone-500 text-lg">Espacios diseñados para tu bienestar integral.</p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div *ngFor="let area of profesional().areas" class="bg-white rounded-3xl p-8 shadow-sm hover:shadow-md transition-shadow border border-stone-50">
-            <div class="w-14 h-14 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mb-6">
-              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="area.icono"></path>
-              </svg>
-            </div>
-            <h4 class="text-xl font-bold text-stone-900 mb-3">{{ area.nombre }}</h4>
-            <p class="text-stone-500 leading-relaxed">{{ area.descripcion }}</p>
+    <!-- Widget de Reservas Rápidas (Más compacto) -->
+    <section class="bg-white border-y border-stone-100 py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-0.5">
+            <h3 class="font-bold text-stone-900 text-base flex items-center gap-2">
+              <span class="w-1 h-5 bg-teal-600 rounded-full"></span>
+              ¿Necesitás coordinar pronto?
+            </h3>
+            <p class="text-xs text-stone-500">Agendá directamente en los horarios disponibles de esta semana:</p>
+          </div>
+          
+          <div class="flex flex-wrap gap-2.5">
+            <a *ngFor="let turno of turnosRapidos()" 
+               routerLink="/client/turnos" 
+               class="bg-stone-50 hover:bg-teal-50 border border-stone-200 hover:border-teal-300 rounded-lg px-3.5 py-2 text-center transition-all duration-200 group flex items-center gap-2">
+              <div>
+                <p class="text-[9px] uppercase font-bold text-stone-400 group-hover:text-teal-500">{{ turno.fecha }}</p>
+                <p class="text-xs font-bold text-stone-700 group-hover:text-teal-700">{{ turno.hora }} hs</p>
+              </div>
+              <svg class="w-3.5 h-3.5 text-stone-400 group-hover:text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Modalidad y Ubicación -->
-    <section class="py-16 sm:py-24 px-4 max-w-3xl mx-auto text-center">
-      <div class="inline-flex items-center justify-center w-16 h-16 bg-stone-100 text-stone-600 rounded-full mb-6">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+    <!-- Biografía / Presentación (Más compacto) -->
+    <section id="enfoque" class="py-10 sm:py-14 px-4 max-w-4xl mx-auto">
+      <div class="text-center space-y-2 mb-6">
+        <h3 class="text-xs font-bold text-teal-600 uppercase tracking-widest">Sobre Mí</h3>
+        <h4 class="text-2xl font-bold text-stone-900">Mi Enfoque Profesional</h4>
       </div>
-      <h3 class="text-2xl font-bold text-stone-900 mb-4">Modalidad de Atención</h3>
-      <p class="text-lg text-stone-500">{{ profesional().modalidad }}</p>
+      <div class="bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-stone-100/80 text-sm sm:text-base text-stone-600 leading-relaxed space-y-4">
+        <p>{{ profesional().biografia }}</p>
+        <p class="font-medium text-stone-700 border-l-4 border-teal-500 pl-3">{{ profesional().modalidad }}</p>
+      </div>
+    </section>
+
+    <!-- Áreas de Atención (Especialidades Interactivas) (Más compacto) -->
+    <section class="bg-stone-100/60 py-10 sm:py-14 px-4 border-y border-stone-200/40">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-10 space-y-2">
+          <h3 class="text-xs font-bold text-teal-600 uppercase tracking-widest">Especialidades</h3>
+          <h2 class="text-2xl sm:text-3xl font-bold text-stone-900">Áreas de Acompañamiento</h2>
+          <p class="text-stone-500 text-xs sm:text-sm">Hacé clic en cualquier tarjeta para profundizar sobre el enfoque clínico terapéutico.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div *ngFor="let area of profesional().areas; let i = index" 
+               (click)="toggleSpecialty(i)"
+               [class.border-teal-500]="especialidadActiva() === i"
+               [class.shadow-md]="especialidadActiva() === i"
+               class="bg-white rounded-2xl p-6 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 border border-stone-100 relative group overflow-hidden">
+            
+            <div class="absolute top-0 left-0 w-full h-1 bg-teal-600 transition-transform duration-300"
+                 [class.scale-x-0]="especialidadActiva() !== i"
+                 [class.scale-x-100]="especialidadActiva() === i"></div>
+            
+            <div class="w-10 h-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="area.icono"></path>
+              </svg>
+            </div>
+            
+            <h4 class="text-lg font-bold text-stone-900 mb-2 flex items-center justify-between">
+              {{ area.nombre }}
+              <svg class="w-4 h-4 text-stone-400 transition-transform duration-300"
+                   [class.rotate-180]="especialidadActiva() === i"
+                   fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h4>
+            
+            <p class="text-stone-500 text-xs leading-relaxed mb-2">{{ area.descripcion }}</p>
+            
+            <div class="overflow-hidden transition-all duration-300 border-t border-stone-100 pt-3 mt-2"
+                 [style.max-height]="especialidadActiva() === i ? '150px' : '0px'"
+                 [style.opacity]="especialidadActiva() === i ? '1' : '0'">
+              <p class="text-[11px] text-teal-800 bg-teal-50/50 p-2.5 rounded-lg border border-teal-100 font-medium">
+                {{ area.detalle }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lugares de Atención (NUEVA SECCIÓN REQUERIDA) -->
+    <section class="py-10 sm:py-14 px-4 max-w-6xl mx-auto">
+      <div class="text-center mb-10 space-y-2">
+        <h3 class="text-xs font-bold text-teal-600 uppercase tracking-widest">Dónde Atiendo</h3>
+        <h2 class="text-2xl sm:text-3xl font-bold text-stone-900">Lugares de Atención</h2>
+        <p class="text-stone-500 text-xs sm:text-sm">Consultorios presenciales y modalidad virtual para tu mayor comodidad.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div *ngFor="let loc of profesional().direcciones" 
+             class="bg-white rounded-2xl p-6 border border-stone-200/75 hover:border-teal-500/50 hover:shadow-sm transition-all duration-200 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="loc.icono"></path>
+              </svg>
+            </div>
+            
+            <div class="space-y-1">
+              <h4 class="font-bold text-stone-900 text-base">{{ loc.tipo }}</h4>
+              <p class="text-[11px] text-teal-600 font-semibold bg-teal-50/40 inline-block px-2.5 py-0.5 rounded-full">{{ loc.detalle }}</p>
+            </div>
+            
+            <p class="text-xs text-stone-500 leading-relaxed">{{ loc.direccion }}</p>
+          </div>
+
+          <div *ngIf="loc.mapLink" class="pt-4 mt-4 border-t border-stone-100">
+            <a [href]="loc.mapLink" target="_blank" class="inline-flex items-center text-xs font-bold text-teal-600 hover:text-teal-700 gap-1 hover:underline">
+              Ver ubicación en mapa
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cómo funciona el Proceso (Timeline interactivo) (Más compacto) -->
+    <section class="bg-stone-100/60 py-10 sm:py-14 px-4 border-t border-stone-200/40">
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-8 space-y-2">
+          <h3 class="text-xs font-bold text-teal-600 uppercase tracking-widest">Paso a Paso</h3>
+          <h2 class="text-2xl font-bold text-stone-900">¿Cómo reservo mi sesión?</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+          <!-- Paso 1 -->
+          <div class="bg-white rounded-2xl p-6 border border-stone-100 shadow-sm flex flex-col items-center text-center">
+            <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-800 font-bold text-sm flex items-center justify-center mb-4">1</div>
+            <h4 class="font-bold text-stone-900 text-base mb-1">Elegí servicio y horario</h4>
+            <p class="text-stone-500 text-xs">Seleccioná la consulta y el día libre en la agenda que mejor se acomode a tus horarios.</p>
+          </div>
+          
+          <!-- Paso 2 -->
+          <div class="bg-white rounded-2xl p-6 border border-stone-100 shadow-sm flex flex-col items-center text-center">
+            <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-800 font-bold text-sm flex items-center justify-center mb-4">2</div>
+            <h4 class="font-bold text-stone-900 text-base mb-1">Completá tus datos</h4>
+            <p class="text-stone-500 text-xs">Llená el formulario sin demoras. Tus datos están completamente seguros y protegidos.</p>
+          </div>
+          
+          <!-- Paso 3 -->
+          <div class="bg-white rounded-2xl p-6 border border-stone-100 shadow-sm flex flex-col items-center text-center">
+            <div class="w-8 h-8 rounded-full bg-teal-600 text-white font-bold text-sm flex items-center justify-center mb-4">3</div>
+            <h4 class="font-bold text-stone-900 text-base mb-1">¡Listo! Turno confirmado</h4>
+            <p class="text-stone-500 text-xs">Recibís un comprobante digital e instrucciones para asistir a la sesión de inmediato.</p>
+          </div>
+        </div>
+      </div>
     </section>
 
   </main>
   
   <!-- Footer -->
-  <footer class="bg-stone-900 text-stone-400 py-12 px-4 text-center">
-    <div class="w-12 h-12 mx-auto rounded-full overflow-hidden opacity-50 mb-4">
-      <img [src]="profesional().avatarUrl" alt="Avatar">
+  <footer class="bg-stone-900 text-stone-400 py-10 px-4">
+    <div class="max-w-6xl mx-auto text-center space-y-4">
+      <div class="w-10 h-10 mx-auto rounded-full overflow-hidden border border-stone-700 shadow-md">
+        <img [src]="profesional().avatarUrl" alt="Dra. Elena Ramos" class="w-full h-full object-cover">
+      </div>
+      <div class="space-y-1">
+        <h4 class="text-white font-bold text-sm">{{ profesional().nombre }}</h4>
+        <p class="text-xs text-stone-500">{{ profesional().titulo }}</p>
+      </div>
+      <p class="text-[11px] text-stone-600 pt-2 border-t border-stone-800/80">&copy; 2026 Dra. Elena Ramos. Todos los derechos reservados.</p>
     </div>
-    <p class="text-sm">&copy; 2026 {{ profesional().nombre }}. Todos los derechos reservados.</p>
   </footer>
 
   <!-- Sticky CTA (Sólo Móvil) -->
-  <div class="sm:hidden fixed bottom-0 left-0 w-full bg-white p-4 border-t border-stone-200 z-50 shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.1)]">
-    <a routerLink="/client/turnos" class="flex items-center justify-center w-full bg-teal-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-teal-700 transition-colors">
+  <div class="sm:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md p-3.5 border-t border-stone-200 z-50 shadow-[0_-8px_20px_-3px_rgba(0,0,0,0.08)] flex items-center justify-between gap-4">
+    <div class="text-left shrink-0">
+      <p class="text-[9px] text-stone-400 font-bold uppercase tracking-wider">Próximo Turno</p>
+      <p class="text-xs font-bold text-teal-600">Hoy 17:00 hs</p>
+    </div>
+    <a routerLink="/client/turnos" class="flex-grow inline-flex items-center justify-center bg-teal-600 text-white py-3 px-5 rounded-lg font-bold text-sm hover:bg-teal-700 transition-colors shadow-sm">
       Reservar Turno
     </a>
   </div>
 
 </div>
+
