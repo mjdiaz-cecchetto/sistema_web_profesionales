@@ -4,7 +4,7 @@ export const clientRoutes: Routes = [
   {
     path: '',
     loadComponent: () => import('./components/inicio/inicio.component').then(m => m.InicioComponent),
-    title: 'Dra. Elena Ramos - Psicóloga'
+    title: 'Sistema Profesionales'
   },
   {
     path: 'turnos',
