@@ -100,8 +100,8 @@ export class ClientService {
       blockedRanges = JSON.parse(rawBlocked);
     }
     
-    // Generar para los próximos 7 días
-    for (let day = 1; day <= 7; day++) {
+    // Generar para los próximos 14 días
+    for (let day = 1; day <= 14; day++) {
       const date = this.getFutureDate(day);
 
       // Si la fecha está dentro de algún rango bloqueado, omitir por completo
