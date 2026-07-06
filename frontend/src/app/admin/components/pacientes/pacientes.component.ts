@@ -43,10 +43,11 @@ import { AdminService, Patient } from '../../services/admin.service';
         <div class="bg-stone-50/80 px-6 py-3 border-b border-stone-200/60 flex items-center gap-4 text-[10px] font-bold text-stone-400 uppercase tracking-wider hidden sm:flex">
           <div class="w-10 shrink-0"></div> <!-- Espacio Avatar -->
           <div class="flex-1 grid grid-cols-12 gap-4">
-            <div class="col-span-4">Datos del Paciente</div>
-            <div class="col-span-4">Contacto</div>
+            <div class="col-span-3">Datos del Paciente</div>
+            <div class="col-span-3">Contacto</div>
             <div class="col-span-2">Cobertura</div>
             <div class="col-span-2 text-right">Fecha de Alta</div>
+            <div class="col-span-2 text-center">Acciones</div>
           </div>
         </div>
 
@@ -62,14 +63,14 @@ import { AdminService, Patient } from '../../services/admin.service';
             <!-- Datos principales -->
             <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-y-3 gap-x-4 items-center">
               
-              <!-- Paciente (4 cols) -->
-              <div class="sm:col-span-4 space-y-0.5">
+              <!-- Paciente (3 cols) -->
+              <div class="sm:col-span-3 space-y-0.5">
                 <h4 class="font-extrabold text-stone-900 text-sm truncate" [title]="pat.nombre">{{ pat.nombre }}</h4>
                 <p class="text-[11px] text-stone-500 truncate" [title]="'DNI: ' + pat.dni">DNI: <span class="font-medium text-stone-700">{{ pat.dni }}</span></p>
               </div>
 
-              <!-- Contacto (4 cols) -->
-              <div class="sm:col-span-4 text-[11px] text-stone-500 space-y-1">
+              <!-- Contacto (3 cols) -->
+              <div class="sm:col-span-3 text-[11px] text-stone-500 space-y-1">
                 <p class="truncate"><span class="font-semibold text-stone-400">Tel:</span> {{ pat.telefono }}</p>
                 <p class="truncate"><span class="font-semibold text-stone-400">Email:</span> <span class="truncate">{{ pat.email }}</span></p>
               </div>
@@ -84,6 +85,19 @@ import { AdminService, Patient } from '../../services/admin.service';
               <!-- Fecha de Alta (2 cols) -->
               <div class="sm:col-span-2 text-left sm:text-right border-t border-stone-100 sm:border-0 pt-2 sm:pt-0">
                 <p class="text-xs font-black text-stone-800">{{ formatDate(pat.fechaAlta) }}</p>
+              </div>
+              
+              <!-- Acciones (2 cols) -->
+              <div class="sm:col-span-2 flex justify-start sm:justify-center items-center gap-1.5 border-t border-stone-100 sm:border-0 pt-3 sm:pt-0">
+                <button title="Agendar Turno" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white flex items-center justify-center transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+                <button title="Ver Perfil" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 hover:bg-stone-600 hover:text-white flex items-center justify-center transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </button>
+                <button title="Editar Paciente" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 hover:bg-teal-600 hover:text-white flex items-center justify-center transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                </button>
               </div>
               
             </div>

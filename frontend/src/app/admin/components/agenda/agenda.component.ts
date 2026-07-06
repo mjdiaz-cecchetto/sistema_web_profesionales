@@ -33,6 +33,11 @@ import { DatePickerComponent } from '../../../shared/components/date-picker/date
           <h1 class="text-2xl font-black text-stone-900 tracking-tight">Agenda de Turnos</h1>
           <p class="text-sm text-stone-500">Visualizá y gestioná las reservas solicitadas por tus pacientes.</p>
         </div>
+        <!-- Botón Nuevo Turno -->
+        <button class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Nuevo Turno
+        </button>
       </div>
 
       <!-- Barra de Filtros y Búsqueda -->
