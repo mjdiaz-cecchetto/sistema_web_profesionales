@@ -27,6 +27,16 @@ export interface AdminProfile {
   areas: SpecialtyConfig[];
 }
 
+export interface Patient {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string;
+  dni: string;
+  obraSocial: string;
+  fechaAlta: string;
+}
+
 export interface AdminAppointment {
   id: string;
   serviceName: string;
@@ -54,7 +64,7 @@ export interface DayAvailability {
 })
 export class AdminService {
   private STORAGE_PROFILE_KEY = 'profesional_data';
-  private STORAGE_APPOINTMENTS_KEY = 'appointments_data';
+  private STORAGE_APPOINTMENTS_KEY = 'appointments_data_v2';
   private STORAGE_AVAILABILITY_KEY = 'disponibilidad_data';
 
   // Default Mock Profile data
@@ -121,44 +131,207 @@ export class AdminService {
     {
       id: 'apt-mock-1',
       serviceName: 'Consulta',
-      patientName: 'Martín Spinetta',
-      patientEmail: 'martin.spin@gmail.com',
-      patientPhone: '1123456789',
-      patientDni: '38123456',
-      date: this.getFutureDateString(0), // Hoy
-      time: '17:00',
-      status: 'CONFIRMED',
-      notes: 'Paciente indica que está con picos de estrés laboral elevados.',
+      patientName: 'Sofía Álvarez',
+      patientEmail: 'sofia.alvarez@email.com',
+      patientPhone: '1123456001',
+      patientDni: '30123456',
+      date: this.getFutureDateString(-5),
+      time: '10:00',
+      status: 'CANCELLED',
+      notes: 'Canceló por viaje.',
       location: 'Consultorio Palermo',
       healthInsurance: 'OSDE'
     },
     {
       id: 'apt-mock-2',
       serviceName: 'Consulta',
-      patientName: 'Laura Giménez',
-      patientEmail: 'laurag@live.com.ar',
-      patientPhone: '1198765432',
-      patientDni: '35987654',
-      date: this.getFutureDateString(1), // Mañana
-      time: '09:00',
-      status: 'PENDING',
-      notes: 'Primera visita presencial. Reintegro por prepaga Swiss Medical.',
+      patientName: 'Diego Torres',
+      patientEmail: 'diego.t@email.com',
+      patientPhone: '1123456002',
+      patientDni: '31123456',
+      date: this.getFutureDateString(-2),
+      time: '14:00',
+      status: 'CONFIRMED',
+      notes: 'Sesión de seguimiento.',
       location: 'Centro Médico Belgrano',
       healthInsurance: 'Swiss Medical'
     },
     {
       id: 'apt-mock-3',
+      serviceName: 'Terapia de Pareja',
+      patientName: 'Lucía y Marcos',
+      patientEmail: 'lucia.marcos@email.com',
+      patientPhone: '1123456003',
+      patientDni: '32123456',
+      date: this.getFutureDateString(-1),
+      time: '18:00',
+      status: 'CONFIRMED',
+      notes: 'Primera sesión conjunta.',
+      location: 'Consulta Online',
+      healthInsurance: 'Particular'
+    },
+    {
+      id: 'apt-mock-4',
+      serviceName: 'Consulta',
+      patientName: 'Martín Spinetta',
+      patientEmail: 'martin.spin@gmail.com',
+      patientPhone: '1123456789',
+      patientDni: '38123456',
+      date: this.getFutureDateString(0),
+      time: '09:00',
+      status: 'CONFIRMED',
+      notes: 'Paciente indica que está con picos de estrés laboral elevados.',
+      location: 'Consultorio Palermo',
+      healthInsurance: 'OSDE'
+    },
+    {
+      id: 'apt-mock-5',
+      serviceName: 'Desarrollo Personal',
+      patientName: 'Carla Ruiz',
+      patientEmail: 'carla.ruiz@email.com',
+      patientPhone: '1123456005',
+      patientDni: '33123456',
+      date: this.getFutureDateString(0),
+      time: '15:00',
+      status: 'CONFIRMED',
+      location: 'Centro Médico Belgrano',
+      healthInsurance: 'Galeno'
+    },
+    {
+      id: 'apt-mock-6',
       serviceName: 'Prescripción de Receta',
+      patientName: 'Tomás Gómez',
+      patientEmail: 'tomas.g@email.com',
+      patientPhone: '1123456006',
+      patientDni: '34123456',
+      date: this.getFutureDateString(0),
+      time: '17:30',
+      status: 'PENDING',
+      notes: 'Renovación de medicación.',
+      location: 'Consulta Online',
+      healthInsurance: 'OSDE'
+    },
+    {
+      id: 'apt-mock-7',
+      serviceName: 'Consulta',
+      patientName: 'Laura Giménez',
+      patientEmail: 'laurag@live.com.ar',
+      patientPhone: '1198765432',
+      patientDni: '35987654',
+      date: this.getFutureDateString(1),
+      time: '09:00',
+      status: 'CONFIRMED',
+      notes: 'Primera visita presencial.',
+      location: 'Centro Médico Belgrano',
+      healthInsurance: 'Swiss Medical'
+    },
+    {
+      id: 'apt-mock-8',
+      serviceName: 'Terapia de Pareja',
+      patientName: 'Ana y Juan',
+      patientEmail: 'ana.juan@email.com',
+      patientPhone: '1123456008',
+      patientDni: '36123456',
+      date: this.getFutureDateString(1),
+      time: '16:00',
+      status: 'PENDING',
+      location: 'Consultorio Palermo',
+      healthInsurance: 'Particular'
+    },
+    {
+      id: 'apt-mock-9',
+      serviceName: 'Consulta',
       patientName: 'Andrés Mendoza',
       patientEmail: 'andres.men@outlook.com',
       patientPhone: '1133334444',
       patientDni: '40111222',
-      date: this.getFutureDateString(2), // Pasado mañana
+      date: this.getFutureDateString(2),
       time: '11:00',
       status: 'CONFIRMED',
-      notes: 'Sesión online rápida para renovación de orden de reintegro.',
+      notes: 'Sesión online rápida.',
       location: 'Consulta Online',
-      healthInsurance: 'Particular (Sin cobertura)'
+      healthInsurance: 'Particular'
+    },
+    {
+      id: 'apt-mock-10',
+      serviceName: 'Desarrollo Personal',
+      patientName: 'Valentina Silva',
+      patientEmail: 'valen.silva@email.com',
+      patientPhone: '1123456010',
+      patientDni: '37123456',
+      date: this.getFutureDateString(3),
+      time: '10:30',
+      status: 'CONFIRMED',
+      location: 'Centro Médico Belgrano',
+      healthInsurance: 'OSDE'
+    },
+    {
+      id: 'apt-mock-11',
+      serviceName: 'Consulta',
+      patientName: 'Julián Castro',
+      patientEmail: 'julian.castro@email.com',
+      patientPhone: '1123456011',
+      patientDni: '38123457',
+      date: this.getFutureDateString(4),
+      time: '19:00',
+      status: 'PENDING',
+      notes: 'Consulta sobre estrés y ansiedad.',
+      location: 'Consulta Online',
+      healthInsurance: 'Swiss Medical'
+    },
+    {
+      id: 'apt-mock-12',
+      serviceName: 'Prescripción de Receta',
+      patientName: 'Mariana López',
+      patientEmail: 'mariana.l@email.com',
+      patientPhone: '1123456012',
+      patientDni: '39123456',
+      date: this.getFutureDateString(5),
+      time: '08:30',
+      status: 'CANCELLED',
+      notes: 'El paciente reprogramó para la próxima semana.',
+      location: 'Consultorio Palermo',
+      healthInsurance: 'Galeno'
+    },
+    {
+      id: 'apt-mock-13',
+      serviceName: 'Consulta',
+      patientName: 'Esteban Rey',
+      patientEmail: 'esteban.rey@email.com',
+      patientPhone: '1123456013',
+      patientDni: '40123456',
+      date: this.getFutureDateString(7),
+      time: '14:00',
+      status: 'CONFIRMED',
+      location: 'Centro Médico Belgrano',
+      healthInsurance: 'OSDE'
+    },
+    {
+      id: 'apt-mock-14',
+      serviceName: 'Terapia de Pareja',
+      patientName: 'Clara y Federico',
+      patientEmail: 'clara.fede@email.com',
+      patientPhone: '1123456014',
+      patientDni: '41123456',
+      date: this.getFutureDateString(10),
+      time: '18:30',
+      status: 'CONFIRMED',
+      location: 'Consulta Online',
+      healthInsurance: 'Particular'
+    },
+    {
+      id: 'apt-mock-15',
+      serviceName: 'Desarrollo Personal',
+      patientName: 'Sebastián Ríos',
+      patientEmail: 'sebas.rios@email.com',
+      patientPhone: '1123456015',
+      patientDni: '42123456',
+      date: this.getFutureDateString(14),
+      time: '16:00',
+      status: 'PENDING',
+      notes: 'Primera entrevista.',
+      location: 'Consultorio Palermo',
+      healthInsurance: 'Swiss Medical'
     }
   ];
 
@@ -180,6 +353,9 @@ export class AdminService {
   appointments = signal<AdminAppointment[]>(this.defaultAppointments);
   availability = signal<DayAvailability[]>(this.defaultAvailability);
   blockedDates = signal<{ id: string, startDate: string, endDate: string, reason: string }[]>([]);
+  patients = signal<Patient[]>([]);
+
+  private STORAGE_PATIENTS_KEY = 'patients_data';
 
   constructor() {
     this.initLocalStorageData();
@@ -228,6 +404,37 @@ export class AdminService {
     } else {
       this.saveBlockedDatesDirect([]);
     }
+
+    // 5. Patients
+    const savedPatients = localStorage.getItem(this.STORAGE_PATIENTS_KEY);
+    if (savedPatients) {
+      this.patients.set(JSON.parse(savedPatients));
+    } else {
+      this.generateMockPatientsFromAppointments();
+    }
+  }
+
+  private generateMockPatientsFromAppointments() {
+    const uniqueMap = new Map<string, Patient>();
+    this.defaultAppointments.forEach((appt, index) => {
+      if (!uniqueMap.has(appt.patientDni)) {
+        uniqueMap.set(appt.patientDni, {
+          id: 'pat-' + appt.patientDni,
+          nombre: appt.patientName,
+          email: appt.patientEmail,
+          telefono: appt.patientPhone,
+          dni: appt.patientDni,
+          obraSocial: appt.healthInsurance,
+          fechaAlta: this.getFutureDateString(-30 + index)
+        });
+      }
+    });
+    this.savePatientsDirect(Array.from(uniqueMap.values()));
+  }
+
+  private savePatientsDirect(list: Patient[]) {
+    localStorage.setItem(this.STORAGE_PATIENTS_KEY, JSON.stringify(list));
+    this.patients.set(list);
   }
 
   // Profile Methods

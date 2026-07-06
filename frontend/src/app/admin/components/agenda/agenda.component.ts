@@ -2,11 +2,28 @@ import { Component, computed, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, AdminAppointment } from '../../services/admin.service';
+import { DatePickerComponent } from '../../../shared/components/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-agenda',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DatePickerComponent],
+  styles: [`
+    .custom-date-input::-webkit-calendar-picker-indicator {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .custom-date-input::-webkit-datetime-edit {
+      color: #57534e; /* text-stone-600 */
+    }
+  `],
   template: `
     <div class="space-y-6">
       
@@ -19,9 +36,9 @@ import { AdminService, AdminAppointment } from '../../services/admin.service';
       </div>
 
       <!-- Barra de Filtros y Búsqueda -->
-      <div class="bg-white rounded-2xl border border-stone-200/60 p-5 shadow-sm grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
+      <div class="bg-white rounded-2xl border border-stone-200/60 p-5 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-center">
         <!-- Búsqueda -->
-        <div class="sm:col-span-2 space-y-1">
+        <div class="lg:col-span-2 space-y-1">
           <label class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Buscar Paciente</label>
           <div class="relative">
             <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)" 
@@ -31,28 +48,52 @@ import { AdminService, AdminAppointment } from '../../services/admin.service';
           </div>
         </div>
 
+        <!-- Fecha Desde -->
+        <app-date-picker 
+          label="Fecha Desde" 
+          placeholder="Desde..."
+          [value]="dateFromFilter()" 
+          (valueChange)="onDateFromChange($event)">
+        </app-date-picker>
+
+        <!-- Fecha Hasta -->
+        <app-date-picker 
+          label="Fecha Hasta" 
+          placeholder="Hasta..."
+          [value]="dateToFilter()" 
+          (valueChange)="onDateToChange($event)">
+        </app-date-picker>
+
         <!-- Filtro por Estado -->
         <div class="space-y-1">
           <label class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Estado del Turno</label>
-          <select [ngModel]="statusFilter()" (ngModelChange)="onStatusChange($event)" 
-                  class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:border-teal-500 focus:bg-white focus:outline-none transition-all">
-            <option value="ALL">Todos los estados</option>
-            <option value="CONFIRMED">Confirmado</option>
-            <option value="PENDING">Pendiente</option>
-            <option value="CANCELLED">Cancelado</option>
-          </select>
+          <div class="relative">
+            <select [ngModel]="statusFilter()" (ngModelChange)="onStatusChange($event)" 
+                    class="w-full bg-stone-50 border border-stone-200 rounded-xl pl-10 pr-8 py-2 text-xs focus:border-teal-500 focus:bg-white focus:outline-none transition-all appearance-none text-stone-600 cursor-pointer">
+              <option value="ALL">Todos los estados</option>
+              <option value="CONFIRMED">Confirmado</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="CANCELLED">Cancelado</option>
+            </select>
+            <svg class="w-4 h-4 text-stone-400 absolute left-3.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <svg class="w-4 h-4 text-stone-400 absolute right-3.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
         </div>
 
         <!-- Filtro por Ubicación -->
         <div class="space-y-1">
-          <label class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Lugar de Atención</label>
-          <select [ngModel]="locationFilter()" (ngModelChange)="onLocationChange($event)" 
-                  class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:border-teal-500 focus:bg-white focus:outline-none transition-all">
-            <option value="ALL">Todas las ubicaciones</option>
-            <option value="Palermo">Consultorio Palermo</option>
-            <option value="Belgrano">Centro Belgrano</option>
-            <option value="Online">Consulta Online</option>
-          </select>
+          <label class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Lugar</label>
+          <div class="relative">
+            <select [ngModel]="locationFilter()" (ngModelChange)="onLocationChange($event)" 
+                    class="w-full bg-stone-50 border border-stone-200 rounded-xl pl-10 pr-8 py-2 text-xs focus:border-teal-500 focus:bg-white focus:outline-none transition-all appearance-none text-stone-600 cursor-pointer">
+              <option value="ALL">Todas las ubic.</option>
+              <option value="Palermo">Palermo</option>
+              <option value="Belgrano">Belgrano</option>
+              <option value="Online">Online</option>
+            </select>
+            <svg class="w-4 h-4 text-stone-400 absolute left-3.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <svg class="w-4 h-4 text-stone-400 absolute right-3.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
         </div>
       </div>
 
@@ -182,6 +223,8 @@ export class AgendaComponent {
   searchQuery = signal('');
   statusFilter = signal('ALL');
   locationFilter = signal('ALL');
+  dateFromFilter = signal('');
+  dateToFilter = signal('');
   
   // Paginación
   currentPage = signal(1);
@@ -194,6 +237,8 @@ export class AgendaComponent {
     const query = this.searchQuery().toLowerCase().trim();
     const status = this.statusFilter();
     const location = this.locationFilter();
+    const fromDate = this.dateFromFilter();
+    const toDate = this.dateToFilter();
 
     return list.filter(a => {
       // 1. Filtro búsqueda
@@ -208,7 +253,12 @@ export class AgendaComponent {
       // 3. Filtro Ubicación
       const matchesLocation = location === 'ALL' || a.location.includes(location);
 
-      return matchesSearch && matchesStatus && matchesLocation;
+      // 4. Filtro Fechas
+      let matchesDate = true;
+      if (fromDate) matchesDate = matchesDate && a.date >= fromDate;
+      if (toDate) matchesDate = matchesDate && a.date <= toDate;
+
+      return matchesSearch && matchesStatus && matchesLocation && matchesDate;
     }).sort((a, b) => {
       // Ordenar por fecha y hora ascendente (las citas más cercanas primero)
       const dateCompare = a.date.localeCompare(b.date);
@@ -243,6 +293,16 @@ export class AgendaComponent {
 
   onLocationChange(val: string) {
     this.locationFilter.set(val);
+    this.currentPage.set(1);
+  }
+
+  onDateFromChange(val: string) {
+    this.dateFromFilter.set(val);
+    this.currentPage.set(1);
+  }
+
+  onDateToChange(val: string) {
+    this.dateToFilter.set(val);
     this.currentPage.set(1);
   }
 
@@ -281,6 +341,8 @@ export class AgendaComponent {
     this.searchQuery.set('');
     this.statusFilter.set('ALL');
     this.locationFilter.set('ALL');
+    this.dateFromFilter.set('');
+    this.dateToFilter.set('');
     this.currentPage.set(1);
   }
 }

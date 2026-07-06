@@ -21,6 +21,11 @@ export const adminRoutes: Routes = [
         title: 'Admin - Agenda de Turnos'
       },
       {
+        path: 'pacientes',
+        loadComponent: () => import('./components/pacientes/pacientes.component').then(m => m.PacientesComponent),
+        title: 'Admin - Pacientes'
+      },
+      {
         path: 'disponibilidad',
         loadComponent: () => import('./components/disponibilidad/disponibilidad.component').then(m => m.DisponibilidadComponent),
         title: 'Admin - Configurar Disponibilidad'
