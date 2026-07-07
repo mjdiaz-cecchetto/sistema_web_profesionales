@@ -1,12 +1,29 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, AdminAppointment } from '../../services/admin.service';
+import { DatePickerComponent } from '../../../shared/components/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-agenda',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DatePickerComponent],
+  styles: [`
+    .custom-date-input::-webkit-calendar-picker-indicator {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .custom-date-input::-webkit-datetime-edit {
+      color: #57534e; /* text-stone-600 */
+    }
+  `],
   template: `
     <div class="space-y-6">
       
@@ -16,69 +33,105 @@ import { AdminService, AdminAppointment } from '../../services/admin.service';
           <h1 class="text-2xl font-black text-stone-900 tracking-tight">Agenda de Turnos</h1>
           <p class="text-sm text-stone-500">Visualizá y gestioná las reservas solicitadas por tus pacientes.</p>
         </div>
+        <!-- Botón Nuevo Turno -->
+        <button class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Nuevo Turno
+        </button>
       </div>
 
       <!-- Barra de Filtros y Búsqueda -->
-      <div class="bg-white rounded-2xl border border-stone-200/60 p-5 shadow-sm grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
+      <div class="bg-white rounded-2xl border border-stone-200/60 p-5 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-center">
         <!-- Búsqueda -->
-        <div class="sm:col-span-2 space-y-1">
+        <div class="lg:col-span-2 space-y-1">
           <label class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Buscar Paciente</label>
           <div class="relative">
-            <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" 
+            <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)" 
                    placeholder="Nombre, DNI o email..."
                    class="w-full bg-stone-50 border border-stone-200 rounded-xl pl-10 pr-4 py-2 text-xs focus:border-teal-500 focus:bg-white focus:outline-none transition-all">
             <svg class="w-4 h-4 text-stone-400 absolute left-3.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
           </div>
         </div>
 
+        <!-- Fecha Desde -->
+        <app-date-picker 
+          label="Fecha Desde" 
+          placeholder="Desde..."
+          [value]="dateFromFilter()" 
+          (valueChange)="onDateFromChange($event)">
+        </app-date-picker>
+
+        <!-- Fecha Hasta -->
+        <app-date-picker 
+          label="Fecha Hasta" 
+          placeholder="Hasta..."
+          [value]="dateToFilter()" 
+          (valueChange)="onDateToChange($event)">
+        </app-date-picker>
+
         <!-- Filtro por Estado -->
         <div class="space-y-1">
           <label class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Estado del Turno</label>
-          <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" 
-                  class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:border-teal-500 focus:bg-white focus:outline-none transition-all">
-            <option value="ALL">Todos los estados</option>
-            <option value="CONFIRMED">Confirmado</option>
-            <option value="PENDING">Pendiente</option>
-            <option value="CANCELLED">Cancelado</option>
-          </select>
+          <div class="relative">
+            <select [ngModel]="statusFilter()" (ngModelChange)="onStatusChange($event)" 
+                    class="w-full bg-stone-50 border border-stone-200 rounded-xl pl-10 pr-8 py-2 text-xs focus:border-teal-500 focus:bg-white focus:outline-none transition-all appearance-none text-stone-600 cursor-pointer">
+              <option value="ALL">Todos los estados</option>
+              <option value="CONFIRMED">Confirmado</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="CANCELLED">Cancelado</option>
+            </select>
+            <svg class="w-4 h-4 text-stone-400 absolute left-3.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <svg class="w-4 h-4 text-stone-400 absolute right-3.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
         </div>
 
         <!-- Filtro por Ubicación -->
         <div class="space-y-1">
-          <label class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Lugar de Atención</label>
-          <select [ngModel]="locationFilter()" (ngModelChange)="locationFilter.set($event)" 
-                  class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs focus:border-teal-500 focus:bg-white focus:outline-none transition-all">
-            <option value="ALL">Todas las ubicaciones</option>
-            <option value="Palermo">Consultorio Palermo</option>
-            <option value="Belgrano">Centro Belgrano</option>
-            <option value="Online">Consulta Online</option>
-          </select>
+          <label class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Lugar</label>
+          <div class="relative">
+            <select [ngModel]="locationFilter()" (ngModelChange)="onLocationChange($event)" 
+                    class="w-full bg-stone-50 border border-stone-200 rounded-xl pl-10 pr-8 py-2 text-xs focus:border-teal-500 focus:bg-white focus:outline-none transition-all appearance-none text-stone-600 cursor-pointer">
+              <option value="ALL">Todas las ubic.</option>
+              <option value="Palermo">Palermo</option>
+              <option value="Belgrano">Belgrano</option>
+              <option value="Online">Online</option>
+            </select>
+            <svg class="w-4 h-4 text-stone-400 absolute left-3.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <svg class="w-4 h-4 text-stone-400 absolute right-3.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
         </div>
       </div>
 
       <!-- Listado de Resultados -->
-      <div class="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+      <div class="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden flex flex-col">
         
         <!-- Header Tabla/Lista -->
-        <div class="bg-stone-50/50 px-6 py-4 border-b border-stone-200/60 flex justify-between items-center text-xs font-bold text-stone-400 uppercase tracking-wider">
-          <span>Detalle del Paciente y Cita</span>
-          <span class="hidden sm:inline">Fecha y Hora</span>
+        <div class="bg-stone-50/80 px-6 py-3 border-b border-stone-200/60 flex items-center gap-4 text-[10px] font-bold text-stone-400 uppercase tracking-wider hidden sm:flex">
+          <div class="w-10 shrink-0"></div> <!-- Espacio Avatar -->
+          <div class="flex-1 grid grid-cols-12 gap-4">
+            <div class="col-span-4">Paciente y Servicio</div>
+            <div class="col-span-4">Contacto y Cobertura</div>
+            <div class="col-span-2 text-right">Fecha y Hora</div>
+            <div class="col-span-2 text-right">Acciones</div>
+          </div>
         </div>
 
         <!-- Cuerpo de Citas -->
-        <div *ngIf="filteredAppointments().length > 0; else noResults" class="divide-y divide-stone-100">
-          <div *ngFor="let appt of filteredAppointments()" class="p-6 hover:bg-stone-50/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div *ngIf="filteredAppointments().length > 0; else noResults" class="divide-y divide-stone-100 flex-1">
+          <div *ngFor="let appt of paginatedAppointments()" class="px-6 py-4 hover:bg-stone-50/50 transition-colors flex flex-col sm:flex-row sm:items-center gap-4 group">
             
-            <!-- Datos Paciente y Lugar -->
-            <div class="flex items-start gap-4">
-              <!-- Avatar Iniciales -->
-              <div class="w-10 h-10 rounded-full bg-teal-50 text-teal-700 font-bold text-sm flex items-center justify-center shrink-0 border border-teal-100">
-                {{ getInitials(appt.patientName) }}
-              </div>
+            <!-- Avatar Iniciales -->
+            <div class="w-10 h-10 rounded-full bg-teal-50 text-teal-700 font-bold text-sm flex items-center justify-center shrink-0 border border-teal-100 hidden sm:flex">
+              {{ getInitials(appt.patientName) }}
+            </div>
+            
+            <!-- Datos principales -->
+            <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-y-3 gap-x-4 items-center">
               
-              <div class="space-y-1">
-                <div class="flex items-center gap-2.5">
-                  <h4 class="font-extrabold text-stone-900 text-sm">{{ appt.patientName }}</h4>
+              <!-- Paciente y Servicio (4 cols) -->
+              <div class="sm:col-span-4 space-y-0.5">
+                <div class="flex items-center gap-2">
+                  <h4 class="font-extrabold text-stone-900 text-sm truncate" [title]="appt.patientName">{{ appt.patientName }}</h4>
                   <span [class.bg-emerald-50]="appt.status === 'CONFIRMED'"
                         [class.text-emerald-700]="appt.status === 'CONFIRMED'"
                         [class.border-emerald-200]="appt.status === 'CONFIRMED'"
@@ -88,61 +141,83 @@ import { AdminService, AdminAppointment } from '../../services/admin.service';
                         [class.bg-red-50]="appt.status === 'CANCELLED'"
                         [class.text-red-700]="appt.status === 'CANCELLED'"
                         [class.border-red-200]="appt.status === 'CANCELLED'"
-                        class="px-2 py-0.5 text-[9px] font-bold rounded-full border">
+                        class="px-1.5 py-0.5 text-[9px] font-bold rounded-full border whitespace-nowrap shrink-0">
                     {{ appt.status === 'CONFIRMED' ? 'Confirmado' : appt.status === 'PENDING' ? 'Pendiente' : 'Cancelado' }}
                   </span>
                 </div>
-                
-                <p class="text-xs text-stone-500">
+                <p class="text-[11px] text-stone-500 truncate" [title]="appt.serviceName + ' · ' + appt.location">
                   {{ appt.serviceName }} · <span class="font-medium text-stone-700">{{ appt.location }}</span>
                 </p>
-
-                <!-- Ficha detallada colapsable / siempre visible en agenda -->
-                <div class="pt-2 text-xs space-y-1 text-stone-400 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
-                  <p><span class="font-semibold text-stone-500">DNI:</span> {{ appt.patientDni }}</p>
-                  <p><span class="font-semibold text-stone-500">Teléfono:</span> {{ appt.patientPhone }}</p>
-                  <p class="sm:col-span-2"><span class="font-semibold text-stone-500">Email:</span> {{ appt.patientEmail }}</p>
-                  <p class="sm:col-span-2"><span class="font-semibold text-stone-500">Cobertura:</span> {{ appt.healthInsurance }}</p>
-                  <p *ngIf="appt.notes" class="sm:col-span-2 mt-1.5 bg-stone-50 p-2.5 rounded-lg border border-stone-100 italic text-stone-500">
-                    "{{ appt.notes }}"
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Fecha, Hora y Acciones -->
-            <div class="flex sm:flex-col items-end justify-between sm:justify-center gap-4 shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0">
-              <!-- Info Horario -->
-              <div class="text-left sm:text-right space-y-1">
-                <p class="text-xs text-stone-400 font-bold uppercase tracking-wider">Fecha y Hora</p>
-                <p class="text-sm font-black text-stone-800">{{ formatDate(appt.date) }}</p>
-                <p class="text-xs font-bold text-teal-600">{{ appt.time }} hs</p>
+                <p *ngIf="appt.notes" class="text-[10px] text-amber-600 truncate mt-1 italic" [title]="appt.notes">
+                  <span class="font-semibold">Nota:</span> "{{ appt.notes }}"
+                </p>
               </div>
 
-              <!-- Acciones de Estado -->
-              <div class="flex gap-2">
+              <!-- Contacto y Cobertura (4 cols) -->
+              <div class="sm:col-span-4 text-[11px] text-stone-500 space-y-1">
+                <p class="truncate"><span class="font-semibold text-stone-400">Tel:</span> {{ appt.patientPhone }} <span class="mx-1 hidden sm:inline">•</span> <br class="sm:hidden"/><span class="font-semibold text-stone-400">Email:</span> <span class="truncate">{{ appt.patientEmail }}</span></p>
+                <p class="truncate"><span class="font-semibold text-stone-400">DNI:</span> {{ appt.patientDni }} <span class="mx-1 hidden sm:inline">•</span> <br class="sm:hidden"/><span class="font-semibold text-stone-400">Cob:</span> <span class="font-medium text-stone-600">{{ appt.healthInsurance }}</span></p>
+              </div>
+
+              <!-- Fecha y Hora (2 cols) -->
+              <div class="sm:col-span-2 text-left sm:text-right border-t border-stone-100 sm:border-0 pt-2 sm:pt-0">
+                <p class="text-xs font-black text-stone-800">{{ formatDate(appt.date) }}</p>
+                <p class="text-[11px] font-bold text-teal-600">{{ appt.time }} hs</p>
+              </div>
+
+              <!-- Acciones (2 cols) -->
+              <div class="sm:col-span-2 flex justify-start sm:justify-end gap-1.5 mt-2 sm:mt-0">
                 <button *ngIf="appt.status === 'PENDING'" 
                         (click)="changeStatus(appt.id, 'CONFIRMED')" 
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1.5 rounded text-[10px] font-bold transition-colors shadow-sm w-full sm:w-auto text-center">
                   Confirmar
                 </button>
                 <button *ngIf="appt.status !== 'CANCELLED'" 
                         (click)="changeStatus(appt.id, 'CANCELLED')" 
-                        class="bg-stone-50 hover:bg-red-50 hover:text-red-700 border border-stone-200 hover:border-red-200 text-stone-500 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+                        class="bg-stone-50 hover:bg-red-50 hover:text-red-700 border border-stone-200 hover:border-red-200 text-stone-500 px-2 py-1.5 rounded text-[10px] font-bold transition-colors w-full sm:w-auto text-center">
                   Cancelar
                 </button>
               </div>
+              
             </div>
 
           </div>
         </div>
 
         <ng-template #noResults>
-          <div class="py-16 text-center space-y-2">
+          <div class="py-16 text-center space-y-2 flex-1">
             <p class="text-sm text-stone-400 italic">No se encontraron turnos que coincidan con los filtros aplicados.</p>
             <button (click)="resetFilters()" class="text-xs text-teal-600 font-bold hover:underline">Restablecer filtros</button>
           </div>
         </ng-template>
+
+        <!-- Paginación -->
+        <div *ngIf="totalPages() > 1" class="bg-stone-50/50 px-6 py-3 border-t border-stone-200/60 flex items-center justify-between text-xs">
+          <p class="text-stone-500 hidden sm:block">
+            Mostrando <span class="font-bold text-stone-700">{{ startIndex() }}</span> a 
+            <span class="font-bold text-stone-700">{{ endIndex() }}</span> de 
+            <span class="font-bold text-stone-700">{{ totalItems() }}</span> turnos
+          </p>
+          <p class="text-stone-500 sm:hidden">
+            {{ startIndex() }} - {{ endIndex() }} de {{ totalItems() }}
+          </p>
+          
+          <div class="flex items-center gap-1.5">
+            <button (click)="prevPage()" [disabled]="currentPage() === 1" 
+                    class="px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 hover:text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+              <span class="hidden sm:inline">Anterior</span>
+            </button>
+            <div class="flex items-center px-2 font-bold text-stone-500">
+              Página <span class="text-stone-800 mx-1">{{ currentPage() }}</span> de {{ totalPages() }}
+            </div>
+            <button (click)="nextPage()" [disabled]="currentPage() === totalPages()" 
+                    class="px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 hover:text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold flex items-center gap-1">
+              <span class="hidden sm:inline">Siguiente</span>
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+          </div>
+        </div>
 
       </div>
 
@@ -153,6 +228,12 @@ export class AgendaComponent {
   searchQuery = signal('');
   statusFilter = signal('ALL');
   locationFilter = signal('ALL');
+  dateFromFilter = signal('');
+  dateToFilter = signal('');
+  
+  // Paginación
+  currentPage = signal(1);
+  readonly itemsPerPage = 10;
 
   constructor(private adminService: AdminService) {}
 
@@ -161,6 +242,8 @@ export class AgendaComponent {
     const query = this.searchQuery().toLowerCase().trim();
     const status = this.statusFilter();
     const location = this.locationFilter();
+    const fromDate = this.dateFromFilter();
+    const toDate = this.dateToFilter();
 
     return list.filter(a => {
       // 1. Filtro búsqueda
@@ -175,7 +258,12 @@ export class AgendaComponent {
       // 3. Filtro Ubicación
       const matchesLocation = location === 'ALL' || a.location.includes(location);
 
-      return matchesSearch && matchesStatus && matchesLocation;
+      // 4. Filtro Fechas
+      let matchesDate = true;
+      if (fromDate) matchesDate = matchesDate && a.date >= fromDate;
+      if (toDate) matchesDate = matchesDate && a.date <= toDate;
+
+      return matchesSearch && matchesStatus && matchesLocation && matchesDate;
     }).sort((a, b) => {
       // Ordenar por fecha y hora ascendente (las citas más cercanas primero)
       const dateCompare = a.date.localeCompare(b.date);
@@ -183,6 +271,58 @@ export class AgendaComponent {
       return a.time.localeCompare(b.time);
     });
   });
+
+  // Computed properties para paginación
+  totalPages = computed(() => Math.max(1, Math.ceil(this.filteredAppointments().length / this.itemsPerPage)));
+  
+  paginatedAppointments = computed(() => {
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    return this.filteredAppointments().slice(start, end);
+  });
+
+  totalItems = computed(() => this.filteredAppointments().length);
+  startIndex = computed(() => this.totalItems() === 0 ? 0 : (this.currentPage() - 1) * this.itemsPerPage + 1);
+  endIndex = computed(() => Math.min(this.currentPage() * this.itemsPerPage, this.totalItems()));
+
+  // Handlers para resetear página cuando cambian los filtros
+  onSearchChange(val: string) {
+    this.searchQuery.set(val);
+    this.currentPage.set(1);
+  }
+
+  onStatusChange(val: string) {
+    this.statusFilter.set(val);
+    this.currentPage.set(1);
+  }
+
+  onLocationChange(val: string) {
+    this.locationFilter.set(val);
+    this.currentPage.set(1);
+  }
+
+  onDateFromChange(val: string) {
+    this.dateFromFilter.set(val);
+    this.currentPage.set(1);
+  }
+
+  onDateToChange(val: string) {
+    this.dateToFilter.set(val);
+    this.currentPage.set(1);
+  }
+
+  // Navegación paginación
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+    }
+  }
 
   getInitials(name: string): string {
     const parts = name.split(' ');
@@ -206,5 +346,8 @@ export class AgendaComponent {
     this.searchQuery.set('');
     this.statusFilter.set('ALL');
     this.locationFilter.set('ALL');
+    this.dateFromFilter.set('');
+    this.dateToFilter.set('');
+    this.currentPage.set(1);
   }
 }
