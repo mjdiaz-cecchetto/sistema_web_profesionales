@@ -134,7 +134,7 @@ import { AdminService } from '../../services/admin.service';
         </header>
 
         <!-- Child Views Slot -->
-        <main class="flex-grow p-6 overflow-y-auto z-10 relative bg-stone-50">
+        <main class="flex-grow p-6 overflow-y-auto bg-stone-50">
           <router-outlet></router-outlet>
         </main>
       </div>

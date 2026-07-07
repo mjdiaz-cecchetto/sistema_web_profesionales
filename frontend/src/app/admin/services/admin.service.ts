@@ -443,7 +443,22 @@ export class AdminService {
     this.profile.set(profileData);
   }
 
-  // Appointments Methods
+  // ==========================================
+  // PATIENT MANAGEMENT
+  // ==========================================
+
+  addPatient(patient: Patient) {
+    const current = this.patients();
+    if (!current.find(p => p.dni === patient.dni)) {
+      const updated = [...current, patient];
+      this.savePatientsDirect(updated);
+    }
+  }
+
+  // ==========================================
+  // APPOINTMENT MANAGEMENT
+  // ==========================================
+
   private saveAppointmentsDirect(list: AdminAppointment[]) {
     localStorage.setItem(this.STORAGE_APPOINTMENTS_KEY, JSON.stringify(list));
     this.appointments.set(list);
@@ -458,6 +473,53 @@ export class AdminService {
   updateAppointmentStatus(id: string, status: 'PENDING' | 'CONFIRMED' | 'CANCELLED') {
     const updated = this.appointments().map(a => a.id === id ? { ...a, status } : a);
     this.saveAppointmentsDirect(updated);
+  }
+
+  addRecurringAppointments(baseData: any, recurrence: any) {
+    const newAppts: AdminAppointment[] = [];
+    
+    // Generar el primer turno
+    const firstAppt: AdminAppointment = {
+      ...baseData,
+      id: 'apt-' + Math.floor(Math.random() * 10000000),
+      status: 'CONFIRMED'
+    };
+    newAppts.push(firstAppt);
+
+    if (recurrence) {
+      const freqMap: any = {
+        'weekly': 7,
+        'biweekly': 14,
+        'monthly': 30
+      };
+      const daysToAdd = freqMap[recurrence.frequency] || 7;
+      
+      let currDate = new Date(baseData.date);
+      let count = 1;
+      
+      while (true) {
+        if (recurrence.endType === 'count' && count >= recurrence.count) break;
+        
+        currDate.setDate(currDate.getDate() + daysToAdd);
+        const dateStr = currDate.toISOString().split('T')[0];
+        
+        if (recurrence.endType === 'date' && dateStr > recurrence.endDate) break;
+        
+        newAppts.push({
+          ...baseData,
+          id: 'apt-' + Math.floor(Math.random() * 10000000),
+          date: dateStr,
+          status: 'CONFIRMED'
+        });
+        
+        count++;
+        // Safety break
+        if (count > 50) break;
+      }
+    }
+
+    const current = this.appointments();
+    this.saveAppointmentsDirect([...current, ...newAppts]);
   }
 
   // Availability Methods

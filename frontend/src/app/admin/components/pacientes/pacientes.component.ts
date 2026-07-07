@@ -164,7 +164,7 @@ export class PacientesComponent {
              p.dni.toLowerCase().includes(query) ||
              p.email.toLowerCase().includes(query) ||
              p.telefono.toLowerCase().includes(query);
-    }).sort((a, b) => a.nombre.localeCompare(b.nombre)); // Orden alfabético por defecto
+    }).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '')); // Orden alfabético por defecto
   });
 
   // Computed properties para paginación
@@ -199,6 +199,7 @@ export class PacientesComponent {
   }
 
   getInitials(name: string): string {
+    if (!name) return '';
     const parts = name.split(' ');
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();

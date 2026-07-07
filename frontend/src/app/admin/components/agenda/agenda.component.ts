@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, AdminAppointment } from '../../services/admin.service';
 import { DatePickerComponent } from '../../../shared/components/date-picker/date-picker.component';
+import { ModalComponent } from '../../../shared/components/modal/modal.component';
+import { AppointmentFormComponent } from './appointment-form/appointment-form.component';
 
 @Component({
   selector: 'app-agenda',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePickerComponent],
+  imports: [CommonModule, FormsModule, DatePickerComponent, ModalComponent, AppointmentFormComponent],
   styles: [`
     .custom-date-input::-webkit-calendar-picker-indicator {
       position: absolute;
@@ -34,7 +36,7 @@ import { DatePickerComponent } from '../../../shared/components/date-picker/date
           <p class="text-sm text-stone-500">Visualizá y gestioná las reservas solicitadas por tus pacientes.</p>
         </div>
         <!-- Botón Nuevo Turno -->
-        <button class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2">
+        <button (click)="isModalOpen.set(true)" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-colors flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           Nuevo Turno
         </button>
@@ -222,9 +224,19 @@ import { DatePickerComponent } from '../../../shared/components/date-picker/date
       </div>
 
     </div>
+
+    <!-- Modal Nuevo Turno -->
+    <app-modal
+      [isOpen]="isModalOpen()"
+      title="Nuevo Turno"
+      (closeModal)="isModalOpen.set(false)"
+    >
+      <app-appointment-form (save)="onAppointmentSubmit($event)"></app-appointment-form>
+    </app-modal>
   `
 })
 export class AgendaComponent {
+  isModalOpen = signal(false);
   searchQuery = signal('');
   statusFilter = signal('ALL');
   locationFilter = signal('ALL');
@@ -266,9 +278,9 @@ export class AgendaComponent {
       return matchesSearch && matchesStatus && matchesLocation && matchesDate;
     }).sort((a, b) => {
       // Ordenar por fecha y hora ascendente (las citas más cercanas primero)
-      const dateCompare = a.date.localeCompare(b.date);
+      const dateCompare = (a.date || '').localeCompare(b.date || '');
       if (dateCompare !== 0) return dateCompare;
-      return a.time.localeCompare(b.time);
+      return (a.time || '').localeCompare(b.time || '');
     });
   });
 
@@ -325,6 +337,7 @@ export class AgendaComponent {
   }
 
   getInitials(name: string): string {
+    if (!name) return '';
     const parts = name.split(' ');
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -333,13 +346,23 @@ export class AgendaComponent {
   }
 
   formatDate(dateStr: string): string {
+    if (!dateStr) return '';
     const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
     // Formato local D/M/AAAA
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
   changeStatus(id: string, status: 'CONFIRMED' | 'CANCELLED') {
     this.adminService.updateAppointmentStatus(id, status);
+  }
+
+  onAppointmentSubmit(data: any) {
+    if (data.newPatient) {
+      this.adminService.addPatient(data.newPatient);
+    }
+    this.adminService.addRecurringAppointments(data.appointment, data.recurrence);
+    this.isModalOpen.set(false);
   }
 
   resetFilters() {
