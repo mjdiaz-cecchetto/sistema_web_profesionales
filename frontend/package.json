@@ -4,6 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "api": "json-server --watch db.json --port 3000",
+    "seed": "node seed.js",
+    "dev": "concurrently -n api,web -c yellow,cyan \"npm run api\" \"npm run start\"",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -25,7 +28,9 @@
     "@angular/cli": "^21.2.3",
     "@angular/compiler-cli": "^21.2.0",
     "autoprefixer": "^10.5.2",
+    "concurrently": "^9.2.4",
     "jsdom": "^28.0.0",
+    "json-server": "^0.17.4",
     "postcss": "^8.5.16",
     "prettier": "^3.8.1",
     "tailwindcss": "^3.4.19",

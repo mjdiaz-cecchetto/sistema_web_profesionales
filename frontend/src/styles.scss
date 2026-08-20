@@ -1,4 +1,98 @@
-/* You can add global styles to this file, and also import other style files */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ---- Base global ---- */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  @apply font-sans bg-stone-50 text-stone-700;
+}
+
+/* Scrollbars sutiles (WebKit) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-stone-200 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-stone-300;
+}
+
+/* ---- Componentes reutilizables (estilo flat: blanco, gris y verde pastel) ---- */
+@layer components {
+  /* Tarjeta estándar */
+  .card {
+    @apply bg-white rounded-2xl border border-stone-200;
+  }
+
+  /* Título de sección dentro de una tarjeta */
+  .card-title {
+    @apply font-bold text-stone-800 text-base flex items-center gap-2.5;
+  }
+  .card-title::before {
+    content: '';
+    @apply w-1.5 h-5 rounded-full bg-teal-300 inline-block;
+  }
+
+  /* Botón primario: verde pastel plano */
+  .btn-primary {
+    @apply bg-teal-200 text-teal-900 font-bold rounded-xl px-5 py-2.5 text-sm
+           border border-teal-300 transition-colors duration-150
+           hover:bg-teal-300 active:bg-teal-300
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Botón secundario: blanco con borde gris */
+  .btn-secondary {
+    @apply bg-white text-stone-600 font-bold rounded-xl px-5 py-2.5 text-sm
+           border border-stone-200 transition-colors duration-150
+           hover:border-teal-300 hover:text-teal-800 hover:bg-teal-50;
+  }
+
+  /* Botón fantasma: gris muy suave */
+  .btn-ghost {
+    @apply bg-stone-100 text-stone-600 font-bold rounded-xl px-4 py-2 text-xs
+           border border-stone-200 transition-colors duration-150
+           hover:bg-stone-200;
+  }
+
+  /* Input estándar */
+  .input {
+    @apply w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-sm
+           placeholder:text-stone-400 transition-colors
+           focus:border-teal-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-100;
+  }
+
+  /* Etiqueta de campo */
+  .field-label {
+    @apply text-[11px] font-bold text-stone-500 uppercase tracking-wider;
+  }
+
+  /* Chip de estado (pasteles fijos) */
+  .chip {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full border whitespace-nowrap;
+  }
+  .chip-confirmed { @apply bg-emerald-100 text-emerald-800 border-emerald-200; }
+  .chip-pending   { @apply bg-amber-100 text-amber-800 border-amber-200; }
+  .chip-cancelled { @apply bg-rose-100 text-rose-700 border-rose-200; }
+
+  /* Tab / segmento (sub-vistas) */
+  .segment {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold
+           text-stone-500 border border-transparent transition-colors duration-150
+           hover:text-stone-800;
+  }
+  .segment-active {
+    @apply bg-teal-100 text-teal-900 border-teal-200;
+  }
+}

@@ -3,59 +3,53 @@
 Este documento sirve como un registro vivo del estado del proyecto. Se actualizará periódicamente a medida que se implementen nuevas funcionalidades.
 
 ## 🛠️ Stack Tecnológico
-- **Frontend:** Angular 18 (Standalone Components)
-- **Estilos:** TailwindCSS (diseño minimalista, glassmorphism, responsive)
-- **Backend / Base de Datos:** *(Por definir / Pendiente)*
+- **Frontend:** Angular 21 (Standalone Components, Signals)
+- **Estilos:** TailwindCSS 3 + fuente Plus Jakarta Sans (design system propio: `src/styles.scss` + `tailwind.config.js`)
+- **Base de datos simulada (localhost):** json-server sobre `db.json` en `http://localhost:3000`
+- **Backend definitivo:** Laravel + MySQL *(pendiente — la API local respeta la misma forma de recursos para migrar después)*
+
+## ▶️ Cómo correr el proyecto (desde `frontend/`)
+
+```bash
+npm install        # una sola vez
+npm run dev        # levanta API (localhost:3000) + Angular (localhost:4200) juntos
+```
+
+O por separado: `npm run api` (json-server) y `npm start` (Angular).
+Otros scripts: `npm run seed` regenera `db.json` con datos de ejemplo y fechas relativas a hoy.
 
 ---
 
-## ✅ Lo que tenemos listo (Progreso Actual)
+## ✅ Lo que tenemos listo
 
-### 1. Landing Page (Página Principal B2B)
-Se construyó la página de inicio en la ruta `/` orientada a vender la plataforma a los profesionales, inspirada estética y estructuralmente en herramientas líderes del sector.
-*   **Hero Section:** Propuesta de valor clara ("Agenda, pacientes y turnos online en un solo lugar") con botones de llamado a la acción.
-*   **Sección de Funciones (Features):** Tarjetas explicando la historia clínica privada, la agenda y el link público.
-*   **Demo Visual:** Un mockup atractivo que invita a probar la vista del paciente (`/client`).
-*   **Preguntas Frecuentes (FAQ):** Sistema de acordeón interactivo para resolver dudas comunes.
-*   **Diseño:** Estética limpia, fondos "stone-50", detalles en "teal-600", y desenfoques (*backdrop-blur*) en el navegador superior.
+### 1. API local simulada (json-server)
+- `db.json` con: `profile` (incluye `avatarUrl` y `bannerUrl`), `appointments`, `patients`, `availability`, `blockedDates`, `services`, `healthInsurances`.
+- `seed.js` regenera los datos de ejemplo con fechas relativas al día actual.
+- Toda la app (admin y cliente) lee y escribe contra esta API — **ya no se usa localStorage**.
 
-### 2. Flujo del Paciente (Turnero / Aplicación Cliente)
-Se ha desarrollado completamente la interfaz de usuario para que un paciente pueda reservar un turno. El diseño está optimizado para dispositivos móviles (*Mobile-First*), ofreciendo una experiencia similar a una aplicación nativa.
+### 2. Panel de Administración (`/admin`) — rediseñado
+- **Layout:** sidebar oscuro con acentos teal, aviso con botón "Reintentar" si la API local no responde.
+- **Dashboard:** tarjeta de bienvenida con gradiente, métricas, turnos de hoy con confirmar/cancelar.
+- **Agenda:** filtros (búsqueda, rango de fechas, estado, lugar dinámico), paginación, acciones de estado persistidas en la API.
+- **Pacientes:** búsqueda + paginación; los pacientes nuevos se crean automáticamente al reservar un turno.
+- **Disponibilidad:** horarios semanales + bloqueo de rangos de fechas por calendario (persistido en API).
+- **Mi Perfil Público:** editor completo + **subida de foto de perfil y banner** con vista previa en vivo (imágenes redimensionadas en el navegador y guardadas en la API como base64).
 
-El turnero consta de 4 pasos integrados en un único componente (`AsistenteTurnosComponent`):
+### 3. Página del Paciente (`/client`) — rediseñada
+- Hero con **banner** (o gradiente si no hay banner cargado) y **avatar** superpuesto, datos 100% desde la API (se acabó el perfil hardcodeado).
+- Secciones: sobre mí, áreas de acompañamiento (acordeón), lugares de atención, CTA de reserva, CTA fijo en móvil.
+- **Asistente de turnos (4 pasos):** los horarios se generan desde la disponibilidad real del admin, respetando fechas bloqueadas y turnos ocupados (los cancelados liberan el horario). Los días laborables sin horarios libres se marcan como "Ocupados" (ya no está hardcodeado). La reserva se crea **PENDIENTE** y el profesional la confirma desde el panel. La duración del servicio se usa para calcular la hora de fin.
 
-*   **Paso 1: Selección de Motivo**
-    *   Tarjetas minimalistas para elegir el servicio (ej. "Consulta").
-*   **Paso 2: Disponibilidad (Calendario y Horarios)**
-    *   Calendario interactivo mensual.
-    *   Lógica para identificar días hábiles y fines de semana.
-    *   Visualización de días "Ocupados" (ejemplo en color rojo).
-    *   Selección de turnos en formato de píldoras responsivas.
-*   **Paso 3: Datos Personales y Cobertura**
-    *   Formulario limpio sin bordes pesados.
-    *   Recolección de datos: Nombre, Apellido, Correo, Teléfono, Edad, Sexo.
-    *   Selector dinámico de Obra Social / Prepaga.
-    *   Checkbox de primera consulta y área de notas.
-*   **Paso 4: Confirmación del Turno**
-    *   Pantalla de éxito tipo comprobante.
-    *   Resumen detallado de los datos ingresados y recordatorios para el paciente.
-
-**UX/UI Destacados:**
-- Botones de acción anclados al fondo (*sticky*) en celulares para facilitar el uso con una mano.
-- Encabezado con difuminado semitransparente (*backdrop-blur*) siempre visible.
-- Uso de `Signals` de Angular para una gestión de estado rápida y reactiva.
-- Mockups (datos falsos) integrados en `ClientService` para simular la conexión a la base de datos mientras no haya backend.
+### 4. Correcciones de bugs
+- Cliente y admin compartían claves distintas de localStorage → resuelto al centralizar en la API.
+- Fechas calculadas en UTC (`toISOString`) → ahora en horario local (`src/app/core/date-utils.ts`).
+- Modelos duplicados → unificados en `src/app/core/models.ts`.
+- Eliminados componentes muertos sin rutas: `booking-wizard` y `landing-home` (duplicaban el flujo actual y rompían la compilación).
 
 ---
 
 ## 🚧 Próximos Pasos Sugeridos
-
-*   **Panel de Administración del Profesional (Dashboard):**
-    *   Crear la interfaz donde el profesional iniciará sesión.
-    *   Vista de agenda diaria/semanal.
-    *   Configuración de servicios, duración y obras sociales.
-    *   Configuración de días y horarios de atención.
-*   **Autenticación y Seguridad:**
-    *   Login y Registro para profesionales.
-*   **Backend y Base de Datos:**
-    *   Crear la API (Node.js/NestJS/Spring/etc.) y modelar la base de datos para almacenar servicios, usuarios, turnos reales y configuraciones.
+- **Backend Laravel + MySQL** (stack definitivo): migraciones para professionals, services, patients, appointments, availabilities y blocked_date_ranges; API Resources con la misma forma que `db.json` para que el frontend casi no cambie (solo `environment.apiUrl`).
+- **Autenticación** (Laravel Sanctum) + guard de Angular para proteger `/admin`.
+- CRUD de servicios y precios desde el panel.
+- Acciones reales para "Nuevo Turno" y "Nuevo Paciente" desde el admin.
