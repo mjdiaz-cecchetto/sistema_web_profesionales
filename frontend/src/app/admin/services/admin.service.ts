@@ -8,7 +8,8 @@ import {
   DayAvailability,
   Patient,
   ProfessionalProfile,
-  Service
+  Service,
+  HealthInsurance
 } from '../../core/models';
 
 // Re-export para mantener compatibilidad con los imports existentes de los componentes.
@@ -38,6 +39,7 @@ export class AdminService {
   blockedDates = signal<BlockedDateRange[]>([]);
   patients = signal<Patient[]>([]);
   services = signal<Service[]>([]);
+  healthInsurances = signal<string[]>([]);
 
   loading = signal<boolean>(true);
   /** true si la API local no responde (ej. falta ejecutar `npm run api`). */
@@ -54,7 +56,7 @@ export class AdminService {
     this.loading.set(true);
     this.apiError.set(false);
 
-    let pendientes = 6;
+    let pendientes = 7;
     const done = () => { if (--pendientes === 0) this.loading.set(false); };
     const fail = () => { this.apiError.set(true); done(); };
 
@@ -80,6 +82,10 @@ export class AdminService {
     });
     this.http.get<Service[]>(`${this.api}/services`).subscribe({
       next: list => { this.services.set(list); done(); },
+      error: fail
+    });
+    this.http.get<HealthInsurance[]>(`${this.api}/healthInsurances`).subscribe({
+      next: list => { this.healthInsurances.set(list.map(h => h.name)); done(); },
       error: fail
     });
   }
@@ -152,6 +158,38 @@ export class AdminService {
 
     this.http.patch<Appointment>(`${this.api}/appointments/${id}`, { status }).subscribe({
       error: () => { this.appointments.set(previo); this.apiError.set(true); }
+    });
+  }
+
+  // ---- Pacientes ----
+  /** Da de alta un paciente y actualiza el estado local. */
+  addPatient(datos: Omit<Patient, 'id'>): Promise<Patient | null> {
+    this.saving.set(true);
+    const nuevo: Patient = { ...datos, id: 'pat-' + datos.dni };
+    return new Promise(resolve => {
+      this.http.post<Patient>(`${this.api}/patients`, nuevo).subscribe({
+        next: creado => {
+          this.patients.set([...this.patients(), creado]);
+          this.saving.set(false);
+          resolve(creado);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(null); }
+      });
+    });
+  }
+
+  /** Modifica un paciente existente y actualiza el estado local. */
+  updatePatient(id: string, datos: Partial<Patient>): Promise<boolean> {
+    this.saving.set(true);
+    return new Promise(resolve => {
+      this.http.patch<Patient>(`${this.api}/patients/${id}`, datos).subscribe({
+        next: actualizado => {
+          this.patients.set(this.patients().map(p => (p.id === id ? actualizado : p)));
+          this.saving.set(false);
+          resolve(true);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(false); }
+      });
     });
   }
 

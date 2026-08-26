@@ -1,117 +1,223 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService } from '../../services/admin.service';
-import { formatDMY } from '../../../core/date-utils';
+import { AdminService, Patient } from '../../services/admin.service';
+import { PacienteModalComponent } from '../paciente-modal/paciente-modal.component';
+import { TurnoModalComponent } from '../turno-modal/turno-modal.component';
+import { formatDMY, todayLocal } from '../../../core/date-utils';
+
+type Orden = 'NOMBRE' | 'ALTA_RECIENTE' | 'PROXIMO_TURNO';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PacienteModalComponent, TurnoModalComponent],
+  host: { class: 'block xl:h-full' },
   template: `
-    <div class="space-y-6 animate-fade-in">
+    <div class="xl:h-full flex flex-col gap-3 animate-fade-in min-h-0">
 
-      <!-- Encabezado -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 class="text-2xl font-extrabold text-stone-900 tracking-tight">Pacientes</h1>
-          <p class="text-sm text-stone-500 mt-0.5">Listado de todos tus pacientes registrados en el sistema.</p>
-        </div>
-        <span class="chip !text-[11px] !px-3 !py-1.5 bg-teal-50 text-teal-700 border-teal-200">
-          {{ totalItems() }} en total
-        </span>
+      <!-- Toast flotante -->
+      <div *ngIf="toastMensaje()"
+           class="fixed top-24 left-1/2 -translate-x-1/2 z-[60] bg-emerald-100 border border-emerald-300 text-emerald-900 px-5 py-3 rounded-2xl text-sm font-bold flex items-center gap-2.5 animate-scale-in max-w-[calc(100vw-2rem)]">
+        <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>{{ toastMensaje() }}</span>
+        <button (click)="toastMensaje.set('')" class="text-emerald-500 hover:text-emerald-800 font-black leading-none ml-1">×</button>
       </div>
 
-      <!-- Búsqueda -->
-      <div class="card p-5">
-        <div class="max-w-md space-y-1.5">
-          <label class="field-label">Buscar Paciente</label>
-          <div class="relative">
-            <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)"
-                   placeholder="Nombre, DNI, email o teléfono..."
-                   class="input !pl-10 !py-2 !text-xs">
-            <svg class="w-4 h-4 text-stone-400 absolute left-3.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      <!-- Fila 1: título compacto + Nuevo Paciente -->
+      <div class="flex items-center justify-between gap-2.5 shrink-0">
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg font-extrabold text-stone-800 tracking-tight">Pacientes</h1>
+          <span class="chip !text-[10px] bg-teal-100 text-teal-900 border-teal-200">{{ totalItems() }}</span>
+        </div>
+        <button (click)="abrirAltaPaciente()" class="btn-primary !text-xs !py-2.5 flex items-center justify-center gap-2 shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+          <span class="hidden sm:inline">Nuevo Paciente</span>
+          <span class="sm:hidden">Nuevo</span>
+        </button>
+      </div>
+
+      <!-- Fila 2: búsqueda + botón de filtros -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2 shrink-0">
+        <div class="relative flex-1 sm:max-w-sm">
+          <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)"
+                 placeholder="Buscar por nombre, DNI, email o teléfono..."
+                 class="input !pl-10 !py-2 !text-xs">
+          <svg class="w-4 h-4 text-stone-400 absolute left-3.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button (click)="filtrosAbiertos.set(!filtrosAbiertos())"
+                  [ngClass]="filtrosAbiertos() || filtrosActivosCount() > 0 ? 'bg-teal-100 text-teal-900 border-teal-300' : 'bg-white text-stone-500 border-stone-200 hover:text-teal-800 hover:border-teal-300'"
+                  class="px-3 py-2 rounded-xl text-xs font-bold border transition-colors flex items-center gap-1.5 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filtros
+            <span *ngIf="filtrosActivosCount() > 0" class="bg-white text-teal-900 border border-teal-300 px-1.5 py-0.5 rounded-full text-[9px]">{{ filtrosActivosCount() }}</span>
+          </button>
+
+          <span class="text-[11px] text-stone-400 font-semibold whitespace-nowrap ml-auto sm:ml-0">
+            {{ totalItems() }} {{ totalItems() === 1 ? 'paciente' : 'pacientes' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Panel de filtros -->
+      <div *ngIf="filtrosAbiertos()" class="card p-4 shrink-0 animate-scale-in">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+
+          <div class="space-y-1.5">
+            <label class="field-label">Obra Social</label>
+            <div class="relative">
+              <select [ngModel]="insuranceFilter()" (ngModelChange)="onInsuranceChange($event)"
+                      class="input !py-2 !text-xs appearance-none cursor-pointer !pr-8">
+                <option value="ALL">Todas</option>
+                <option *ngFor="let o of insurances()" [value]="o">{{ o }}</option>
+              </select>
+              <svg class="w-4 h-4 text-stone-400 absolute right-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="field-label">Turnos</label>
+            <div class="relative">
+              <select [ngModel]="turnosFilter()" (ngModelChange)="onTurnosChange($event)"
+                      class="input !py-2 !text-xs appearance-none cursor-pointer !pr-8">
+                <option value="ALL">Todos</option>
+                <option value="CON_PROXIMO">Con próximo turno</option>
+                <option value="SIN_PROXIMO">Sin próximo turno</option>
+              </select>
+              <svg class="w-4 h-4 text-stone-400 absolute right-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="field-label">Ordenar por</label>
+            <div class="relative">
+              <select [ngModel]="orden()" (ngModelChange)="onOrdenChange($event)"
+                      class="input !py-2 !text-xs appearance-none cursor-pointer !pr-8">
+                <option value="NOMBRE">Nombre (A-Z)</option>
+                <option value="ALTA_RECIENTE">Alta más reciente</option>
+                <option value="PROXIMO_TURNO">Próximo turno más cercano</option>
+              </select>
+              <svg class="w-4 h-4 text-stone-400 absolute right-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
           </div>
         </div>
+
+        <div *ngIf="filtrosActivosCount() > 0" class="flex justify-end mt-3">
+          <button (click)="resetFilters()" class="text-xs font-bold text-teal-700 hover:text-teal-800 hover:underline flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            Limpiar filtros
+          </button>
+        </div>
       </div>
 
-      <!-- Listado -->
-      <div class="card overflow-hidden flex flex-col">
+      <!-- ===== Listado (único scroll) ===== -->
+      <div class="card flex-1 min-h-0 flex flex-col overflow-hidden">
 
-        <div class="bg-stone-50/80 px-6 py-3 border-b border-stone-200/70 items-center gap-4 text-[10px] font-bold text-stone-400 uppercase tracking-wider hidden sm:flex">
+        <div class="bg-stone-50 px-6 py-3 border-b border-stone-200 items-center gap-4 text-[10px] font-bold text-stone-400 uppercase tracking-wider hidden lg:flex shrink-0">
           <div class="w-10 shrink-0"></div>
           <div class="flex-1 grid grid-cols-12 gap-4">
-            <div class="col-span-4">Datos del Paciente</div>
-            <div class="col-span-4">Contacto</div>
+            <div class="col-span-3">Datos del Paciente</div>
+            <div class="col-span-3">Contacto</div>
             <div class="col-span-2">Cobertura</div>
-            <div class="col-span-2 text-right">Fecha de Alta</div>
+            <div class="col-span-2">Próximo Turno</div>
+            <div class="col-span-2 text-right">Acciones</div>
           </div>
         </div>
 
-        <div *ngIf="filteredPatients().length > 0; else noResults" class="divide-y divide-stone-100 flex-1">
-          <div *ngFor="let pat of paginatedPatients()"
-               class="px-6 py-4 hover:bg-teal-50/30 transition-colors flex flex-col sm:flex-row sm:items-center gap-4">
+        <div class="flex-1 min-h-0 overflow-y-auto max-h-[60vh] xl:max-h-none">
+          <div *ngIf="filteredPatients().length > 0; else noResults" class="divide-y divide-stone-100">
+            <div *ngFor="let pat of paginatedPatients()"
+                 class="px-4 sm:px-6 py-3.5 hover:bg-teal-50/60 transition-colors flex flex-col lg:flex-row lg:items-center gap-3">
 
-            <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-700 font-extrabold text-sm items-center justify-center shrink-0 border border-teal-100 hidden sm:flex">
-              {{ getInitials(pat.nombre) }}
-            </div>
-
-            <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-y-3 gap-x-4 items-center">
-
-              <div class="sm:col-span-4 space-y-0.5">
-                <h4 class="font-extrabold text-stone-900 text-sm truncate" [title]="pat.nombre">{{ pat.nombre }}</h4>
-                <p class="text-[11px] text-stone-500 truncate">DNI: <span class="font-semibold text-stone-700">{{ pat.dni }}</span></p>
+              <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-800 font-extrabold text-sm items-center justify-center shrink-0 border border-teal-200 hidden lg:flex">
+                {{ getInitials(pat.nombre) }}
               </div>
 
-              <div class="sm:col-span-4 text-[11px] text-stone-500 space-y-1">
-                <p class="truncate"><span class="font-semibold text-stone-400">Tel:</span> {{ pat.telefono }}</p>
-                <p class="truncate"><span class="font-semibold text-stone-400">Email:</span> {{ pat.email }}</p>
-              </div>
+              <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-y-2.5 gap-x-4 items-center">
 
-              <div class="sm:col-span-2 text-[11px]">
-                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-stone-100 text-stone-700 font-semibold truncate max-w-full">
-                  {{ pat.obraSocial }}
-                </span>
-              </div>
+                <div class="lg:col-span-3 space-y-0.5">
+                  <h4 class="font-extrabold text-stone-800 text-sm truncate" [title]="pat.nombre">{{ pat.nombre }}</h4>
+                  <p class="text-[11px] text-stone-500 truncate">DNI: <span class="font-semibold text-stone-600">{{ pat.dni }}</span></p>
+                </div>
 
-              <div class="sm:col-span-2 text-left sm:text-right border-t border-stone-100 sm:border-0 pt-2 sm:pt-0">
-                <p class="text-xs font-extrabold text-stone-800">{{ formatDate(pat.fechaAlta) }}</p>
-              </div>
+                <div class="lg:col-span-3 text-[11px] text-stone-500 space-y-0.5">
+                  <p class="truncate"><span class="font-semibold text-stone-400">Tel:</span> {{ pat.telefono }}</p>
+                  <p class="truncate"><span class="font-semibold text-stone-400">Email:</span> {{ pat.email }}</p>
+                </div>
 
+                <div class="lg:col-span-2 text-[11px]">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-stone-100 text-stone-600 font-semibold truncate max-w-full">
+                    {{ pat.obraSocial }}
+                  </span>
+                </div>
+
+                <div class="lg:col-span-2">
+                  <ng-container *ngIf="proximoTurnoDe(pat.dni) as prox; else sinProx">
+                    <p class="text-xs font-extrabold text-stone-700">{{ formatDate(prox.date) }}</p>
+                    <p class="text-[11px] font-bold text-teal-700">{{ prox.time }} hs
+                      <span class="chip !text-[8px] ml-1"
+                            [class.chip-confirmed]="prox.status === 'CONFIRMED'"
+                            [class.chip-pending]="prox.status === 'PENDING'">
+                        {{ prox.status === 'CONFIRMED' ? 'Conf.' : 'Pend.' }}
+                      </span>
+                    </p>
+                  </ng-container>
+                  <ng-template #sinProx>
+                    <p class="text-[11px] text-stone-400 italic">Sin turnos próximos</p>
+                  </ng-template>
+                </div>
+
+                <div class="lg:col-span-2 flex justify-stretch lg:justify-end gap-1.5">
+                  <button (click)="abrirTurnoRapido(pat)"
+                          title="Agendar turno"
+                          class="bg-teal-100 hover:bg-teal-200 text-teal-900 border border-teal-200 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1 flex-1 lg:flex-initial justify-center">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Turno
+                  </button>
+                  <button (click)="abrirEdicionPaciente(pat)"
+                          title="Editar paciente"
+                          class="bg-white hover:bg-teal-50 hover:text-teal-800 border border-stone-200 hover:border-teal-300 text-stone-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1 flex-1 lg:flex-initial justify-center">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    Editar
+                  </button>
+                </div>
+
+              </div>
             </div>
           </div>
+
+          <ng-template #noResults>
+            <div class="py-14 text-center space-y-3">
+              <div class="w-14 h-14 mx-auto rounded-2xl bg-stone-100 flex items-center justify-center">
+                <svg class="w-7 h-7 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              </div>
+              <p class="text-sm text-stone-500">No se encontraron pacientes con esos filtros.</p>
+              <button (click)="resetFilters()" class="text-xs text-teal-700 font-bold hover:underline">Limpiar filtros</button>
+            </div>
+          </ng-template>
         </div>
-
-        <ng-template #noResults>
-          <div class="py-16 text-center space-y-3 flex-1">
-            <div class="w-14 h-14 mx-auto rounded-2xl bg-stone-100 flex items-center justify-center">
-              <svg class="w-7 h-7 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            </div>
-            <p class="text-sm text-stone-500">No se encontraron pacientes con esa búsqueda.</p>
-            <button (click)="resetFilters()" class="text-xs text-teal-600 font-bold hover:underline">Limpiar búsqueda</button>
-          </div>
-        </ng-template>
 
         <!-- Paginación -->
-        <div *ngIf="totalPages() > 1" class="bg-stone-50/60 px-6 py-3 border-t border-stone-200/70 flex items-center justify-between text-xs">
+        <div *ngIf="totalPages() > 1" class="bg-stone-50 px-4 sm:px-6 py-2.5 border-t border-stone-200 flex items-center justify-between text-xs shrink-0">
           <p class="text-stone-500 hidden sm:block">
-            Mostrando <span class="font-bold text-stone-700">{{ startIndex() }}</span> a
-            <span class="font-bold text-stone-700">{{ endIndex() }}</span> de
-            <span class="font-bold text-stone-700">{{ totalItems() }}</span> pacientes
+            <span class="font-bold text-stone-700">{{ startIndex() }}</span>–<span class="font-bold text-stone-700">{{ endIndex() }}</span>
+            de <span class="font-bold text-stone-700">{{ totalItems() }}</span>
           </p>
-          <p class="text-stone-500 sm:hidden">{{ startIndex() }} - {{ endIndex() }} de {{ totalItems() }}</p>
+          <p class="text-stone-500 sm:hidden">{{ startIndex() }}–{{ endIndex() }} de {{ totalItems() }}</p>
 
           <div class="flex items-center gap-1.5">
             <button (click)="prevPage()" [disabled]="currentPage() === 1"
-                    class="px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-600 hover:text-teal-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold flex items-center gap-1">
+                    class="px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-600 hover:text-teal-800 hover:bg-teal-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-semibold flex items-center gap-1">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
               <span class="hidden sm:inline">Anterior</span>
             </button>
             <div class="flex items-center px-2 font-bold text-stone-500">
-              Página <span class="text-stone-800 mx-1">{{ currentPage() }}</span> de {{ totalPages() }}
+              <span class="text-stone-800 mx-1">{{ currentPage() }}</span> / {{ totalPages() }}
             </div>
             <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
-                    class="px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-600 hover:text-teal-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold flex items-center gap-1">
+                    class="px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-600 hover:text-teal-800 hover:bg-teal-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-semibold flex items-center gap-1">
               <span class="hidden sm:inline">Siguiente</span>
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
             </button>
@@ -119,6 +225,21 @@ import { formatDMY } from '../../../core/date-utils';
         </div>
 
       </div>
+
+      <!-- Modal Paciente (alta / edición) -->
+      <app-paciente-modal *ngIf="modalPacienteAbierto()"
+                          [pacienteEditar]="pacienteEnEdicion()"
+                          (cerrar)="cerrarModalPaciente()"
+                          (guardado)="onPacienteGuardado($event)">
+      </app-paciente-modal>
+
+      <!-- Modal Turno rápido (paciente precargado) -->
+      <app-turno-modal *ngIf="modalTurnoAbierto()"
+                       [pacienteInicial]="pacienteParaTurno()"
+                       [fechaInicial]="hoy"
+                       (cerrar)="modalTurnoAbierto.set(false)"
+                       (creado)="onTurnosCreados($event)">
+      </app-turno-modal>
     </div>
   `
 })
@@ -126,20 +247,86 @@ export class PacientesComponent {
   private adminService = inject(AdminService);
 
   searchQuery = signal('');
+  insuranceFilter = signal('ALL');
+  turnosFilter = signal<'ALL' | 'CON_PROXIMO' | 'SIN_PROXIMO'>('ALL');
+  orden = signal<Orden>('NOMBRE');
+  filtrosAbiertos = signal(false);
+
   currentPage = signal(1);
-  readonly itemsPerPage = 10;
+  readonly itemsPerPage = 8;
+
+  // Modales
+  modalPacienteAbierto = signal(false);
+  pacienteEnEdicion = signal<Patient | null>(null);
+  modalTurnoAbierto = signal(false);
+  pacienteParaTurno = signal<Patient | null>(null);
+  toastMensaje = signal('');
+
+  readonly hoy = todayLocal();
+
+  insurances = computed(() => [...new Set(this.adminService.patients().map(p => p.obraSocial))].sort());
+
+  /** Mapa DNI → próximo turno activo (hoy en adelante). */
+  private proximosTurnos = computed(() => {
+    const hoy = todayLocal();
+    const map = new Map<string, { date: string; time: string; status: string }>();
+    const activos = this.adminService.appointments()
+      .filter(a => a.status !== 'CANCELLED' && a.date >= hoy)
+      .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    for (const a of activos) {
+      if (!map.has(a.patientDni)) map.set(a.patientDni, { date: a.date, time: a.time, status: a.status });
+    }
+    return map;
+  });
+
+  proximoTurnoDe(dni: string) {
+    return this.proximosTurnos().get(dni) ?? null;
+  }
+
+  filtrosActivosCount = computed(() => {
+    let n = 0;
+    if (this.insuranceFilter() !== 'ALL') n++;
+    if (this.turnosFilter() !== 'ALL') n++;
+    if (this.orden() !== 'NOMBRE') n++;
+    return n;
+  });
 
   filteredPatients = computed(() => {
-    const list = this.adminService.patients();
     const query = this.searchQuery().toLowerCase().trim();
+    const insurance = this.insuranceFilter();
+    const turnos = this.turnosFilter();
+    const proximos = this.proximosTurnos();
 
-    return list.filter(p => {
-      if (!query) return true;
-      return p.nombre.toLowerCase().includes(query) ||
-             p.dni.toLowerCase().includes(query) ||
-             p.email.toLowerCase().includes(query) ||
-             p.telefono.toLowerCase().includes(query);
-    }).sort((a, b) => a.nombre.localeCompare(b.nombre));
+    const lista = this.adminService.patients().filter(p => {
+      const matchesSearch = !query ||
+        p.nombre.toLowerCase().includes(query) ||
+        p.dni.toLowerCase().includes(query) ||
+        p.email.toLowerCase().includes(query) ||
+        p.telefono.toLowerCase().includes(query);
+
+      const matchesInsurance = insurance === 'ALL' || p.obraSocial === insurance;
+
+      const tieneProximo = proximos.has(p.dni);
+      const matchesTurnos = turnos === 'ALL' ||
+        (turnos === 'CON_PROXIMO' && tieneProximo) ||
+        (turnos === 'SIN_PROXIMO' && !tieneProximo);
+
+      return matchesSearch && matchesInsurance && matchesTurnos;
+    });
+
+    const orden = this.orden();
+    return lista.sort((a, b) => {
+      if (orden === 'ALTA_RECIENTE') return (b.fechaAlta || '').localeCompare(a.fechaAlta || '');
+      if (orden === 'PROXIMO_TURNO') {
+        const pa = proximos.get(a.dni);
+        const pb = proximos.get(b.dni);
+        if (pa && pb) return (pa.date + pa.time).localeCompare(pb.date + pb.time);
+        if (pa) return -1;
+        if (pb) return 1;
+        return a.nombre.localeCompare(b.nombre);
+      }
+      return a.nombre.localeCompare(b.nombre);
+    });
   });
 
   totalPages = computed(() => Math.max(1, Math.ceil(this.filteredPatients().length / this.itemsPerPage)));
@@ -154,9 +341,55 @@ export class PacientesComponent {
   endIndex = computed(() => Math.min(this.currentPage() * this.itemsPerPage, this.totalItems()));
 
   onSearchChange(val: string) { this.searchQuery.set(val); this.currentPage.set(1); }
+  onInsuranceChange(val: string) { this.insuranceFilter.set(val); this.currentPage.set(1); }
+  onTurnosChange(val: 'ALL' | 'CON_PROXIMO' | 'SIN_PROXIMO') { this.turnosFilter.set(val); this.currentPage.set(1); }
+  onOrdenChange(val: Orden) { this.orden.set(val); this.currentPage.set(1); }
+
   prevPage() { if (this.currentPage() > 1) this.currentPage.update(p => p - 1); }
   nextPage() { if (this.currentPage() < this.totalPages()) this.currentPage.update(p => p + 1); }
 
+  // ---- Modales ----
+  abrirAltaPaciente() {
+    this.pacienteEnEdicion.set(null);
+    this.toastMensaje.set('');
+    this.modalPacienteAbierto.set(true);
+  }
+
+  abrirEdicionPaciente(pac: Patient) {
+    this.pacienteEnEdicion.set(pac);
+    this.toastMensaje.set('');
+    this.modalPacienteAbierto.set(true);
+  }
+
+  cerrarModalPaciente() {
+    this.modalPacienteAbierto.set(false);
+    this.pacienteEnEdicion.set(null);
+  }
+
+  onPacienteGuardado(evento: { paciente: Patient; esNuevo: boolean }) {
+    this.cerrarModalPaciente();
+    this.mostrarToast(evento.esNuevo
+      ? `${evento.paciente.nombre} fue dado de alta con éxito.`
+      : `Los datos de ${evento.paciente.nombre} se actualizaron con éxito.`);
+  }
+
+  abrirTurnoRapido(pac: Patient) {
+    this.pacienteParaTurno.set(pac);
+    this.toastMensaje.set('');
+    this.modalTurnoAbierto.set(true);
+  }
+
+  onTurnosCreados(cantidad: number) {
+    this.modalTurnoAbierto.set(false);
+    this.mostrarToast(cantidad === 1 ? 'Turno creado con éxito.' : `Se crearon ${cantidad} turnos de la serie con éxito.`);
+  }
+
+  private mostrarToast(mensaje: string) {
+    this.toastMensaje.set(mensaje);
+    setTimeout(() => this.toastMensaje.set(''), 5000);
+  }
+
+  // ---- Helpers ----
   getInitials(name: string): string {
     const parts = name.split(' ');
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -167,6 +400,9 @@ export class PacientesComponent {
 
   resetFilters() {
     this.searchQuery.set('');
+    this.insuranceFilter.set('ALL');
+    this.turnosFilter.set('ALL');
+    this.orden.set('NOMBRE');
     this.currentPage.set(1);
   }
 }

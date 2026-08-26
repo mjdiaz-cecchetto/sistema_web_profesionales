@@ -620,12 +620,5 @@
       "fechaAlta": "2026-08-03"
     }
   ],
-  "blockedDates": [
-    {
-      "id": "blk-mt0ptitu8",
-      "startDate": "2026-08-19",
-      "endDate": "2026-08-21",
-      "reason": "Licencia"
-    }
-  ]
+  "blockedDates": []
 }
