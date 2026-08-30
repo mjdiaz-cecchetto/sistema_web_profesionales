@@ -1,55 +1,59 @@
-# Resumen del Proyecto: Sistema Web para Profesionales
+# Sistema Web para Profesionales — Estado del Proyecto
 
-Este documento sirve como un registro vivo del estado del proyecto. Se actualizará periódicamente a medida que se implementen nuevas funcionalidades.
+Registro vivo del estado del proyecto. Última actualización: 30/08/2026.
 
-## 🛠️ Stack Tecnológico
-- **Frontend:** Angular 21 (Standalone Components, Signals)
-- **Estilos:** TailwindCSS 3 + fuente Plus Jakarta Sans (design system propio: `src/styles.scss` + `tailwind.config.js`)
-- **Base de datos simulada (localhost):** json-server sobre `db.json` en `http://localhost:3000`
-- **Backend definitivo:** Laravel + MySQL *(pendiente — la API local respeta la misma forma de recursos para migrar después)*
+## 🛠️ Stack
+- **Frontend:** Angular 21 (standalone, signals) + TailwindCSS 3 · diseño flat pastel (blanco/gris/verde)
+- **Base de datos simulada:** json-server sobre `frontend/db.json` en `localhost:3000`
+- **Backend definitivo (próximo paso):** Laravel + MySQL · multi-profesional (SaaS) · tablas y atributos en español · auth con Sanctum
 
-## ▶️ Cómo correr el proyecto (desde `frontend/`)
-
+## ▶️ Cómo correr (desde `frontend/`)
 ```bash
-npm install        # una sola vez
-npm run dev        # levanta API (localhost:3000) + Angular (localhost:4200) juntos
+npm install      # una sola vez
+npm run dev      # API (localhost:3000) + web (localhost:4200)
+npm run seed     # regenera db.json con datos de ejemplo (¡pisa los datos!)
 ```
 
-O por separado: `npm run api` (json-server) y `npm start` (Angular).
-Otros scripts: `npm run seed` regenera `db.json` con datos de ejemplo y fechas relativas a hoy.
+---
+
+## ✅ Lo que está hecho y verificado
+
+### Panel del profesional (`/admin`)
+- **Dashboard** compacto a pantalla completa: métricas, turnos de hoy con aceptar/cancelar, atajos.
+- **Agenda · Lista:** búsqueda y estado siempre visibles, filtros avanzados tras botón (rango rápido, fechas, servicio, obra social, lugar), paginador, editar / confirmar / cancelar por fila y botón WhatsApp por turno.
+- **Agenda · Calendario:** mes con indicadores por estado, filtro por estado, panel del día con scroll propio, filtro por nombre/DNI, alta y edición de turnos.
+- **Modal de turno (compartido):** paciente con buscador + alta rápida inline, selector interactivo de fecha (mini calendario con disponibilidad real) y hora (chips, ocupados tachados, hora manual), estado inicial, notas, **series repetidas** (semanal / quincenal / mensual, N sesiones) con vista previa por fecha. Reglas: un horario = un turno activo · un paciente = un turno activo por día · en series se pueden omitir fechas con conflicto.
+- **Servicios:** CRUD completo (nombre único, descripción, duración, precio opcional, activo/inactivo, eliminar con aviso de uso). Los inactivos no se ofrecen para turnos nuevos.
+- **Mis Pacientes:** alta/edición con validaciones (DNI único e inmutable), historial completo por paciente, turno rápido con paciente precargado, filtros (obra social, con/sin próximo turno, orden), columna "Próximo turno".
+- **Disponibilidad:** horarios semanales + bloqueo de rangos (vacaciones/feriados) por calendario.
+- **Mi Perfil Público:** nombre, título, frase, bio, modalidad, WhatsApp, consultorios, especialidades y **subida de foto y banner** con vista previa.
+
+### Página del paciente (`/client`)
+- **Landing animada:** héroe con banner + avatar, entradas escalonadas, reveals al scroll, barra de progreso, navbar reactiva, servicios con **precios**, horarios de atención con día "HOY", ubicaciones, CTA con halo; en mobile: chips de navegación, carrusel de servicios deslizable, doble CTA fijo (Agendar / Mi turno).
+- **Asistente de turnos (4 pasos):** disponibilidad real (horario semanal − bloqueos − ocupados), precios visibles, reserva queda **Pendiente**, comprobante por **WhatsApp** con mensaje pre-armado.
+- **Gestionar mi turno (`/client/mis-turnos`):** búsqueda por **DNI**, próximos turnos con **reprogramar** (mini agenda + horarios al lado, vuelve a Pendiente con trazabilidad) y **Cancelar Turno**, historial anterior, aviso al profesional por WhatsApp.
+
+### Técnica
+- Modelos unificados en `core/models.ts` · fechas en horario local (`core/date-utils.ts`) · WhatsApp en `core/whatsapp.ts` · directiva `reveal` reutilizable · todo persiste vía HTTP en la API local.
 
 ---
 
-## ✅ Lo que tenemos listo
+## 🚧 Lo que falta
 
-### 1. API local simulada (json-server)
-- `db.json` con: `profile` (incluye `avatarUrl` y `bannerUrl`), `appointments`, `patients`, `availability`, `blockedDates`, `services`, `healthInsurances`.
-- `seed.js` regenera los datos de ejemplo con fechas relativas al día actual.
-- Toda la app (admin y cliente) lee y escribe contra esta API — **ya no se usa localStorage**.
+### Etapa Backend (siguiente)
+1. **Laravel + MySQL** multi-profesional, tablas en español (`usuarios`, `perfiles`, `pacientes`, `turnos`, `servicios`, `disponibilidades`, `bloqueos_fechas`, `obras_sociales`, `lugares_atencion`, `especialidades`, `series_turnos`).
+2. **Registro/Login** del profesional (Sanctum) + guard en `/admin` + pantalla de login ("Cerrar Sesión" hoy es decorativo).
+3. **Validaciones server-side** de las reglas de negocio (hoy solo las valida el frontend).
+4. **Notificaciones automáticas**: WhatsApp (Business API) y **email** al confirmar/reprogramar/cancelar (hoy es manual vía wa.me).
+5. Subida real de imágenes a storage (hoy base64 en db.json).
+6. Página pública por **slug** (`/p/{profesional}`) para el multi-tenant.
 
-### 2. Panel de Administración (`/admin`) — rediseñado
-- **Layout:** sidebar oscuro con acentos teal, aviso con botón "Reintentar" si la API local no responde.
-- **Dashboard:** tarjeta de bienvenida con gradiente, métricas, turnos de hoy con confirmar/cancelar.
-- **Agenda:** filtros (búsqueda, rango de fechas, estado, lugar dinámico), paginación, acciones de estado persistidas en la API.
-- **Pacientes:** búsqueda + paginación; los pacientes nuevos se crean automáticamente al reservar un turno.
-- **Disponibilidad:** horarios semanales + bloqueo de rangos de fechas por calendario (persistido en API).
-- **Mi Perfil Público:** editor completo + **subida de foto de perfil y banner** con vista previa en vivo (imágenes redimensionadas en el navegador y guardadas en la API como base64).
+### Funcional pendiente (frontend)
+- Estado **"Completado / Asistió / No asistió"** para turnos pasados (y métricas reales en dashboard).
+- Gestión de **series como grupo** (cancelar/reprogramar toda la serie).
+- Rediseño de la **landing B2B** (`/`) al nivel del resto.
+- Requisitos de reprogramación/cancelación (ej. mínimo 24 hs antes) — hoy sin restricción.
 
-### 3. Página del Paciente (`/client`) — rediseñada
-- Hero con **banner** (o gradiente si no hay banner cargado) y **avatar** superpuesto, datos 100% desde la API (se acabó el perfil hardcodeado).
-- Secciones: sobre mí, áreas de acompañamiento (acordeón), lugares de atención, CTA de reserva, CTA fijo en móvil.
-- **Asistente de turnos (4 pasos):** los horarios se generan desde la disponibilidad real del admin, respetando fechas bloqueadas y turnos ocupados (los cancelados liberan el horario). Los días laborables sin horarios libres se marcan como "Ocupados" (ya no está hardcodeado). La reserva se crea **PENDIENTE** y el profesional la confirma desde el panel. La duración del servicio se usa para calcular la hora de fin.
-
-### 4. Correcciones de bugs
-- Cliente y admin compartían claves distintas de localStorage → resuelto al centralizar en la API.
-- Fechas calculadas en UTC (`toISOString`) → ahora en horario local (`src/app/core/date-utils.ts`).
-- Modelos duplicados → unificados en `src/app/core/models.ts`.
-- Eliminados componentes muertos sin rutas: `booking-wizard` y `landing-home` (duplicaban el flujo actual y rompían la compilación).
-
----
-
-## 🚧 Próximos Pasos Sugeridos
-- **Backend Laravel + MySQL** (stack definitivo): migraciones para professionals, services, patients, appointments, availabilities y blocked_date_ranges; API Resources con la misma forma que `db.json` para que el frontend casi no cambie (solo `environment.apiUrl`).
-- **Autenticación** (Laravel Sanctum) + guard de Angular para proteger `/admin`.
-- CRUD de servicios y precios desde el panel.
-- Acciones reales para "Nuevo Turno" y "Nuevo Paciente" desde el admin.
+### Limpieza
+- Borrar carpetas `client/components/booking-wizard` y `landing-home` (stubs vacíos).
+- Tests automatizados (unitarios/E2E).
