@@ -481,6 +481,34 @@
       "location": "Consultorio Palermo",
       "healthInsurance": "Swiss Medical",
       "id": "apt-mt0s7tt8-0-239"
+    },
+    {
+      "id": "apt-mtg53pii426",
+      "serviceName": "Consulta",
+      "patientName": "Matias Joaquin Diaz",
+      "patientEmail": "matidiaz10.md@gmail.com",
+      "patientPhone": "3853115268",
+      "patientDni": "39583171",
+      "date": "2026-08-31",
+      "time": "10:00",
+      "status": "CANCELLED",
+      "notes": "[Cancelado por el paciente]",
+      "location": "Consultorio Palermo",
+      "healthInsurance": "OSDE"
+    },
+    {
+      "id": "apt-mtg5b221541",
+      "serviceName": "Consulta",
+      "patientName": "Matias Diaz",
+      "patientEmail": "matidiaz10.md@gmail.com",
+      "patientPhone": "3853115268",
+      "patientDni": "39583171",
+      "date": "2026-08-31",
+      "time": "10:00",
+      "status": "CONFIRMED",
+      "notes": "",
+      "location": "Consultorio Palermo",
+      "healthInsurance": "OSDE"
     }
   ],
   "patients": [
@@ -618,6 +646,15 @@
       "dni": "42123456",
       "obraSocial": "Swiss Medical",
       "fechaAlta": "2026-08-03"
+    },
+    {
+      "id": "pat-39583171",
+      "nombre": "Matias Joaquin Diaz",
+      "email": "matidiaz10.md@gmail.com",
+      "telefono": "3853115268",
+      "dni": "39583171",
+      "obraSocial": "OSDE",
+      "fechaAlta": "2026-08-31"
     }
   ],
   "blockedDates": []

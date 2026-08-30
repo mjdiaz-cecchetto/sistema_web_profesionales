@@ -20,6 +20,7 @@ const db = {
     titulo: 'Psicología Clínica · Adultos',
     avatarUrl: 'dra-elena.jpg',
     bannerUrl: '',
+    whatsapp: '5491123456789',
     frasePrincipal: 'Un espacio seguro para tu bienestar emocional y mental',
     biografia:
       'Soy psicóloga clínica con más de 10 años de experiencia, especializada en Terapia Cognitivo-Conductual (TCC). Mi objetivo es brindarte un espacio seguro, empático y libre de prejuicios donde podamos trabajar juntos para entender tus emociones, superar de la mejor manera tus dificultades y mejorar tu calidad de vida.',

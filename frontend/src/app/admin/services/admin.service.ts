@@ -193,6 +193,53 @@ export class AdminService {
     });
   }
 
+  // ---- Servicios ----
+  /** Da de alta un servicio. */
+  addService(datos: Omit<Service, 'id'>): Promise<Service | null> {
+    this.saving.set(true);
+    const nuevo: Service = { ...datos, id: 'srv-' + Date.now().toString(36) };
+    return new Promise(resolve => {
+      this.http.post<Service>(`${this.api}/services`, nuevo).subscribe({
+        next: creado => {
+          this.services.set([...this.services(), creado]);
+          this.saving.set(false);
+          resolve(creado);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(null); }
+      });
+    });
+  }
+
+  /** Modifica un servicio (incluye activar/desactivar). */
+  updateService(id: string, datos: Partial<Service>): Promise<boolean> {
+    this.saving.set(true);
+    return new Promise(resolve => {
+      this.http.patch<Service>(`${this.api}/services/${id}`, datos).subscribe({
+        next: actualizado => {
+          this.services.set(this.services().map(s => (s.id === id ? actualizado : s)));
+          this.saving.set(false);
+          resolve(true);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(false); }
+      });
+    });
+  }
+
+  /** Elimina un servicio definitivamente (los turnos ya creados conservan su nombre). */
+  deleteService(id: string): Promise<boolean> {
+    this.saving.set(true);
+    return new Promise(resolve => {
+      this.http.delete(`${this.api}/services/${id}`).subscribe({
+        next: () => {
+          this.services.set(this.services().filter(s => s.id !== id));
+          this.saving.set(false);
+          resolve(true);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(false); }
+      });
+    });
+  }
+
   // ---- Disponibilidad semanal ----
   saveAvailability(days: DayAvailability[]): void {
     this.saving.set(true);

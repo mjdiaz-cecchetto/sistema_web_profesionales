@@ -110,10 +110,18 @@ import { AdminService, AdminProfile } from '../../services/admin.service';
             <textarea formControlName="biografia" rows="4" class="input resize-none"></textarea>
           </div>
 
-          <div class="space-y-1.5">
-            <label class="field-label">Modalidad de Atención</label>
-            <input type="text" formControlName="modalidad" class="input"
-                   placeholder="Ej. Atención presencial en Palermo y consultas online.">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="field-label">Modalidad de Atención</label>
+              <input type="text" formControlName="modalidad" class="input"
+                     placeholder="Ej. Atención presencial en Palermo y consultas online.">
+            </div>
+            <div class="space-y-1.5">
+              <label class="field-label">WhatsApp (para recibir avisos de pacientes)</label>
+              <input type="text" formControlName="whatsapp" class="input"
+                     placeholder="Ej. 5491123456789 (con código de país)">
+              <p class="text-[10px] text-stone-400">Los pacientes te envían el comprobante y los avisos de cambios a este número.</p>
+            </div>
           </div>
         </div>
 
@@ -261,6 +269,7 @@ export class PerfilEditorComponent {
       avatarUrl: [prof.avatarUrl],
       bannerUrl: [prof.bannerUrl || ''],
       modalidad: [prof.modalidad],
+      whatsapp: [prof.whatsapp || ''],
       direcciones: this.fb.array([]),
       areas: this.fb.array([])
     });

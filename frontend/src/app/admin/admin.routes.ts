@@ -31,6 +31,11 @@ export const adminRoutes: Routes = [
         title: 'Admin - Agenda · Calendario'
       },
       {
+        path: 'servicios',
+        loadComponent: () => import('./components/servicios/servicios.component').then(m => m.ServiciosComponent),
+        title: 'Admin - Servicios'
+      },
+      {
         path: 'pacientes',
         loadComponent: () => import('./components/pacientes/pacientes.component').then(m => m.PacientesComponent),
         title: 'Admin - Pacientes'

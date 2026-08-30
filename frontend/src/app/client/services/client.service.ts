@@ -22,6 +22,7 @@ export interface Professional {
   bio: string;
   avatarUrl: string;
   bannerUrl: string;
+  whatsapp: string;
   phrase: string;
   modality: string;
   specialties: string[];
@@ -52,6 +53,7 @@ export class ClientService {
         bio: p.biografia,
         avatarUrl: p.avatarUrl,
         bannerUrl: p.bannerUrl,
+        whatsapp: p.whatsapp || '',
         phrase: p.frasePrincipal,
         modality: p.modalidad,
         specialties: (p.areas ?? []).map(a => a.nombre)
@@ -59,8 +61,18 @@ export class ClientService {
     );
   }
 
+  /** Disponibilidad semanal (para mostrar horarios de atención en la página pública). */
+  getWeeklyAvailability(): Observable<DayAvailability[]> {
+    return this.http.get<{ days: DayAvailability[] }>(`${this.api}/availability`).pipe(
+      map(a => a.days ?? [])
+    );
+  }
+
+  /** Servicios ofrecidos al paciente (solo los activos). */
   getServices(): Observable<Service[]> {
-    return this.http.get<Service[]>(`${this.api}/services`);
+    return this.http.get<Service[]>(`${this.api}/services`).pipe(
+      map(list => list.filter(s => s.activo !== false))
+    );
   }
 
   getHealthInsurances(): Observable<string[]> {
@@ -170,6 +182,38 @@ export class ClientService {
         );
       })
     );
+  }
+
+  // ===== Gestión de turnos por DNI (autogestión del paciente) =====
+
+  /** Turnos del paciente identificado por DNI. */
+  getTurnosPorDni(dni: string): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(`${this.api}/appointments?patientDni=${encodeURIComponent(dni.trim())}`);
+  }
+
+  /**
+   * Reprograma un turno: nueva fecha y hora, vuelve a estado PENDING
+   * para que el profesional lo re-confirme.
+   */
+  reprogramarTurno(turno: Appointment, nuevaFecha: string, nuevaHora: string): Observable<Appointment> {
+    const notaBase = (turno.notes || '').replace(/\s*\[Reprogramado por el paciente[^\]]*\]/g, '').trim();
+    const nota = `${notaBase} [Reprogramado por el paciente: antes ${turno.date} ${turno.time} hs]`.trim();
+    return this.http.patch<Appointment>(`${this.api}/appointments/${turno.id}`, {
+      date: nuevaFecha,
+      time: nuevaHora,
+      status: 'PENDING',
+      notes: nota
+    });
+  }
+
+  /** Cancela un turno del paciente. */
+  cancelarTurno(turno: Appointment): Observable<Appointment> {
+    const notaBase = (turno.notes || '').trim();
+    const nota = `${notaBase} [Cancelado por el paciente]`.trim();
+    return this.http.patch<Appointment>(`${this.api}/appointments/${turno.id}`, {
+      status: 'CANCELLED',
+      notes: nota
+    });
   }
 
   /** Da de alta al paciente si su DNI no está registrado. */

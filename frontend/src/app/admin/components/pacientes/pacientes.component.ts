@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, Patient } from '../../services/admin.service';
 import { PacienteModalComponent } from '../paciente-modal/paciente-modal.component';
 import { TurnoModalComponent } from '../turno-modal/turno-modal.component';
+import { PacienteHistorialComponent } from '../paciente-historial/paciente-historial.component';
 import { formatDMY, todayLocal } from '../../../core/date-utils';
 
 type Orden = 'NOMBRE' | 'ALTA_RECIENTE' | 'PROXIMO_TURNO';
@@ -11,7 +12,7 @@ type Orden = 'NOMBRE' | 'ALTA_RECIENTE' | 'PROXIMO_TURNO';
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, PacienteModalComponent, TurnoModalComponent],
+  imports: [CommonModule, FormsModule, PacienteModalComponent, TurnoModalComponent, PacienteHistorialComponent],
   host: { class: 'block xl:h-full' },
   template: `
     <div class="xl:h-full flex flex-col gap-3 animate-fade-in min-h-0">
@@ -138,7 +139,9 @@ type Orden = 'NOMBRE' | 'ALTA_RECIENTE' | 'PROXIMO_TURNO';
               <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-y-2.5 gap-x-4 items-center">
 
                 <div class="lg:col-span-3 space-y-0.5">
-                  <h4 class="font-extrabold text-stone-800 text-sm truncate" [title]="pat.nombre">{{ pat.nombre }}</h4>
+                  <button (click)="abrirHistorial(pat)" class="text-left group/nombre" title="Ver historial de turnos">
+                    <h4 class="font-extrabold text-stone-800 text-sm truncate group-hover/nombre:text-teal-800 group-hover/nombre:underline transition-colors" [title]="pat.nombre">{{ pat.nombre }}</h4>
+                  </button>
                   <p class="text-[11px] text-stone-500 truncate">DNI: <span class="font-semibold text-stone-600">{{ pat.dni }}</span></p>
                 </div>
 
@@ -170,6 +173,12 @@ type Orden = 'NOMBRE' | 'ALTA_RECIENTE' | 'PROXIMO_TURNO';
                 </div>
 
                 <div class="lg:col-span-2 flex justify-stretch lg:justify-end gap-1.5">
+                  <button (click)="abrirHistorial(pat)"
+                          title="Ver historial de turnos"
+                          class="bg-white hover:bg-teal-50 hover:text-teal-800 border border-stone-200 hover:border-teal-300 text-stone-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1 flex-1 lg:flex-initial justify-center">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    Historial
+                  </button>
                   <button (click)="abrirTurnoRapido(pat)"
                           title="Agendar turno"
                           class="bg-teal-100 hover:bg-teal-200 text-teal-900 border border-teal-200 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1 flex-1 lg:flex-initial justify-center">
@@ -225,6 +234,13 @@ type Orden = 'NOMBRE' | 'ALTA_RECIENTE' | 'PROXIMO_TURNO';
         </div>
 
       </div>
+
+      <!-- Modal Historial del paciente -->
+      <app-paciente-historial *ngIf="historialAbierto()"
+                              [paciente]="pacienteHistorial()"
+                              (cerrar)="cerrarHistorial()"
+                              (agendarTurno)="agendarDesdeHistorial()">
+      </app-paciente-historial>
 
       <!-- Modal Paciente (alta / edición) -->
       <app-paciente-modal *ngIf="modalPacienteAbierto()"
@@ -371,6 +387,28 @@ export class PacientesComponent {
     this.mostrarToast(evento.esNuevo
       ? `${evento.paciente.nombre} fue dado de alta con éxito.`
       : `Los datos de ${evento.paciente.nombre} se actualizaron con éxito.`);
+  }
+
+  // ---- Historial ----
+  historialAbierto = signal(false);
+  pacienteHistorial = signal<Patient | null>(null);
+
+  abrirHistorial(pac: Patient) {
+    this.pacienteHistorial.set(pac);
+    this.toastMensaje.set('');
+    this.historialAbierto.set(true);
+  }
+
+  cerrarHistorial() {
+    this.historialAbierto.set(false);
+    this.pacienteHistorial.set(null);
+  }
+
+  /** Desde el historial: cierra y abre el modal de turno con el paciente precargado. */
+  agendarDesdeHistorial() {
+    const pac = this.pacienteHistorial();
+    this.cerrarHistorial();
+    if (pac) this.abrirTurnoRapido(pac);
   }
 
   abrirTurnoRapido(pac: Patient) {

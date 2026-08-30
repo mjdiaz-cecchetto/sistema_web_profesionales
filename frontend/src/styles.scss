@@ -28,6 +28,39 @@ body {
   @apply bg-stone-300;
 }
 
+/* ---- Animaciones de la landing pública ---- */
+@keyframes banner-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.07); }
+}
+@keyframes float-suave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes entrada-arriba {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes halo-pulso {
+  0% { box-shadow: 0 0 0 0 rgba(98, 178, 139, 0.45); }
+  70% { box-shadow: 0 0 0 16px rgba(98, 178, 139, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(98, 178, 139, 0); }
+}
+@keyframes rebote-suave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+.anim-banner-zoom { animation: banner-zoom 22s ease-in-out infinite alternate; }
+.anim-float { animation: float-suave 6s ease-in-out infinite; }
+.anim-entrada { animation: entrada-arriba 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) both; }
+.anim-halo { animation: halo-pulso 2.8s ease-out infinite; }
+.anim-rebote { animation: rebote-suave 1.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-banner-zoom, .anim-float, .anim-entrada, .anim-halo, .anim-rebote { animation: none !important; }
+  .reveal, .title-bar { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+
 /* ---- Componentes reutilizables (estilo flat: blanco, gris y verde pastel) ---- */
 @layer components {
   /* Tarjeta estándar */
@@ -85,6 +118,40 @@ body {
   .chip-confirmed { @apply bg-emerald-100 text-emerald-800 border-emerald-200; }
   .chip-pending   { @apply bg-amber-100 text-amber-800 border-amber-200; }
   .chip-cancelled { @apply bg-rose-100 text-rose-700 border-rose-200; }
+
+  /* Reveal on scroll (directiva [reveal]) */
+  .reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity 0.65s cubic-bezier(0.22, 0.9, 0.3, 1), transform 0.65s cubic-bezier(0.22, 0.9, 0.3, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.reveal-left { transform: translateX(-36px); }
+  .reveal.reveal-right { transform: translateX(36px); }
+  .reveal.reveal-zoom { transform: scale(0.9); }
+  .reveal-visible {
+    opacity: 1;
+    transform: none !important;
+  }
+
+  /* Subrayado que crece cuando la sección se revela */
+  .title-bar {
+    @apply block h-1 w-12 rounded-full bg-teal-300;
+    transform: scaleX(0);
+    transition: transform 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) 0.25s;
+  }
+  .reveal-visible .title-bar,
+  .reveal-visible.title-bar {
+    transform: scaleX(1);
+  }
+
+  /* Ocultar scrollbar en carruseles táctiles */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 
   /* Tab / segmento (sub-vistas) */
   .segment {

@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { ClientService } from '../../services/client.service';
 import { Service, TimeSlot, BookingRequest } from '../../interfaces/client.models';
+import { linkWhatsapp } from '../../../core/whatsapp';
+import { formatDMY, parseLocalDate } from '../../../core/date-utils';
 
 @Component({
   selector: 'app-asistente-turnos',
@@ -29,6 +31,7 @@ export class AsistenteTurnosComponent implements OnInit {
   diasOcupados = signal<string[]>([]);
   obrasSociales = signal<string[]>([]);
   nombreProfesional = signal<string>('');
+  whatsappProfesional = signal<string>('');
 
   // Selection Signals
   servicioSeleccionado = signal<Service | null>(null);
@@ -141,7 +144,10 @@ export class AsistenteTurnosComponent implements OnInit {
     });
 
     this.clientService.getProfessionalInfo().subscribe({
-      next: prof => this.nombreProfesional.set(prof.name)
+      next: prof => {
+        this.nombreProfesional.set(prof.name);
+        this.whatsappProfesional.set(prof.whatsapp);
+      }
     });
   }
 
@@ -223,6 +229,21 @@ export class AsistenteTurnosComponent implements OnInit {
     this.fechaSeleccionada.set(null);
     this.turnoSeleccionado.set(null);
     this.formularioPaciente.reset({ isFirstVisit: true });
+  }
+
+  /** Link de WhatsApp con el comprobante de la reserva, dirigido al profesional. */
+  linkComprobanteWhatsapp(): string {
+    const turno = this.turnoSeleccionado();
+    const servicio = this.servicioSeleccionado();
+    const f = this.formularioPaciente.value;
+    if (!turno || !servicio || !this.whatsappProfesional()) return '';
+
+    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const dia = dias[parseLocalDate(turno.date).getDay()];
+    const mensaje = `Hola! Soy ${f.firstName} ${f.lastName} (DNI ${f.dni}). ` +
+      `Acabo de reservar un turno de ${servicio.name} para el ${dia} ${formatDMY(turno.date)} a las ${turno.startTime} hs. ` +
+      `Te dejo mi comprobante por acá. ¡Gracias!`;
+    return linkWhatsapp(this.whatsappProfesional(), mensaje);
   }
 
   obtenerNombreDia(fechaStr: string): string {

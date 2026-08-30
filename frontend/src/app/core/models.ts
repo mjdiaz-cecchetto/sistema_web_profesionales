@@ -23,6 +23,8 @@ export interface ProfessionalProfile {
   titulo: string;
   avatarUrl: string;
   bannerUrl: string;
+  /** WhatsApp del profesional para recibir comprobantes/avisos de pacientes (formato con código de país, ej. 5491123456789). */
+  whatsapp?: string;
   frasePrincipal: string;
   biografia: string;
   modalidad: string;
@@ -77,6 +79,8 @@ export interface Service {
   description: string;
   durationMinutes: number;
   price?: number;
+  /** false = oculto para nuevos turnos (los turnos ya creados no se tocan). Ausente = activo. */
+  activo?: boolean;
 }
 
 export interface HealthInsurance {
