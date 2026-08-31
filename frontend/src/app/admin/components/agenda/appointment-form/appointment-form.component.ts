@@ -153,7 +153,7 @@ export class AppointmentFormComponent {
   adminService = inject(AdminService);
 
   activePatients = computed(() => this.adminService.patients());
-  services = computed(() => this.adminService.profile().areas);
+  services = computed(() => this.adminService.profile()?.areas || []);
 
   formData = {
     patientDni: '',

@@ -530,10 +530,6 @@ type RangoRapido = 'TODOS' | 'HOY' | 'SEMANA' | 'MES';
       </app-turno-modal>
     </div>
 
-    <!-- Modal Nuevo Turno -->
-    <app-modal [isOpen]="isModalOpen()" title="Nuevo Turno" (closeModal)="isModalOpen.set(false)">
-      <app-appointment-form (save)="onAppointmentSubmit($event)"></app-appointment-form>
-    </app-modal>
   `,
 })
 export class AgendaComponent {

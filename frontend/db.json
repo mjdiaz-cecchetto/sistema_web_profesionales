@@ -510,6 +510,20 @@
       "notes": "",
       "location": "Consultorio Palermo",
       "healthInsurance": "OSDE"
+    },
+    {
+      "id": "apt-mthaftkm755",
+      "serviceName": "Consulta",
+      "patientName": "Chicho Siesta",
+      "patientEmail": "matidiaz10.md@gmail.com",
+      "patientPhone": "3853115268",
+      "patientDni": "11111111",
+      "date": "2026-09-01",
+      "time": "17:00",
+      "status": "CONFIRMED",
+      "notes": "",
+      "location": "Consulta Online",
+      "healthInsurance": "Particular (Sin cobertura)"
     }
   ],
   "patients": [
@@ -656,6 +670,15 @@
       "dni": "39583171",
       "obraSocial": "OSDE",
       "fechaAlta": "2026-08-31"
+    },
+    {
+      "id": "pat-11111111",
+      "nombre": "Chicho Siesta",
+      "email": "matidiaz10.md@gmail.com",
+      "telefono": "3853115268",
+      "dni": "11111111",
+      "obraSocial": "Particular (Sin cobertura)",
+      "fechaAlta": "2026-09-01"
     }
   ],
   "blockedDates": []
