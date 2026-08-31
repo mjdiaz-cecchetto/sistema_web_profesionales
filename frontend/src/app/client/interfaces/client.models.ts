@@ -1,44 +1,13 @@
-export interface Professional {
-  id: string;
-  name: string;
-  title: string;
-  bio: string;
-  avatarUrl: string;
-  specialties: string[];
-}
+/**
+ * Re-export de los modelos compartidos (src/app/core/models.ts)
+ * para mantener compatibilidad con los imports existentes.
+ */
+export type {
+  Service,
+  TimeSlot,
+  BookingRequest,
+  BookingPatientData,
+  Appointment
+} from '../../core/models';
 
-export interface Service {
-  id: string;
-  name: string;
-  description: string;
-  durationMinutes: number;
-  price?: number;
-}
-
-export interface TimeSlot {
-  id: string;
-  date: string; // ISO format YYYY-MM-DD
-  startTime: string; // HH:mm
-  endTime: string; // HH:mm
-  isAvailable: boolean;
-}
-
-export interface Appointment {
-  id?: string;
-  serviceId: string;
-  professionalId: string;
-  date: string;
-  time: string;
-  patientData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    healthInsurance: string;
-    isFirstVisit: boolean;
-    age: number;
-    sex: string;
-    notes?: string;
-  };
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
-}
+export type { Professional } from '../services/client.service';

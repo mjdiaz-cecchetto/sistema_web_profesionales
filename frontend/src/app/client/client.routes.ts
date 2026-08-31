@@ -12,6 +12,11 @@ export const clientRoutes: Routes = [
     title: 'Agendar Turno'
   },
   {
+    path: 'mis-turnos',
+    loadComponent: () => import('./components/mis-turnos/mis-turnos.component').then(m => m.MisTurnosComponent),
+    title: 'Gestionar mi Turno'
+  },
+  {
     path: '**',
     redirectTo: '',
     pathMatch: 'full'

@@ -17,8 +17,23 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'agenda',
+        redirectTo: 'agenda/lista',
+        pathMatch: 'full'
+      },
+      {
+        path: 'agenda/lista',
         loadComponent: () => import('./components/agenda/agenda.component').then(m => m.AgendaComponent),
-        title: 'Admin - Agenda de Turnos'
+        title: 'Admin - Agenda · Lista'
+      },
+      {
+        path: 'agenda/calendario',
+        loadComponent: () => import('./components/agenda-calendario/agenda-calendario.component').then(m => m.AgendaCalendarioComponent),
+        title: 'Admin - Agenda · Calendario'
+      },
+      {
+        path: 'servicios',
+        loadComponent: () => import('./components/servicios/servicios.component').then(m => m.ServiciosComponent),
+        title: 'Admin - Servicios'
       },
       {
         path: 'pacientes',

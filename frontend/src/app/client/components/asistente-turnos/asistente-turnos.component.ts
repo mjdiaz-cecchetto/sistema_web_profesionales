@@ -1,9 +1,11 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ClientService } from '../../services/client.service';
-import { Service, TimeSlot, Appointment } from '../../interfaces/client.models';
+import { Service, TimeSlot, BookingRequest } from '../../interfaces/client.models';
+import { linkWhatsapp } from '../../../core/whatsapp';
+import { formatDMY, parseLocalDate } from '../../../core/date-utils';
 
 @Component({
   selector: 'app-asistente-turnos',
@@ -13,30 +15,37 @@ import { Service, TimeSlot, Appointment } from '../../interfaces/client.models';
   styleUrl: './asistente-turnos.component.scss'
 })
 export class AsistenteTurnosComponent implements OnInit {
-  
+  private clientService = inject(ClientService);
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+
   // State Signals
   pasoActual = signal<number>(1);
   cargando = signal<boolean>(true);
   enviando = signal<boolean>(false);
-  
+  errorCarga = signal<boolean>(false);
+
   // Data Signals
   servicios = signal<Service[]>([]);
   turnos = signal<TimeSlot[]>([]);
+  diasOcupados = signal<string[]>([]);
   obrasSociales = signal<string[]>([]);
-  
+  nombreProfesional = signal<string>('');
+  whatsappProfesional = signal<string>('');
+
   // Selection Signals
   servicioSeleccionado = signal<Service | null>(null);
   fechaSeleccionada = signal<string | null>(null);
   turnoSeleccionado = signal<TimeSlot | null>(null);
-  
+
   // Calendar State
   mesActual = signal<number>(new Date().getMonth());
   anioActual = signal<number>(new Date().getFullYear());
-  
+
   // Form
   formularioPaciente: FormGroup;
 
-  // Computed Values
+  // Computed
   fechasUnicas = computed(() => {
     const fechas = this.turnos().map(t => t.date);
     return [...new Set(fechas)].sort();
@@ -56,60 +65,39 @@ export class AsistenteTurnosComponent implements OnInit {
   diasCalendario = computed(() => {
     const mes = this.mesActual();
     const anio = this.anioActual();
-    
+
     const primerDia = new Date(anio, mes, 1);
     const ultimoDia = new Date(anio, mes + 1, 0);
-    
+
     const totalDias = ultimoDia.getDate();
     const diaSemanaInicio = primerDia.getDay(); // 0 (Dom) a 6 (Sab)
-    
+
     const dias: { date: string | null, num: number | null, available: boolean, isFullyBooked?: boolean }[] = [];
-    
-    // Relleno inicial
+
     for (let i = 0; i < diaSemanaInicio; i++) {
       dias.push({ date: null, num: null, available: false });
     }
-    
-    // Dias del mes
+
     const disponibles = this.fechasUnicas();
+    const ocupados = this.diasOcupados();
+
     for (let i = 1; i <= totalDias; i++) {
-      // Formateamos mes y día a 2 dígitos respetando timezone local
       const mesStr = String(mes + 1).padStart(2, '0');
       const diaStr = String(i).padStart(2, '0');
       const fechaStr = `${anio}-${mesStr}-${diaStr}`;
-      
-      const isAvailable = disponibles.includes(fechaStr);
-      
-      // Mock: Marcar explícitamente un par de días hábiles como "ocupados" (rojos)
-      const dayOfWeek = new Date(anio, mes, i).getDay();
-      const isWeekday = dayOfWeek !== 0 && dayOfWeek !== 6;
-      // Por ejemplo, el día 10, 15 o 22 si son hábiles y no tienen turnos
-      const isFullyBooked = !isAvailable && isWeekday && (i === 12 || i === 15 || i === 22);
 
       dias.push({
         date: fechaStr,
         num: i,
-        available: isAvailable,
-        isFullyBooked: isFullyBooked
+        available: disponibles.includes(fechaStr),
+        // Días laborables realmente completos (calculado desde la API, no hardcodeado)
+        isFullyBooked: ocupados.includes(fechaStr)
       });
     }
     return dias;
   });
 
-  cambiarMes(delta: number) {
-    let m = this.mesActual() + delta;
-    let y = this.anioActual();
-    if (m > 11) { m = 0; y++; }
-    if (m < 0) { m = 11; y--; }
-    this.mesActual.set(m);
-    this.anioActual.set(y);
-  }
-
-  constructor(
-    private clientService: ClientService,
-    private fb: FormBuilder,
-    private router: Router
-  ) {
+  constructor() {
     this.formularioPaciente = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.pattern('^[a-zA-ZÀ-ÿ\\u00f1\\u00d1\\s]+$')]],
       lastName: ['', [Validators.required, Validators.minLength(2), Validators.pattern('^[a-zA-ZÀ-ÿ\\u00f1\\u00d1\\s]+$')]],
@@ -128,20 +116,38 @@ export class AsistenteTurnosComponent implements OnInit {
     this.cargarDatosIniciales();
   }
 
+  cambiarMes(delta: number) {
+    let m = this.mesActual() + delta;
+    let y = this.anioActual();
+    if (m > 11) { m = 0; y++; }
+    if (m < 0) { m = 11; y--; }
+    this.mesActual.set(m);
+    this.anioActual.set(y);
+  }
+
   private cargarDatosIniciales() {
     this.cargando.set(true);
-    
-    // Cargar servicios
+    this.errorCarga.set(false);
+
     this.clientService.getServices().subscribe({
       next: (datos) => {
         this.servicios.set(datos);
-        // Cuando terminan los servicios, cargamos las obras sociales
-        this.clientService.getHealthInsurances().subscribe(obras => {
-          this.obrasSociales.set(obras);
-          this.cargando.set(false);
+        this.clientService.getHealthInsurances().subscribe({
+          next: obras => {
+            this.obrasSociales.set(obras);
+            this.cargando.set(false);
+          },
+          error: () => { this.errorCarga.set(true); this.cargando.set(false); }
         });
       },
-      error: () => this.cargando.set(false)
+      error: () => { this.errorCarga.set(true); this.cargando.set(false); }
+    });
+
+    this.clientService.getProfessionalInfo().subscribe({
+      next: prof => {
+        this.nombreProfesional.set(prof.name);
+        this.whatsappProfesional.set(prof.whatsapp);
+      }
     });
   }
 
@@ -155,7 +161,7 @@ export class AsistenteTurnosComponent implements OnInit {
 
   pasoSiguiente() {
     const paso = this.pasoActual();
-    
+
     if (paso === 1 && this.servicioSeleccionado()) {
       this.cargarTurnos();
     } else if (paso === 2 && this.turnoSeleccionado()) {
@@ -167,52 +173,52 @@ export class AsistenteTurnosComponent implements OnInit {
     if (this.pasoActual() > 1) {
       this.pasoActual.set(this.pasoActual() - 1);
     } else {
-      // Volver a inicio
       this.router.navigate(['/client']);
     }
   }
 
   private cargarTurnos() {
     this.cargando.set(true);
-    // Simular carga de horarios para el servicio seleccionado
-    this.clientService.getAvailableTimeSlots(this.servicioSeleccionado()!.id).subscribe({
-      next: (turnosDisponibles) => {
-        this.turnos.set(turnosDisponibles);
-        // Inicializar mes/año del calendario al primer turno disponible
-        if (turnosDisponibles.length > 0) {
-          const firstDate = new Date(this.fechasUnicas()[0] + 'T00:00:00');
-          this.mesActual.set(firstDate.getMonth());
-          this.anioActual.set(firstDate.getFullYear());
-          this.fechaSeleccionada.set(this.fechasUnicas()[0]);
+    this.clientService.getBookingCalendar(this.servicioSeleccionado()!.id).subscribe({
+      next: ({ slots, fullyBookedDates }) => {
+        this.turnos.set(slots);
+        this.diasOcupados.set(fullyBookedDates);
+
+        if (slots.length > 0) {
+          const primera = this.fechasUnicas()[0];
+          const [y, m] = primera.split('-').map(Number);
+          this.mesActual.set(m - 1);
+          this.anioActual.set(y);
+          this.fechaSeleccionada.set(primera);
         }
         this.cargando.set(false);
         this.pasoActual.set(2);
       },
-      error: () => this.cargando.set(false)
+      error: () => { this.errorCarga.set(true); this.cargando.set(false); }
     });
   }
 
   confirmarReserva() {
     if (this.formularioPaciente.invalid) return;
-    
+
     this.enviando.set(true);
-    
-    const datosReserva: Appointment = {
+
+    const reserva: BookingRequest = {
       serviceId: this.servicioSeleccionado()!.id,
-      professionalId: 'prof-1', // Idealmente viene de contexto o ruta
+      professionalId: 'prof-1',
       date: this.turnoSeleccionado()!.date,
       time: this.turnoSeleccionado()!.startTime,
-      patientData: this.formularioPaciente.value,
-      status: 'PENDING'
+      patientData: this.formularioPaciente.value
     };
 
-    this.clientService.createAppointment(datosReserva).subscribe({
-      next: (res) => {
+    this.clientService.createAppointment(reserva).subscribe({
+      next: () => {
         this.enviando.set(false);
         this.pasoActual.set(4);
       },
       error: () => {
         this.enviando.set(false);
+        this.errorCarga.set(true);
       }
     });
   }
@@ -222,13 +228,28 @@ export class AsistenteTurnosComponent implements OnInit {
     this.servicioSeleccionado.set(null);
     this.fechaSeleccionada.set(null);
     this.turnoSeleccionado.set(null);
-    this.formularioPaciente.reset();
+    this.formularioPaciente.reset({ isFirstVisit: true });
+  }
+
+  /** Link de WhatsApp con el comprobante de la reserva, dirigido al profesional. */
+  linkComprobanteWhatsapp(): string {
+    const turno = this.turnoSeleccionado();
+    const servicio = this.servicioSeleccionado();
+    const f = this.formularioPaciente.value;
+    if (!turno || !servicio || !this.whatsappProfesional()) return '';
+
+    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const dia = dias[parseLocalDate(turno.date).getDay()];
+    const mensaje = `Hola! Soy ${f.firstName} ${f.lastName} (DNI ${f.dni}). ` +
+      `Acabo de reservar un turno de ${servicio.name} para el ${dia} ${formatDMY(turno.date)} a las ${turno.startTime} hs. ` +
+      `Te dejo mi comprobante por acá. ¡Gracias!`;
+    return linkWhatsapp(this.whatsappProfesional(), mensaje);
   }
 
   obtenerNombreDia(fechaStr: string): string {
     const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const d = new Date(fechaStr + 'T00:00:00');
-    return dias[d.getDay()];
+    const [y, m, d] = fechaStr.split('-').map(Number);
+    return dias[new Date(y, m - 1, d).getDay()];
   }
 
   obtenerNumeroDia(fechaStr: string): string {
