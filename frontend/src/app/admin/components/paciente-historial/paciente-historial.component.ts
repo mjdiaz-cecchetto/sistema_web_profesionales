@@ -72,7 +72,9 @@ import { formatDMY, todayLocal } from '../../../core/date-utils';
                     <p class="text-[10px] font-bold text-teal-700 mt-0.5">{{ t.time }} hs</p>
                   </div>
                   <div class="min-w-0">
-                    <p class="text-xs font-bold text-stone-700 truncate">{{ t.serviceName }} · {{ t.location }}</p>
+                    <p class="text-xs font-bold text-stone-700 truncate">
+                      <span *ngIf="adminService.esConsultorio()" class="text-teal-700">{{ adminService.nombreDe(t.profesionalId) }} · </span>{{ t.serviceName }} · {{ t.location }}
+                    </p>
                     <p *ngIf="t.notes" class="text-[10px] italic text-stone-400 truncate" [title]="t.notes">"{{ t.notes }}"</p>
                   </div>
                 </div>
@@ -95,7 +97,9 @@ import { formatDMY, todayLocal } from '../../../core/date-utils';
                 <div class="flex items-center gap-3 min-w-0">
                   <p class="text-[11px] font-extrabold text-stone-600 w-20 shrink-0">{{ formatFecha(t.date) }}</p>
                   <p class="text-[11px] font-bold text-teal-700 w-14 shrink-0">{{ t.time }} hs</p>
-                  <p class="text-[11px] text-stone-500 truncate">{{ t.serviceName }} · {{ t.location }}</p>
+                  <p class="text-[11px] text-stone-500 truncate">
+                    <span *ngIf="adminService.esConsultorio()" class="font-bold text-teal-700">{{ adminService.nombreDe(t.profesionalId) }} · </span>{{ t.serviceName }} · {{ t.location }}
+                  </p>
                 </div>
                 <span class="chip shrink-0 !text-[9px]"
                       [class.chip-confirmed]="t.status === 'CONFIRMED'"
@@ -122,7 +126,7 @@ import { formatDMY, todayLocal } from '../../../core/date-utils';
   `
 })
 export class PacienteHistorialComponent {
-  private adminService = inject(AdminService);
+  adminService = inject(AdminService);
 
   pacienteActual = signal<Patient | null>(null);
   @Input() set paciente(pac: Patient | null) {

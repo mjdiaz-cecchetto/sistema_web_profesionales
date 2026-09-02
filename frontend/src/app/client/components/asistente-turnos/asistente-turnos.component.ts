@@ -1,9 +1,10 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ClientService } from '../../services/client.service';
-import { Service, TimeSlot, BookingRequest } from '../../interfaces/client.models';
+import { Service, TimeSlot, BookingRequest, ProfessionalProfile } from '../../interfaces/client.models';
+import { Cuenta } from '../../../core/models';
 import { linkWhatsapp } from '../../../core/whatsapp';
 import { formatDMY, parseLocalDate } from '../../../core/date-utils';
 
@@ -18,6 +19,17 @@ export class AsistenteTurnosComponent implements OnInit {
   private clientService = inject(ClientService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  /** Cuenta pública (consultorio o profesional) resuelta por el :slug de la URL. */
+  cuenta = signal<Cuenta | null>(null);
+  slug = signal<string>('');
+  esConsultorio = computed(() => this.cuenta()?.tipo === 'consultorio');
+  linkMisTurnos = computed(() => [this.esConsultorio() ? '/c' : '/p', this.slug(), 'mis-turnos']);
+
+  /** Profesional elegido para el turno. Vacío = falta elegir (modo consultorio). */
+  profId = signal<string>('');
+  profesionalesDisponibles = signal<ProfessionalProfile[]>([]);
 
   // State Signals
   pasoActual = signal<number>(1);
@@ -113,7 +125,47 @@ export class AsistenteTurnosComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const slug = this.route.snapshot.paramMap.get('slug') ?? '';
+    const idRuta = this.route.snapshot.paramMap.get('profId');
+    this.slug.set(slug);
+
+    this.clientService.getCuentaPorSlug(slug).subscribe({
+      next: cuenta => {
+        this.cuenta.set(cuenta);
+        this.clientService.getProfessionals(cuenta.id).subscribe({
+          next: profesionales => {
+            this.profesionalesDisponibles.set(profesionales);
+            if (idRuta && profesionales.some(p => p.id === idRuta)) {
+              this.elegirProfesional(idRuta);
+            } else if (profesionales.length === 1 || cuenta.tipo === 'profesional') {
+              this.elegirProfesional(profesionales[0].id);
+            } else {
+              // Consultorio sin profesional en la URL: mostrar la elección.
+              this.cargando.set(false);
+            }
+          },
+          error: () => { this.errorCarga.set(true); this.cargando.set(false); }
+        });
+      },
+      error: () => { this.errorCarga.set(true); this.cargando.set(false); }
+    });
+  }
+
+  /** Selecciona el profesional y carga sus datos. */
+  elegirProfesional(id: string): void {
+    this.profId.set(id);
+    const prof = this.profesionalesDisponibles().find(p => p.id === id);
+    if (prof) {
+      this.nombreProfesional.set(prof.nombre);
+      this.whatsappProfesional.set(prof.whatsapp || '');
+    }
     this.cargarDatosIniciales();
+  }
+
+  inicialesDe(nombre: string): string {
+    const partes = nombre.split(' ').filter(Boolean);
+    if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
+    return nombre.slice(0, 2).toUpperCase();
   }
 
   cambiarMes(delta: number) {
@@ -129,7 +181,7 @@ export class AsistenteTurnosComponent implements OnInit {
     this.cargando.set(true);
     this.errorCarga.set(false);
 
-    this.clientService.getServices().subscribe({
+    this.clientService.getServices(this.profId()).subscribe({
       next: (datos) => {
         this.servicios.set(datos);
         this.clientService.getHealthInsurances().subscribe({
@@ -143,12 +195,6 @@ export class AsistenteTurnosComponent implements OnInit {
       error: () => { this.errorCarga.set(true); this.cargando.set(false); }
     });
 
-    this.clientService.getProfessionalInfo().subscribe({
-      next: prof => {
-        this.nombreProfesional.set(prof.name);
-        this.whatsappProfesional.set(prof.whatsapp);
-      }
-    });
   }
 
   seleccionarServicio(servicio: Service) {
@@ -172,14 +218,18 @@ export class AsistenteTurnosComponent implements OnInit {
   pasoAnterior() {
     if (this.pasoActual() > 1) {
       this.pasoActual.set(this.pasoActual() - 1);
+    } else if (this.esConsultorio() && this.profId()) {
+      this.router.navigate(['/c', this.slug(), 'p', this.profId()]);
+    } else if (this.esConsultorio()) {
+      this.router.navigate(['/c', this.slug()]);
     } else {
-      this.router.navigate(['/client']);
+      this.router.navigate(['/p', this.slug()]);
     }
   }
 
   private cargarTurnos() {
     this.cargando.set(true);
-    this.clientService.getBookingCalendar(this.servicioSeleccionado()!.id).subscribe({
+    this.clientService.getBookingCalendar(this.profId(), this.servicioSeleccionado()!.id).subscribe({
       next: ({ slots, fullyBookedDates }) => {
         this.turnos.set(slots);
         this.diasOcupados.set(fullyBookedDates);
@@ -205,7 +255,7 @@ export class AsistenteTurnosComponent implements OnInit {
 
     const reserva: BookingRequest = {
       serviceId: this.servicioSeleccionado()!.id,
-      professionalId: 'prof-1',
+      professionalId: this.profId(),
       date: this.turnoSeleccionado()!.date,
       time: this.turnoSeleccionado()!.startTime,
       patientData: this.formularioPaciente.value

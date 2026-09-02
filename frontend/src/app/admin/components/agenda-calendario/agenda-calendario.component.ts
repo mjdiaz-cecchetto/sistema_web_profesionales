@@ -182,7 +182,9 @@ type FiltroEstado = 'ALL' | 'CONFIRMED' | 'PENDING' | 'CANCELLED';
                     </div>
                     <div class="min-w-0">
                       <h4 class="font-extrabold text-stone-800 text-[13px] truncate">{{ appt.patientName }}</h4>
-                      <p class="text-[10px] text-stone-500 truncate">{{ appt.serviceName }} · {{ appt.location }}</p>
+                      <p class="text-[10px] text-stone-500 truncate">
+                        <span *ngIf="adminService.esConsultorio()" class="font-bold text-teal-700">{{ adminService.nombreDe(appt.profesionalId) }} · </span>{{ appt.serviceName }} · {{ appt.location }}
+                      </p>
                     </div>
                   </div>
                   <span class="chip shrink-0 !text-[9px]"
@@ -260,7 +262,7 @@ type FiltroEstado = 'ALL' | 'CONFIRMED' | 'PENDING' | 'CANCELLED';
   `
 })
 export class AgendaCalendarioComponent {
-  private adminService = inject(AdminService);
+  adminService = inject(AdminService);
 
   mesActual = signal<number>(new Date().getMonth());
   anioActual = signal<number>(new Date().getFullYear());
@@ -298,12 +300,12 @@ export class AgendaCalendarioComponent {
 
   private turnosFiltrados = computed(() => {
     const filtro = this.filtroEstado();
-    const list = this.adminService.appointments();
+    const list = this.adminService.turnosVisibles();
     return filtro === 'ALL' ? list : list.filter(a => a.status === filtro);
   });
 
   contadorPorEstado = computed(() => {
-    const list = this.adminService.appointments();
+    const list = this.adminService.turnosVisibles();
     return {
       ALL: list.length,
       CONFIRMED: list.filter(a => a.status === 'CONFIRMED').length,
@@ -458,7 +460,7 @@ export class AgendaCalendarioComponent {
     const [y, m, d] = appt.date.split('-').map(Number);
     const dia = dias[new Date(y, m - 1, d).getDay()];
     const fecha = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const profesional = this.adminService.profile()?.nombre ?? '';
+    const profesional = this.adminService.nombreDe(appt.profesionalId);
     const estado = appt.status === 'CONFIRMED' ? 'Te confirmo' : 'Te recuerdo';
     const mensaje = `Hola ${appt.patientName}! ${estado} tu turno de ${appt.serviceName} el ${dia} ${fecha} a las ${appt.time} hs en ${appt.location}. Cualquier cambio avisame por acá. ${profesional}`;
     return linkWhatsapp(appt.patientPhone, mensaje);

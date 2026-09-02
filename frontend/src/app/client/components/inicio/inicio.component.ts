@@ -1,9 +1,9 @@
-import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { ActivatedRoute, RouterModule } from '@angular/router';
+import { forkJoin, switchMap } from 'rxjs';
 import { ClientService } from '../../services/client.service';
-import { DayAvailability, ProfessionalProfile, Service } from '../../../core/models';
+import { Cuenta, DayAvailability, ProfessionalProfile, Service } from '../../../core/models';
 import { RevealDirective } from '../../../shared/directives/reveal.directive';
 
 interface HorarioDia {
@@ -21,6 +21,24 @@ interface HorarioDia {
 })
 export class InicioComponent implements OnInit {
   private clientService = inject(ClientService);
+  private route = inject(ActivatedRoute);
+
+  /** Cuenta pública dueña de esta página (resuelta por el :slug de la URL). */
+  cuenta = signal<Cuenta | null>(null);
+  slug = signal<string>('');
+  /** Profesional de esta página (de la URL /c/:slug/p/:profId, o el único de la cuenta en /p/:slug). */
+  profId = signal<string>('');
+  /** true si la página pertenece a un consultorio (muestra el volver al centro). */
+  esConsultorio = computed(() => this.cuenta()?.tipo === 'consultorio');
+  nombreConsultorio = computed(() => this.cuenta()?.nombre ?? '');
+
+  /** Base de rutas públicas de la cuenta: ['/c', slug] o ['/p', slug]. */
+  base = computed(() => [this.esConsultorio() ? '/c' : '/p', this.slug()]);
+  linkVolverCentro = computed(() => ['/c', this.slug()]);
+  linkTurnos = computed(() =>
+    this.esConsultorio() ? ['/c', this.slug(), 'turnos', this.profId()] : ['/p', this.slug(), 'turnos']
+  );
+  linkMisTurnos = computed(() => [...this.base(), 'mis-turnos']);
 
   profesional = signal<ProfessionalProfile | null>(null);
   servicios = signal<Service[]>([]);
@@ -51,21 +69,41 @@ export class InicioComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    forkJoin({
-      perfil: this.clientService.getProfile(),
-      servicios: this.clientService.getServices(),
-      disponibilidad: this.clientService.getWeeklyAvailability()
-    }).subscribe({
-      next: ({ perfil, servicios, disponibilidad }) => {
-        this.profesional.set(perfil);
-        this.servicios.set(servicios);
-        this.horarios.set(this.armarHorarios(disponibilidad));
-        this.cargando.set(false);
-      },
-      error: () => {
-        this.errorCarga.set(true);
-        this.cargando.set(false);
-      }
+    this.route.paramMap.subscribe(params => {
+      const slug = params.get('slug') ?? '';
+      const idParam = params.get('profId') ?? '';
+      this.slug.set(slug);
+      this.cargando.set(true);
+
+      this.clientService.getCuentaPorSlug(slug).pipe(
+        switchMap(cuenta => {
+          this.cuenta.set(cuenta);
+          return this.clientService.getProfessionals(cuenta.id);
+        }),
+        switchMap(profesionales => {
+          // /p/{slug}: cuenta de un profesional independiente → su único perfil.
+          const prof = idParam
+            ? profesionales.find(x => x.id === idParam)
+            : profesionales[0];
+          if (!prof) throw new Error('Profesional no encontrado');
+          this.profId.set(prof.id);
+          this.profesional.set(prof);
+          return forkJoin({
+            servicios: this.clientService.getServices(prof.id),
+            disponibilidad: this.clientService.getWeeklyAvailability(prof.id)
+          });
+        })
+      ).subscribe({
+        next: ({ servicios, disponibilidad }) => {
+          this.servicios.set(servicios);
+          this.horarios.set(this.armarHorarios(disponibilidad));
+          this.cargando.set(false);
+        },
+        error: () => {
+          this.errorCarga.set(true);
+          this.cargando.set(false);
+        }
+      });
     });
   }
 
