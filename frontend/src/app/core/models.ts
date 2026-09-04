@@ -32,10 +32,57 @@ export interface Cuenta {
   slug: string;
   descripcion: string;
   bannerUrl?: string;
+  /** 'suspendida' bloquea el login de la cuenta y oculta su página pública. */
+  estado: 'activa' | 'suspendida';
+  /** Plan de membresía (la gestión de cobros llega más adelante). */
+  plan: string;
+  fechaAlta: string; // YYYY-MM-DD
 }
 
 /** @deprecated alias temporal — usar Cuenta. */
 export type Consultorio = Cuenta;
+
+/**
+ * Administrador de la PLATAFORMA (back-office /gestion): da de alta y
+ * gestiona cuentas. Por diseño NO tiene acceso a pacientes ni turnos —
+ * el módulo de gestión solo muestra contadores agregados sin datos personales.
+ */
+export interface Administrador {
+  id: string;
+  nombre: string;
+  email: string;
+  password: string; // mock: en el backend real será un hash
+}
+
+/** Plan de membresía de la plataforma (colección `planes`). */
+export interface Plan {
+  id: string;
+  nombre: string;
+  /** Precio mensual en ARS. 0 = gratuito. */
+  precioMensual: number;
+  descripcion: string;
+  /** Máximo de profesionales activos (0 = sin límite). */
+  maxProfesionales: number;
+  activo: boolean;
+}
+
+export type MedioPago = 'transferencia' | 'efectivo' | 'mercadopago' | 'otro';
+
+/**
+ * Cobro registrado a una cuenta (colección `pagos`).
+ * Mock manual: en el backend real vendrán de la pasarela de pagos.
+ */
+export interface Pago {
+  id: string;
+  cuentaId: string;
+  /** Período que salda, formato YYYY-MM. */
+  periodo: string;
+  /** Fecha en que se registró el cobro. */
+  fecha: string; // YYYY-MM-DD
+  monto: number;
+  medio: MedioPago;
+  notas?: string;
+}
 
 export interface ProfessionalProfile {
   /** Identificador del profesional. */

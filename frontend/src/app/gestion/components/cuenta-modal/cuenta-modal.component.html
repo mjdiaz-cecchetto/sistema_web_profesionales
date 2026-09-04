@@ -1,0 +1,142 @@
+<!-- Backdrop -->
+<div class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-[2px] flex items-center justify-center p-4" (click)="cerrar.emit()">
+
+  <!-- Panel -->
+  <div class="bg-white rounded-3xl border border-stone-200 shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto"
+       (click)="$event.stopPropagation()">
+
+    <div class="px-6 pt-6 pb-4 border-b border-stone-100 flex items-start justify-between gap-4">
+      <div>
+        <h2 class="text-lg font-extrabold text-stone-800 tracking-tight">
+          {{ esNueva ? 'Nueva cuenta' : 'Editar cuenta' }}
+        </h2>
+        <p class="text-xs text-stone-400 mt-0.5">
+          {{ esNueva ? 'Alta de un consultorio o profesional en la plataforma.' : 'Datos de acceso y presentación de la cuenta.' }}
+        </p>
+      </div>
+      <button (click)="cerrar.emit()" class="p-2 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="px-6 py-5 space-y-4">
+
+      <!-- Tipo (solo alta) -->
+      <div *ngIf="esNueva">
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-2">Tipo de cuenta</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" (click)="tipo.set('consultorio')"
+                  class="rounded-xl border px-4 py-3 text-sm font-bold text-left transition-colors"
+                  [ngClass]="tipo() === 'consultorio' ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-stone-200 text-stone-500 hover:border-stone-300'">
+            Consultorio
+            <span class="block text-[11px] font-medium text-stone-400 mt-0.5">Varios profesionales</span>
+          </button>
+          <button type="button" (click)="tipo.set('profesional')"
+                  class="rounded-xl border px-4 py-3 text-sm font-bold text-left transition-colors"
+                  [ngClass]="tipo() === 'profesional' ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-stone-200 text-stone-500 hover:border-stone-300'">
+            Profesional
+            <span class="block text-[11px] font-medium text-stone-400 mt-0.5">Independiente</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Nombre -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">
+          {{ tipo() === 'consultorio' ? 'Nombre del consultorio' : 'Nombre del profesional' }}
+        </label>
+        <input type="text" [ngModel]="nombre()" (ngModelChange)="onNombre($event)"
+               [placeholder]="tipo() === 'consultorio' ? 'Centro Médico…' : 'Dra. …'"
+               class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+      </div>
+
+      <!-- Especialidad (solo alta de profesional) -->
+      <div *ngIf="esNueva && tipo() === 'profesional'">
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Especialidad</label>
+        <input type="text" [ngModel]="especialidad()" (ngModelChange)="especialidad.set($event)"
+               placeholder="Psicología, Odontología…"
+               class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+      </div>
+
+      <!-- Email + contraseña -->
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Email de acceso</label>
+          <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" placeholder="cuenta@email.com"
+                 class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">
+            {{ esNueva ? 'Contraseña inicial' : 'Nueva contraseña' }}
+          </label>
+          <div class="relative">
+            <input [type]="verPassword() ? 'text' : 'password'" [ngModel]="password()" (ngModelChange)="password.set($event)"
+                   [placeholder]="esNueva ? 'Mínimo 6 caracteres' : 'Vacío = no cambiar'"
+                   class="w-full rounded-xl border border-stone-200 px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+            <button type="button" (click)="verPassword.set(!verPassword())"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+              <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slug -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Página pública (slug)</label>
+        <div class="flex items-center rounded-xl border border-stone-200 focus-within:ring-2 focus-within:ring-teal-500/40 focus-within:border-teal-500 overflow-hidden">
+          <span class="pl-4 pr-1 text-sm text-stone-400 font-mono shrink-0">{{ prefijoUrl() }}</span>
+          <input type="text" [ngModel]="slug()" (ngModelChange)="onSlug($event)"
+                 class="flex-grow px-1 py-2.5 text-sm font-mono focus:outline-none">
+        </div>
+        <p *ngIf="!esNueva" class="text-[11px] text-amber-600 mt-1.5">
+          Ojo: cambiar el slug rompe los links ya compartidos por la cuenta.
+        </p>
+      </div>
+
+      <!-- Descripción -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Descripción (página pública)</label>
+        <textarea rows="3" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)"
+                  class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 resize-none"></textarea>
+      </div>
+
+      <!-- Plan -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Plan</label>
+        <div class="flex flex-wrap gap-2">
+          <button *ngFor="let p of planes()" type="button" (click)="plan.set(p.id)"
+                  class="px-4 py-2 rounded-xl border text-sm font-bold text-left transition-colors"
+                  [ngClass]="plan() === p.id ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-stone-200 text-stone-500 hover:border-stone-300'">
+            {{ p.nombre }}
+            <span class="block text-[10px] font-semibold" [ngClass]="plan() === p.id ? 'text-teal-700' : 'text-stone-400'">
+              {{ p.precioMensual === 0 ? 'Gratis' : ('$ ' + p.precioMensual.toLocaleString('es-AR') + '/mes') }}
+            </span>
+          </button>
+        </div>
+        <p class="text-[11px] text-stone-400 mt-1.5">Los planes se administran en Membresías; el cobro se asienta en Cobros.</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="error()" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+        {{ error() }}
+      </div>
+    </div>
+
+    <div class="px-6 py-4 border-t border-stone-100 flex items-center justify-end gap-2">
+      <button (click)="cerrar.emit()"
+              class="px-4 py-2.5 rounded-xl text-sm font-bold text-stone-500 hover:bg-stone-100 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="guardar()" [disabled]="gestion.saving()"
+              class="px-5 py-2.5 rounded-xl text-sm font-bold bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 transition-colors">
+        {{ gestion.saving() ? 'Guardando…' : (esNueva ? 'Crear cuenta' : 'Guardar cambios') }}
+      </button>
+    </div>
+  </div>
+</div>

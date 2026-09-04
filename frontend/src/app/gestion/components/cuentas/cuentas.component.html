@@ -1,0 +1,123 @@
+<!-- Encabezado -->
+<div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-extrabold text-stone-800 tracking-tight">Cuentas</h1>
+    <p class="text-sm text-stone-500 mt-1">
+      Consultorios y profesionales de la plataforma. Este panel muestra solo totales —
+      los pacientes y turnos pertenecen a cada cuenta.
+    </p>
+  </div>
+  <button (click)="modal.set('nueva')"
+          class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl px-4 py-2.5 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+    </svg>
+    Nueva cuenta
+  </button>
+</div>
+
+<!-- API caída -->
+<div *ngIf="gestion.apiError()" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-2xl px-5 py-4 mb-6">
+  No se pudo conectar con la API local. Ejecutá <code class="font-mono bg-red-100 px-1.5 py-0.5 rounded">npm run api</code> y recargá.
+</div>
+
+<!-- Cargando -->
+<div *ngIf="gestion.loading() && !gestion.apiError()" class="bg-white border border-stone-200 rounded-2xl p-10 text-center text-sm text-stone-400">
+  Cargando cuentas…
+</div>
+
+<!-- Tabla -->
+<div *ngIf="!gestion.loading() && !gestion.apiError()" class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm min-w-[860px]">
+      <thead>
+        <tr class="text-left text-[11px] uppercase tracking-wider text-stone-400 border-b border-stone-100">
+          <th class="px-5 py-3.5 font-bold">Cuenta</th>
+          <th class="px-3 py-3.5 font-bold">Tipo</th>
+          <th class="px-3 py-3.5 font-bold">Plan</th>
+          <th class="px-3 py-3.5 font-bold">Estado</th>
+          <th class="px-3 py-3.5 font-bold text-center">Prof.</th>
+          <th class="px-3 py-3.5 font-bold text-center">Pacientes</th>
+          <th class="px-3 py-3.5 font-bold text-center">Turnos del mes</th>
+          <th class="px-3 py-3.5 font-bold">Últ. turno</th>
+          <th class="px-5 py-3.5 font-bold text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of gestion.cuentas()" class="border-b border-stone-50 last:border-0 hover:bg-stone-50/60 transition-colors"
+            [class.opacity-60]="c.estado === 'suspendida'">
+          <td class="px-5 py-4">
+            <p class="font-bold text-stone-800">{{ c.nombre }}</p>
+            <p class="text-xs text-stone-400">{{ c.email }}</p>
+            <a [href]="urlPublica(c)" target="_blank"
+               class="text-xs font-semibold text-teal-700 hover:underline">{{ urlPublica(c) }}</a>
+          </td>
+          <td class="px-3 py-4">
+            <span class="text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-lg"
+                  [ngClass]="c.tipo === 'consultorio' ? 'bg-teal-50 text-teal-800 border border-teal-100' : 'bg-amber-50 text-amber-700 border border-amber-100'">
+              {{ c.tipo === 'consultorio' ? 'Consultorio' : 'Profesional' }}
+            </span>
+          </td>
+          <td class="px-3 py-4">
+            <p class="text-stone-600 font-semibold">{{ nombrePlan(c.plan) }}</p>
+            <span *ngIf="pagoPendiente(c)" class="text-[10px] font-bold uppercase tracking-wide text-red-600">pago pendiente</span>
+          </td>
+          <td class="px-3 py-4">
+            <span class="text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-lg"
+                  [ngClass]="c.estado === 'suspendida' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'">
+              {{ c.estado === 'suspendida' ? 'Suspendida' : 'Activa' }}
+            </span>
+          </td>
+          <td class="px-3 py-4 text-center font-bold text-stone-700">{{ metrica(c.id).profesionales }}</td>
+          <td class="px-3 py-4 text-center font-bold text-stone-700">{{ metrica(c.id).pacientes }}</td>
+          <td class="px-3 py-4 text-center font-bold text-stone-700">{{ metrica(c.id).turnosMes }}</td>
+          <td class="px-3 py-4 text-stone-500">{{ fechaCorta(metrica(c.id).ultimoTurno) }}</td>
+          <td class="px-5 py-4">
+            <div class="flex items-center justify-end gap-1.5">
+              <button (click)="entrarComo(c)" title="Entrar como esta cuenta (soporte)"
+                      class="p-2 rounded-lg text-stone-400 hover:text-teal-700 hover:bg-teal-50 transition-colors">
+                <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                </svg>
+              </button>
+              <button (click)="modal.set(c)" title="Editar datos de la cuenta"
+                      class="p-2 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors">
+                <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+              <button (click)="toggleEstado(c)"
+                      [title]="c.estado === 'suspendida' ? 'Reactivar la cuenta' : 'Suspender: bloquea el ingreso y oculta la página pública'"
+                      class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-colors"
+                      [ngClass]="c.estado === 'suspendida'
+                        ? 'text-emerald-700 hover:bg-emerald-50'
+                        : confirmandoId() === c.id
+                          ? 'bg-red-600 text-white'
+                          : 'text-red-500 hover:bg-red-50'">
+                {{ c.estado === 'suspendida' ? 'Reactivar' : (confirmandoId() === c.id ? '¿Confirmar?' : 'Suspender') }}
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="gestion.cuentas().length === 0">
+          <td colspan="9" class="px-5 py-10 text-center text-sm text-stone-400">
+            Todavía no hay cuentas. Creá la primera con "Nueva cuenta".
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal alta/edición -->
+<app-cuenta-modal *ngIf="modal() as m"
+                  [cuenta]="m === 'nueva' ? null : m"
+                  (cerrar)="modal.set(null)"
+                  (guardada)="onGuardada($event)">
+</app-cuenta-modal>
+
+<!-- Toast -->
+<div *ngIf="toast()"
+     class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl max-w-[90vw]">
+  {{ toast() }}
+</div>

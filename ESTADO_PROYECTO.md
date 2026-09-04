@@ -1,6 +1,6 @@
 # Sistema Web para Profesionales — Estado del Proyecto
 
-Registro vivo del estado del proyecto. Última actualización: 02/09/2026.
+Registro vivo del estado del proyecto. Última actualización: 04/09/2026.
 
 ## 🛠️ Stack
 - **Frontend:** Angular 21 (standalone, signals) + TailwindCSS 3 · diseño flat pastel (blanco/gris/verde)
@@ -21,6 +21,7 @@ El sistema maneja **cuentas** (`cuentas` en db.json): cada cuenta es un **consul
 |---|---|---|
 | **Centro Médico San Martín** (consultorio · 5 profesionales: psicología, psiquiatría, odontología, nutrición, kinesiología) | `admin@centrosanmartin.com.ar` / `consultorio123` | `/c/centro-san-martin` |
 | **Dra. Elena Ramos** (profesional independiente · psicología) | `elena.ramos@gmail.com` / `elena123` | `/p/dra-elena-ramos` |
+| **Administrador de la Plataforma** (back-office · gestión de cuentas) | `admin@plataforma.com` / `admin123` | `/gestion` |
 
 - `/login`: pantalla de ingreso (mock contra `cuentas` de json-server; sesión en localStorage). Las cards de demo completan las credenciales con un clic.
 - `/admin` está protegido por guard: sin sesión redirige a `/login`. "Cerrar Sesión" funciona.
@@ -46,6 +47,15 @@ El sistema maneja **cuentas** (`cuentas` en db.json): cada cuenta es un **consul
 - **Gestionar mi turno** (`…/mis-turnos`): búsqueda por DNI **dentro de la cuenta**, reprogramar (mini agenda + horarios), Cancelar Turno, aviso por WhatsApp.
 - **`/` (landing B2B):** botones Ingresar → `/login` y links a las dos demos.
 
+### Back-office de la plataforma (`/gestion`, solo administradores)
+- **Layout con sidebar oscuro** (misma estructura que el panel de las cuentas): Dashboard · Cuentas · Membresías · Cobros (+ Reportes y Configuración como "próximamente").
+- **Modelo `Administrador`** (colección `administradores`); el mismo `/login` detecta el tipo y redirige a `/gestion` o `/admin`.
+- **Dashboard de plataforma:** KPIs (cuentas activas/suspendidas, profesionales, pacientes, turnos del mes, ingresos del mes), cobranza del período (al día / con pago pendiente / sin cargo, con atajo a registrar), actividad del mes por cuenta (barras), últimos cobros y atajos.
+- **Cuentas:** listado con tipo, plan (con aviso "pago pendiente"), estado y totales agregados — **por diseño el back-office nunca ve pacientes ni turnos**, solo contadores. Alta (a la de profesional le crea perfil + disponibilidad vacía), edición (datos, plan, slug, reset de contraseña), suspender/reactivar (suspendida = sin login + página pública oculta) e **impersonación** ("Entrar como" con banner de soporte y Volver a Gestión).
+- **Membresías:** CRUD de planes (`planes`: nombre, precio mensual ARS, máx. profesionales, activo). Un plan inactivo no se ofrece a cuentas nuevas; las existentes lo conservan.
+- **Cobros:** registro manual de pagos de membresía (`pagos`: cuenta, período YYYY-MM, monto, medio, notas), con sugerencia del precio del plan, control de duplicados por período, filtros (cuenta/período/medio) y panel de pendientes del período. Estado de cobranza derivado: plan gratuito = sin cargo; plan pago sin pago del período = **vencida** (se ve en Dashboard y Cuentas).
+- `Cuenta` suma `estado` ('activa'|'suspendida'), `plan` (FK a `planes`) y `fechaAlta`. Seed: planes Demo/Profesional/Consultorio + historial de pagos (San Martín al día, Elena con el mes pendiente).
+
 ### Técnica
 - `core/auth.service.ts` (sesión) + `core/auth.guard.ts` · modelos en `core/models.ts` (con `Cuenta` y `cuentaId`) · fechas locales (`core/date-utils.ts`) · WhatsApp (`core/whatsapp.ts`) · rutas hijas heredan `:slug` (`paramsInheritanceStrategy: 'always'`) · todo persiste vía HTTP en json-server.
 - Verificado con build + E2E Playwright (29 chequeos): guard, login/logout, aislamiento de datos entre cuentas, filtro de especialidades, wizard por profesional, mis-turnos scoped.
@@ -60,7 +70,7 @@ El sistema maneja **cuentas** (`cuentas` en db.json): cada cuenta es un **consul
 3. **Validaciones server-side** de las reglas de negocio.
 4. **Notificaciones automáticas**: WhatsApp (Business API) y email al confirmar/reprogramar/cancelar.
 5. Subida real de imágenes a storage (hoy base64 en db.json).
-6. Registro de cuentas nuevas desde la landing ("Crear cuenta" hoy lleva al login).
+6. Solicitud de alta desde la landing (formulario de contacto): el alta de cuentas es manual y curada desde `/gestion`, por decisión de producto.
 
 ### Funcional pendiente (frontend)
 - Estado **"Completado / Asistió / No asistió"** para turnos pasados (y métricas reales en dashboard).
