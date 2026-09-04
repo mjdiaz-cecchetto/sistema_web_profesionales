@@ -1,161 +1,851 @@
 {
-  "profile": {
-    "nombre": "Dra. Elena Ramos",
-    "titulo": "Psicología Clínica · Adultos",
-    "frasePrincipal": "Un espacio seguro para tu bienestar emocional y mental",
-    "biografia": "Soy psicóloga clínica con más de 10 años de experiencia, especializada en Terapia Cognitivo-Conductual (TCC). Mi objetivo es brindarte un espacio seguro, empático y libre de prejuicios donde podamos trabajar juntos para entender tus emociones, superar de la mejor manera tus dificultades y mejorar tu calidad de vida.",
-    "avatarUrl": "dra-elena.jpg",
-    "bannerUrl": "",
-    "modalidad": "Atención presencial en Palermo y Belgrano, y consultas Online para todo el mundo.",
-    "whatsapp": "",
-    "direcciones": [
-      {
-        "tipo": "Consultorio Palermo",
-        "detalle": "Atención presencial - Lun, Mié y Vie",
-        "direccion": "Av. Santa Fe 3200 (a metros de Av. Coronel Díaz), Palermo, CABA",
-        "mapLink": "https://maps.google.com",
-        "icono": "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-      },
-      {
-        "tipo": "Centro Médico Belgrano",
-        "detalle": "Consultas presenciales - Mar y Jue",
-        "direccion": "Av. Cabildo 1500 (cerca de Estación José Hernández), Belgrano, CABA",
-        "mapLink": "https://maps.google.com",
-        "icono": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-      },
-      {
-        "tipo": "Consulta Online",
-        "detalle": "Videollamadas - Flexibilidad horaria",
-        "direccion": "Enlace seguro mediante Google Meet / Zoom enviado antes de la sesión",
-        "mapLink": "",
-        "icono": "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-      }
-    ],
-    "areas": [
-      {
-        "nombre": "Ansiedad y Estrés",
-        "descripcion": "Herramientas prácticas para manejar la sobrecarga emocional y ataques de pánico.",
-        "icono": "M13 10V3L4 14h7v7l9-11h-7z",
-        "detalle": "La terapia cognitivo-conductual ofrece tasas de éxito muy altas en ansiedad. Trabajamos identificando pensamientos distorsionados y desarrollando respuestas adaptativas."
-      },
-      {
-        "nombre": "Desarrollo Personal",
-        "descripcion": "Trabajo focalizado en la autoestima, toma de decisiones difíciles y asertividad.",
-        "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
-        "detalle": "Ideal para personas que buscan conocerse mejor, potenciar sus habilidades interpersonales o reorientar su carrera."
-      },
-      {
-        "nombre": "Terapia de Pareja",
-        "descripcion": "Resolución de conflictos y construcción de vínculos afectivos más saludables.",
-        "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
-        "detalle": "Brindo un espacio neutral de escucha activa para identificar patrones destructivos y mejorar la empatía."
-      }
-    ]
-  },
-  "availability": {
-    "days": [
-      {
-        "day": "Lunes",
-        "dayIndex": 1,
-        "active": true,
-        "slots": [
-          "08:00",
-          "09:00",
-          "10:00",
-          "11:00",
-          "17:00",
-          "18:00",
-          "19:00",
-          "20:00"
-        ]
-      },
-      {
-        "day": "Martes",
-        "dayIndex": 2,
-        "active": true,
-        "slots": [
-          "17:00",
-          "18:00",
-          "19:00",
-          "20:00"
-        ]
-      },
-      {
-        "day": "Miércoles",
-        "dayIndex": 3,
-        "active": true,
-        "slots": [
-          "08:00",
-          "09:00",
-          "10:00",
-          "11:00",
-          "17:00",
-          "18:00",
-          "19:00",
-          "20:00"
-        ]
-      },
-      {
-        "day": "Jueves",
-        "dayIndex": 4,
-        "active": true,
-        "slots": [
-          "17:00",
-          "18:00",
-          "19:00",
-          "20:00"
-        ]
-      },
-      {
-        "day": "Viernes",
-        "dayIndex": 5,
-        "active": true,
-        "slots": [
-          "08:00",
-          "09:00",
-          "10:00",
-          "11:00",
-          "17:00",
-          "18:00",
-          "19:00",
-          "20:00"
-        ]
-      },
-      {
-        "day": "Sábado",
-        "dayIndex": 6,
-        "active": false,
-        "slots": []
-      },
-      {
-        "day": "Domingo",
-        "dayIndex": 0,
-        "active": false,
-        "slots": []
-      }
-    ]
-  },
+  "cuentas": [
+    {
+      "id": "cta-consultorio-sm",
+      "tipo": "consultorio",
+      "email": "admin@centrosanmartin.com.ar",
+      "password": "consultorio123",
+      "nombre": "Centro Médico San Martín",
+      "slug": "centro-san-martin",
+      "descripcion": "Centro de salud interdisciplinario en el corazón de San Martín. Psicología, psiquiatría, odontología, nutrición y kinesiología en un mismo lugar, con turnos online y atención con las principales obras sociales.",
+      "bannerUrl": ""
+    },
+    {
+      "id": "cta-elena-ramos",
+      "tipo": "profesional",
+      "email": "elena.ramos@gmail.com",
+      "password": "elena123",
+      "nombre": "Dra. Elena Ramos",
+      "slug": "dra-elena-ramos",
+      "descripcion": "Psicóloga clínica de adultos. Atención presencial en Palermo y Belgrano, y consultas online.",
+      "bannerUrl": ""
+    }
+  ],
+  "professionals": [
+    {
+      "id": "prof-funes",
+      "cuentaId": "cta-consultorio-sm",
+      "activo": true,
+      "especialidad": "Psicología",
+      "nombre": "Lic. Carolina Funes",
+      "titulo": "Psicología Clínica · Adultos",
+      "avatarUrl": "",
+      "bannerUrl": "",
+      "whatsapp": "5491161234870",
+      "frasePrincipal": "Terapia basada en evidencia, a tu ritmo y sin vueltas",
+      "biografia": "Licenciada en Psicología (UBA), con formación de posgrado en Terapia Cognitivo-Conductual. Hace 8 años acompaño a adultos en tratamientos por ansiedad, estados depresivos y crisis vitales, combinando el trabajo presencial en el centro con seguimiento online.",
+      "modalidad": "Atención presencial en el Centro Médico San Martín y consultas online.",
+      "direcciones": [
+        {
+          "tipo": "Centro Médico San Martín",
+          "detalle": "Atención presencial con turno previo",
+          "direccion": "Av. Balbín 2450 (ex Av. Mitre), San Martín, Buenos Aires",
+          "mapLink": "https://maps.google.com",
+          "icono": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        },
+        {
+          "tipo": "Consulta Online",
+          "detalle": "Videollamadas - Mié y Vie",
+          "direccion": "Enlace seguro mediante Google Meet / Zoom enviado antes de la consulta",
+          "mapLink": "",
+          "icono": "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+        }
+      ],
+      "areas": [
+        {
+          "nombre": "Ansiedad y Pánico",
+          "descripcion": "Herramientas concretas para recuperar el control frente a la ansiedad.",
+          "icono": "M13 10V3L4 14h7v7l9-11h-7z",
+          "detalle": "Trabajo con TCC y exposición gradual, con tareas entre sesiones y objetivos medibles."
+        },
+        {
+          "nombre": "Depresión",
+          "descripcion": "Acompañamiento en estados de ánimo bajos y pérdida de motivación.",
+          "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+          "detalle": "Activación conductual y reestructuración cognitiva, coordinado con psiquiatría cuando hace falta."
+        },
+        {
+          "nombre": "Crisis Vitales",
+          "descripcion": "Duelos, separaciones, cambios laborales y decisiones difíciles.",
+          "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
+          "detalle": "Un espacio para ordenar lo que pasa y decidir con más claridad."
+        }
+      ]
+    },
+    {
+      "id": "prof-lema",
+      "cuentaId": "cta-consultorio-sm",
+      "activo": true,
+      "especialidad": "Psiquiatría",
+      "nombre": "Dr. Gustavo Lema",
+      "titulo": "Médico Psiquiatra · M.N. 98.734",
+      "avatarUrl": "",
+      "bannerUrl": "",
+      "whatsapp": "5491155418223",
+      "frasePrincipal": "Diagnóstico serio y tratamiento con seguimiento cercano",
+      "biografia": "Médico (UBA) especialista en Psiquiatría. Me dedico a la evaluación diagnóstica y al tratamiento farmacológico de adultos, trabajando en equipo con los psicólogos del centro. Priorizo explicarte cada decisión del tratamiento con claridad.",
+      "modalidad": "Atención presencial en el Centro Médico San Martín y controles online.",
+      "direcciones": [
+        {
+          "tipo": "Centro Médico San Martín",
+          "detalle": "Atención presencial con turno previo",
+          "direccion": "Av. Balbín 2450 (ex Av. Mitre), San Martín, Buenos Aires",
+          "mapLink": "https://maps.google.com",
+          "icono": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        },
+        {
+          "tipo": "Consulta Online",
+          "detalle": "Controles de seguimiento - Jue",
+          "direccion": "Enlace seguro mediante Google Meet / Zoom enviado antes de la consulta",
+          "mapLink": "",
+          "icono": "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+        }
+      ],
+      "areas": [
+        {
+          "nombre": "Evaluación Diagnóstica",
+          "descripcion": "Primera consulta completa con devolución y plan de tratamiento.",
+          "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
+          "detalle": "Entrevista clínica en profundidad de 45 minutos, con informe para tu terapeuta si lo autorizás."
+        },
+        {
+          "nombre": "Tratamiento Farmacológico",
+          "descripcion": "Indicación y ajuste de medicación con controles periódicos.",
+          "icono": "M13 10V3L4 14h7v7l9-11h-7z",
+          "detalle": "Controles cada 4 a 6 semanas, con recetas digitales para tu obra social."
+        }
+      ]
+    },
+    {
+      "id": "prof-rios",
+      "cuentaId": "cta-consultorio-sm",
+      "activo": true,
+      "especialidad": "Odontología",
+      "nombre": "Od. Paula Ríos",
+      "titulo": "Odontóloga General · M.P. 41.208",
+      "avatarUrl": "",
+      "bannerUrl": "",
+      "whatsapp": "5491144906517",
+      "frasePrincipal": "Odontología sin dolor y sin sustos: te explico todo antes",
+      "biografia": "Odontóloga (UNLP) con 12 años de ejercicio. Hago odontología general y estética: controles, limpiezas, arreglos y blanqueamientos. Trabajo con técnicas mínimamente invasivas y turnos puntuales para que no pierdas la mañana en la sala de espera.",
+      "modalidad": "Atención únicamente presencial en el Centro Médico San Martín.",
+      "direcciones": [
+        {
+          "tipo": "Centro Médico San Martín",
+          "detalle": "Atención presencial con turno previo",
+          "direccion": "Av. Balbín 2450 (ex Av. Mitre), San Martín, Buenos Aires",
+          "mapLink": "https://maps.google.com",
+          "icono": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        }
+      ],
+      "areas": [
+        {
+          "nombre": "Odontología General",
+          "descripcion": "Controles, caries, extracciones simples y urgencias.",
+          "icono": "M13 10V3L4 14h7v7l9-11h-7z",
+          "detalle": "Diagnóstico con radiografía digital en el mismo turno cuando hace falta."
+        },
+        {
+          "nombre": "Limpieza y Prevención",
+          "descripcion": "Limpiezas profundas, flúor y plan de prevención personalizado.",
+          "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+          "detalle": "Recomendada cada 6 meses. Incluye revisión completa de encías."
+        },
+        {
+          "nombre": "Estética Dental",
+          "descripcion": "Blanqueamientos y carillas para mejorar tu sonrisa.",
+          "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
+          "detalle": "Presupuesto por escrito y sin compromiso en la primera consulta."
+        }
+      ]
+    },
+    {
+      "id": "prof-salas",
+      "cuentaId": "cta-consultorio-sm",
+      "activo": true,
+      "especialidad": "Nutrición",
+      "nombre": "Lic. Diego Salas",
+      "titulo": "Nutricionista · M.N. 10.552",
+      "avatarUrl": "",
+      "bannerUrl": "",
+      "whatsapp": "5491133287465",
+      "frasePrincipal": "Planes que se adaptan a tu vida, no al revés",
+      "biografia": "Licenciado en Nutrición (UBA), especializado en nutrición clínica y deportiva. Trabajo con planes flexibles y seguimiento por aplicación, sin dietas imposibles. Atiendo también pacientes con diabetes, hipertensión y colesterol elevado derivados por sus médicos.",
+      "modalidad": "Atención presencial en el Centro Médico San Martín y seguimiento online.",
+      "direcciones": [
+        {
+          "tipo": "Centro Médico San Martín",
+          "detalle": "Atención presencial con turno previo",
+          "direccion": "Av. Balbín 2450 (ex Av. Mitre), San Martín, Buenos Aires",
+          "mapLink": "https://maps.google.com",
+          "icono": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        },
+        {
+          "tipo": "Consulta Online",
+          "detalle": "Controles de seguimiento - Lun y Mié",
+          "direccion": "Enlace seguro mediante Google Meet / Zoom enviado antes de la consulta",
+          "mapLink": "",
+          "icono": "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+        }
+      ],
+      "areas": [
+        {
+          "nombre": "Descenso de Peso",
+          "descripcion": "Planes realistas con seguimiento quincenal y ajustes.",
+          "icono": "M13 10V3L4 14h7v7l9-11h-7z",
+          "detalle": "Sin alimentos prohibidos: educación alimentaria y hábitos sostenibles."
+        },
+        {
+          "nombre": "Nutrición Clínica",
+          "descripcion": "Diabetes, hipertensión, dislipemias y salud digestiva.",
+          "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+          "detalle": "Trabajo coordinado con tu médico de cabecera y tus análisis de laboratorio."
+        }
+      ]
+    },
+    {
+      "id": "prof-vega",
+      "cuentaId": "cta-consultorio-sm",
+      "activo": true,
+      "especialidad": "Kinesiología",
+      "nombre": "Lic. Martín Vega",
+      "titulo": "Kinesiólogo Fisiatra · M.N. 15.980",
+      "avatarUrl": "",
+      "bannerUrl": "",
+      "whatsapp": "5491162059841",
+      "frasePrincipal": "Recuperá el movimiento con un plan de trabajo claro",
+      "biografia": "Kinesiólogo fisiatra (UBA) orientado a rehabilitación traumatológica y deportiva. Sesiones individuales de 45 minutos con trabajo activo: nada de quedarte 20 minutos solo con el magneto. Plan de ejercicios para tu casa incluido.",
+      "modalidad": "Atención únicamente presencial en el Centro Médico San Martín.",
+      "direcciones": [
+        {
+          "tipo": "Centro Médico San Martín",
+          "detalle": "Atención presencial con turno previo",
+          "direccion": "Av. Balbín 2450 (ex Av. Mitre), San Martín, Buenos Aires",
+          "mapLink": "https://maps.google.com",
+          "icono": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        }
+      ],
+      "areas": [
+        {
+          "nombre": "Rehabilitación Traumatológica",
+          "descripcion": "Post-quirúrgicos, esguinces, fracturas y lesiones de rodilla y hombro.",
+          "icono": "M13 10V3L4 14h7v7l9-11h-7z",
+          "detalle": "Evaluación funcional inicial y objetivos por etapas hasta el alta."
+        },
+        {
+          "nombre": "Kinesiología Deportiva",
+          "descripcion": "Recuperación de lesiones deportivas y prevención de recaídas.",
+          "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+          "detalle": "Trabajo de fuerza y retorno progresivo a la actividad."
+        }
+      ]
+    },
+    {
+      "id": "prof-elena",
+      "cuentaId": "cta-elena-ramos",
+      "activo": true,
+      "especialidad": "Psicología",
+      "nombre": "Dra. Elena Ramos",
+      "titulo": "Psicología Clínica · Adultos",
+      "avatarUrl": "dra-elena.jpg",
+      "bannerUrl": "",
+      "whatsapp": "5491123456789",
+      "frasePrincipal": "Un espacio seguro para tu bienestar emocional y mental",
+      "biografia": "Soy psicóloga clínica con más de 10 años de experiencia, especializada en Terapia Cognitivo-Conductual (TCC). Mi objetivo es brindarte un espacio seguro, empático y libre de prejuicios donde podamos trabajar juntos para entender tus emociones, superar de la mejor manera tus dificultades y mejorar tu calidad de vida.",
+      "modalidad": "Atención presencial en Palermo y Belgrano, y consultas Online para todo el mundo.",
+      "direcciones": [
+        {
+          "tipo": "Consultorio Palermo",
+          "detalle": "Atención presencial - Lun, Mié y Vie",
+          "direccion": "Av. Santa Fe 3200 (a metros de Av. Coronel Díaz), Palermo, CABA",
+          "mapLink": "https://maps.google.com",
+          "icono": "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+        },
+        {
+          "tipo": "Centro Médico Belgrano",
+          "detalle": "Consultas presenciales - Mar y Jue",
+          "direccion": "Av. Cabildo 1500 (cerca de Estación José Hernández), Belgrano, CABA",
+          "mapLink": "https://maps.google.com",
+          "icono": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        },
+        {
+          "tipo": "Consulta Online",
+          "detalle": "Videollamadas - Flexibilidad horaria",
+          "direccion": "Enlace seguro mediante Google Meet / Zoom enviado antes de la consulta",
+          "mapLink": "",
+          "icono": "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+        }
+      ],
+      "areas": [
+        {
+          "nombre": "Ansiedad y Estrés",
+          "descripcion": "Herramientas prácticas para manejar la sobrecarga emocional y ataques de pánico.",
+          "icono": "M13 10V3L4 14h7v7l9-11h-7z",
+          "detalle": "La terapia cognitivo-conductual ofrece tasas de éxito muy altas en ansiedad. Trabajamos identificando pensamientos distorsionados y desarrollando respuestas adaptativas."
+        },
+        {
+          "nombre": "Desarrollo Personal",
+          "descripcion": "Trabajo focalizado en la autoestima, toma de decisiones difíciles y asertividad.",
+          "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
+          "detalle": "Ideal para personas que buscan conocerse mejor, potenciar sus habilidades interpersonales o reorientar su carrera."
+        },
+        {
+          "nombre": "Terapia de Pareja",
+          "descripcion": "Resolución de conflictos y construcción de vínculos afectivos más saludables.",
+          "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+          "detalle": "Brindo un espacio neutral de escucha activa para identificar patrones destructivos y mejorar la empatía."
+        }
+      ]
+    }
+  ],
+  "availabilities": [
+    {
+      "id": "prof-funes",
+      "cuentaId": "cta-consultorio-sm",
+      "days": [
+        {
+          "day": "Lunes",
+          "dayIndex": 1,
+          "active": true,
+          "slots": [
+            "09:00",
+            "10:00",
+            "11:00",
+            "12:00"
+          ]
+        },
+        {
+          "day": "Martes",
+          "dayIndex": 2,
+          "active": true,
+          "slots": [
+            "14:00",
+            "15:00",
+            "16:00",
+            "17:00",
+            "18:00"
+          ]
+        },
+        {
+          "day": "Miércoles",
+          "dayIndex": 3,
+          "active": true,
+          "slots": [
+            "09:00",
+            "10:00",
+            "11:00",
+            "17:00",
+            "18:00"
+          ]
+        },
+        {
+          "day": "Jueves",
+          "dayIndex": 4,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Viernes",
+          "dayIndex": 5,
+          "active": true,
+          "slots": [
+            "09:00",
+            "10:00",
+            "11:00",
+            "12:00"
+          ]
+        },
+        {
+          "day": "Sábado",
+          "dayIndex": 6,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Domingo",
+          "dayIndex": 0,
+          "active": false,
+          "slots": []
+        }
+      ]
+    },
+    {
+      "id": "prof-lema",
+      "cuentaId": "cta-consultorio-sm",
+      "days": [
+        {
+          "day": "Lunes",
+          "dayIndex": 1,
+          "active": true,
+          "slots": [
+            "08:30",
+            "09:15",
+            "10:00",
+            "10:45",
+            "11:30"
+          ]
+        },
+        {
+          "day": "Martes",
+          "dayIndex": 2,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Miércoles",
+          "dayIndex": 3,
+          "active": true,
+          "slots": [
+            "08:30",
+            "09:15",
+            "10:00",
+            "10:45"
+          ]
+        },
+        {
+          "day": "Jueves",
+          "dayIndex": 4,
+          "active": true,
+          "slots": [
+            "15:00",
+            "15:45",
+            "16:30",
+            "17:15",
+            "18:00"
+          ]
+        },
+        {
+          "day": "Viernes",
+          "dayIndex": 5,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Sábado",
+          "dayIndex": 6,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Domingo",
+          "dayIndex": 0,
+          "active": false,
+          "slots": []
+        }
+      ]
+    },
+    {
+      "id": "prof-rios",
+      "cuentaId": "cta-consultorio-sm",
+      "days": [
+        {
+          "day": "Lunes",
+          "dayIndex": 1,
+          "active": true,
+          "slots": [
+            "08:00",
+            "08:45",
+            "09:30",
+            "10:15",
+            "11:00",
+            "11:45"
+          ]
+        },
+        {
+          "day": "Martes",
+          "dayIndex": 2,
+          "active": true,
+          "slots": [
+            "14:00",
+            "14:45",
+            "15:30",
+            "16:15",
+            "17:00"
+          ]
+        },
+        {
+          "day": "Miércoles",
+          "dayIndex": 3,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Jueves",
+          "dayIndex": 4,
+          "active": true,
+          "slots": [
+            "08:00",
+            "08:45",
+            "09:30",
+            "10:15",
+            "11:00"
+          ]
+        },
+        {
+          "day": "Viernes",
+          "dayIndex": 5,
+          "active": true,
+          "slots": [
+            "14:00",
+            "14:45",
+            "15:30",
+            "16:15"
+          ]
+        },
+        {
+          "day": "Sábado",
+          "dayIndex": 6,
+          "active": true,
+          "slots": [
+            "09:00",
+            "09:45",
+            "10:30",
+            "11:15"
+          ]
+        },
+        {
+          "day": "Domingo",
+          "dayIndex": 0,
+          "active": false,
+          "slots": []
+        }
+      ]
+    },
+    {
+      "id": "prof-salas",
+      "cuentaId": "cta-consultorio-sm",
+      "days": [
+        {
+          "day": "Lunes",
+          "dayIndex": 1,
+          "active": true,
+          "slots": [
+            "16:00",
+            "16:45",
+            "17:30",
+            "18:15",
+            "19:00"
+          ]
+        },
+        {
+          "day": "Martes",
+          "dayIndex": 2,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Miércoles",
+          "dayIndex": 3,
+          "active": true,
+          "slots": [
+            "16:00",
+            "16:45",
+            "17:30",
+            "18:15",
+            "19:00"
+          ]
+        },
+        {
+          "day": "Jueves",
+          "dayIndex": 4,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Viernes",
+          "dayIndex": 5,
+          "active": true,
+          "slots": [
+            "09:00",
+            "09:45",
+            "10:30",
+            "11:15"
+          ]
+        },
+        {
+          "day": "Sábado",
+          "dayIndex": 6,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Domingo",
+          "dayIndex": 0,
+          "active": false,
+          "slots": []
+        }
+      ]
+    },
+    {
+      "id": "prof-vega",
+      "cuentaId": "cta-consultorio-sm",
+      "days": [
+        {
+          "day": "Lunes",
+          "dayIndex": 1,
+          "active": true,
+          "slots": [
+            "08:00",
+            "09:00",
+            "10:00",
+            "11:00",
+            "15:00",
+            "16:00",
+            "17:00"
+          ]
+        },
+        {
+          "day": "Martes",
+          "dayIndex": 2,
+          "active": true,
+          "slots": [
+            "08:00",
+            "09:00",
+            "10:00",
+            "11:00"
+          ]
+        },
+        {
+          "day": "Miércoles",
+          "dayIndex": 3,
+          "active": true,
+          "slots": [
+            "15:00",
+            "16:00",
+            "17:00",
+            "18:00"
+          ]
+        },
+        {
+          "day": "Jueves",
+          "dayIndex": 4,
+          "active": true,
+          "slots": [
+            "08:00",
+            "09:00",
+            "10:00",
+            "11:00"
+          ]
+        },
+        {
+          "day": "Viernes",
+          "dayIndex": 5,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Sábado",
+          "dayIndex": 6,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Domingo",
+          "dayIndex": 0,
+          "active": false,
+          "slots": []
+        }
+      ]
+    },
+    {
+      "id": "prof-elena",
+      "cuentaId": "cta-elena-ramos",
+      "days": [
+        {
+          "day": "Lunes",
+          "dayIndex": 1,
+          "active": true,
+          "slots": [
+            "08:00",
+            "09:00",
+            "10:00",
+            "11:00",
+            "17:00",
+            "18:00",
+            "19:00",
+            "20:00"
+          ]
+        },
+        {
+          "day": "Martes",
+          "dayIndex": 2,
+          "active": true,
+          "slots": [
+            "17:00",
+            "18:00",
+            "19:00",
+            "20:00"
+          ]
+        },
+        {
+          "day": "Miércoles",
+          "dayIndex": 3,
+          "active": true,
+          "slots": [
+            "08:00",
+            "09:00",
+            "10:00",
+            "11:00",
+            "17:00",
+            "18:00",
+            "19:00",
+            "20:00"
+          ]
+        },
+        {
+          "day": "Jueves",
+          "dayIndex": 4,
+          "active": true,
+          "slots": [
+            "17:00",
+            "18:00",
+            "19:00",
+            "20:00"
+          ]
+        },
+        {
+          "day": "Viernes",
+          "dayIndex": 5,
+          "active": true,
+          "slots": [
+            "08:00",
+            "09:00",
+            "10:00",
+            "11:00"
+          ]
+        },
+        {
+          "day": "Sábado",
+          "dayIndex": 6,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Domingo",
+          "dayIndex": 0,
+          "active": false,
+          "slots": []
+        }
+      ]
+    }
+  ],
   "services": [
     {
-      "id": "srv-1",
+      "id": "srv-csm-1",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-funes",
+      "name": "Consulta Psicológica",
+      "description": "Sesión individual de psicoterapia para adultos, primera vez o seguimiento.",
+      "durationMinutes": 60,
+      "price": 55000
+    },
+    {
+      "id": "srv-csm-2",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-funes",
+      "name": "Primera Entrevista",
+      "description": "Entrevista de admisión para conocer tu situación y definir el plan de trabajo.",
+      "durationMinutes": 60,
+      "price": 48000
+    },
+    {
+      "id": "srv-csm-3",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-lema",
+      "name": "Consulta Psiquiátrica",
+      "description": "Evaluación diagnóstica completa con devolución y plan de tratamiento.",
+      "durationMinutes": 45,
+      "price": 90000
+    },
+    {
+      "id": "srv-csm-4",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-lema",
+      "name": "Control de Medicación",
+      "description": "Control breve de tratamiento en curso, con receta digital.",
+      "durationMinutes": 20,
+      "price": 55000
+    },
+    {
+      "id": "srv-csm-5",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-rios",
+      "name": "Consulta Odontológica",
+      "description": "Revisión completa, diagnóstico y presupuesto sin cargo de los tratamientos.",
+      "durationMinutes": 30,
+      "price": 30000
+    },
+    {
+      "id": "srv-csm-6",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-rios",
+      "name": "Limpieza Dental",
+      "description": "Limpieza profunda con ultrasonido, pulido y aplicación de flúor.",
+      "durationMinutes": 45,
+      "price": 65000
+    },
+    {
+      "id": "srv-csm-7",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-rios",
+      "name": "Arreglo de Caries",
+      "description": "Restauración con composite del color de tu diente.",
+      "durationMinutes": 45,
+      "price": 85000
+    },
+    {
+      "id": "srv-csm-8",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-salas",
+      "name": "Primera Consulta Nutricional",
+      "description": "Evaluación completa, antropometría y entrega del plan alimentario.",
+      "durationMinutes": 45,
+      "price": 45000
+    },
+    {
+      "id": "srv-csm-9",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-salas",
+      "name": "Control Nutricional",
+      "description": "Control de seguimiento con ajustes del plan.",
+      "durationMinutes": 30,
+      "price": 32000
+    },
+    {
+      "id": "srv-csm-10",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-vega",
+      "name": "Sesión de Kinesiología",
+      "description": "Sesión individual de rehabilitación de 45 minutos con trabajo activo.",
+      "durationMinutes": 45,
+      "price": 28000
+    },
+    {
+      "id": "srv-csm-11",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-vega",
+      "name": "Evaluación Kinésica Inicial",
+      "description": "Evaluación funcional completa con plan de tratamiento por etapas.",
+      "durationMinutes": 60,
+      "price": 38000
+    },
+    {
+      "id": "srv-ele-1",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "name": "Consulta",
       "description": "Consulta general de psicología, ya sea primera vez o de seguimiento.",
       "durationMinutes": 60,
-      "price": 50
+      "price": 60000
     },
     {
-      "id": "srv-2",
-      "name": "Prescripción de Receta",
-      "description": "Sesión breve orientada a la evaluación y prescripción de medicación.",
-      "durationMinutes": 30,
-      "price": 30
-    },
-    {
-      "id": "srv-3",
+      "id": "srv-ele-2",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "name": "Terapia de Pareja",
       "description": "Sesión conjunta orientada a la resolución de conflictos del vínculo.",
       "durationMinutes": 60,
-      "price": 65
+      "price": 75000
     }
   ],
   "healthInsurances": [
@@ -186,17 +876,271 @@
     {
       "id": "hi-7",
       "name": "IOMA"
+    },
+    {
+      "id": "hi-8",
+      "name": "PAMI"
+    },
+    {
+      "id": "hi-9",
+      "name": "OSECAC"
+    },
+    {
+      "id": "hi-10",
+      "name": "Unión Personal"
     }
   ],
   "appointments": [
     {
-      "id": "apt-1",
+      "id": "apt-csm-1",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-funes",
+      "serviceName": "Consulta Psicológica",
+      "patientName": "Romina Ferreyra",
+      "patientEmail": "rominaferreyra84@gmail.com",
+      "patientPhone": "1160254871",
+      "patientDni": "31485296",
+      "date": "2026-08-30",
+      "time": "15:00",
+      "status": "CONFIRMED",
+      "notes": "Sesión de seguimiento.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "OSECAC"
+    },
+    {
+      "id": "apt-csm-2",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-rios",
+      "serviceName": "Limpieza Dental",
+      "patientName": "Hugo Benítez",
+      "patientEmail": "hbenitez1958@hotmail.com",
+      "patientPhone": "1144762903",
+      "patientDni": "12958374",
+      "date": "2026-08-31",
+      "time": "09:30",
+      "status": "CONFIRMED",
+      "notes": "Paciente de PAMI, trae orden.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "PAMI"
+    },
+    {
+      "id": "apt-csm-3",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-vega",
+      "serviceName": "Sesión de Kinesiología",
+      "patientName": "Federico Acosta",
+      "patientEmail": "fedeacosta92@gmail.com",
+      "patientPhone": "1157983041",
+      "patientDni": "36741852",
+      "date": "2026-09-01",
+      "time": "09:00",
+      "status": "CONFIRMED",
+      "notes": "Post-quirúrgico LCA, sesión 6 de 12.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "OSDE"
+    },
+    {
+      "id": "apt-csm-4",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-lema",
+      "serviceName": "Consulta Psiquiátrica",
+      "patientName": "Marta Villalba",
+      "patientEmail": "marta.villalba@yahoo.com.ar",
+      "patientPhone": "1149035782",
+      "patientDni": "17203948",
+      "date": "2026-09-02",
+      "time": "10:00",
+      "status": "CONFIRMED",
+      "notes": "Derivada por la Lic. Funes.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "IOMA"
+    },
+    {
+      "id": "apt-csm-5",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-rios",
+      "serviceName": "Consulta Odontológica",
+      "patientName": "Julieta Paredes",
+      "patientEmail": "julipardes@gmail.com",
+      "patientPhone": "1132478569",
+      "patientDni": "40185263",
+      "date": "2026-09-02",
+      "time": "14:45",
+      "status": "PENDING",
+      "notes": "Dolor en muela de juicio inferior derecha.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "Swiss Medical"
+    },
+    {
+      "id": "apt-csm-6",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-vega",
+      "serviceName": "Sesión de Kinesiología",
+      "patientName": "Federico Acosta",
+      "patientEmail": "fedeacosta92@gmail.com",
+      "patientPhone": "1157983041",
+      "patientDni": "36741852",
+      "date": "2026-09-03",
+      "time": "09:00",
+      "status": "CONFIRMED",
+      "notes": "Post-quirúrgico LCA, sesión 7 de 12.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "OSDE"
+    },
+    {
+      "id": "apt-csm-7",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-salas",
+      "serviceName": "Primera Consulta Nutricional",
+      "patientName": "Verónica Ludueña",
+      "patientEmail": "vero.luduena@gmail.com",
+      "patientPhone": "1165042183",
+      "patientDni": "33629471",
+      "date": "2026-09-03",
+      "time": "17:30",
+      "status": "PENDING",
+      "notes": "Derivada por cardiólogo, hipertensión.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "Galeno"
+    },
+    {
+      "id": "apt-csm-8",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-funes",
+      "serviceName": "Primera Entrevista",
+      "patientName": "Nicolás Ferrero",
+      "patientEmail": "nicoferrero01@gmail.com",
+      "patientPhone": "1170392485",
+      "patientDni": "43512087",
+      "date": "2026-09-04",
+      "time": "10:00",
+      "status": "PENDING",
+      "notes": "Pidió turno por ansiedad ante exámenes.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "Particular (Sin cobertura)"
+    },
+    {
+      "id": "apt-csm-9",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-lema",
+      "serviceName": "Control de Medicación",
+      "patientName": "Marta Villalba",
+      "patientEmail": "marta.villalba@yahoo.com.ar",
+      "patientPhone": "1149035782",
+      "patientDni": "17203948",
+      "date": "2026-09-11",
+      "time": "15:45",
+      "status": "PENDING",
+      "notes": "Control a 10 días del inicio del tratamiento.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "IOMA"
+    },
+    {
+      "id": "apt-csm-10",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-rios",
+      "serviceName": "Arreglo de Caries",
+      "patientName": "Hugo Benítez",
+      "patientEmail": "hbenitez1958@hotmail.com",
+      "patientPhone": "1144762903",
+      "patientDni": "12958374",
+      "date": "2026-09-05",
+      "time": "08:45",
+      "status": "CONFIRMED",
+      "notes": "Pieza 26, detectada en la limpieza.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "PAMI"
+    },
+    {
+      "id": "apt-csm-11",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-salas",
+      "serviceName": "Control Nutricional",
+      "patientName": "Pablo Giordano",
+      "patientEmail": "pgiordano@outlook.com",
+      "patientPhone": "1158741296",
+      "patientDni": "29384756",
+      "date": "2026-09-06",
+      "time": "18:15",
+      "status": "CONFIRMED",
+      "notes": "Control mensual, va bajando bien.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "Medifé"
+    },
+    {
+      "id": "apt-csm-12",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-funes",
+      "serviceName": "Consulta Psicológica",
+      "patientName": "Romina Ferreyra",
+      "patientEmail": "rominaferreyra84@gmail.com",
+      "patientPhone": "1160254871",
+      "patientDni": "31485296",
+      "date": "2026-09-06",
+      "time": "15:00",
+      "status": "CONFIRMED",
+      "notes": "Sesión semanal.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "OSECAC"
+    },
+    {
+      "id": "apt-csm-13",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-vega",
+      "serviceName": "Evaluación Kinésica Inicial",
+      "patientName": "Silvia Cáceres",
+      "patientEmail": "silvia.caceres62@gmail.com",
+      "patientPhone": "1141936758",
+      "patientDni": "16849302",
+      "date": "2026-09-07",
+      "time": "10:00",
+      "status": "PENDING",
+      "notes": "Hombro doloroso, trae resonancia.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "Unión Personal"
+    },
+    {
+      "id": "apt-csm-14",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-rios",
+      "serviceName": "Consulta Odontológica",
+      "patientName": "Camila Ortega",
+      "patientEmail": "cami.ortega@gmail.com",
+      "patientPhone": "1163805247",
+      "patientDni": "42058613",
+      "date": "2026-08-27",
+      "time": "16:15",
+      "status": "CANCELLED",
+      "notes": "Canceló por trabajo, va a reprogramar.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "Sancor Salud"
+    },
+    {
+      "id": "apt-csm-15",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-lema",
+      "serviceName": "Consulta Psiquiátrica",
+      "patientName": "Oscar Medina",
+      "patientEmail": "oscarmedina55@yahoo.com.ar",
+      "patientPhone": "1152309864",
+      "patientDni": "20174958",
+      "date": "2026-09-10",
+      "time": "09:15",
+      "status": "PENDING",
+      "notes": "Primera consulta.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "OSDE"
+    },
+    {
+      "id": "apt-ele-1",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "serviceName": "Consulta",
       "patientName": "Sofía Álvarez",
-      "patientEmail": "sofia.alvarez@email.com",
+      "patientEmail": "sofialvarez.psi@gmail.com",
       "patientPhone": "1123456001",
       "patientDni": "30123456",
-      "date": "2026-08-14",
+      "date": "2026-08-28",
       "time": "10:00",
       "status": "CANCELLED",
       "notes": "Canceló por viaje.",
@@ -204,83 +1148,63 @@
       "healthInsurance": "OSDE"
     },
     {
-      "id": "apt-2",
+      "id": "apt-ele-2",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "serviceName": "Consulta",
       "patientName": "Diego Torres",
-      "patientEmail": "diego.t@email.com",
+      "patientEmail": "diegotorres78@gmail.com",
       "patientPhone": "1123456002",
       "patientDni": "31123456",
-      "date": "2026-08-17",
-      "time": "14:00",
+      "date": "2026-08-31",
+      "time": "18:00",
       "status": "CONFIRMED",
       "notes": "Sesión de seguimiento.",
       "location": "Centro Médico Belgrano",
       "healthInsurance": "Swiss Medical"
     },
     {
-      "id": "apt-3",
+      "id": "apt-ele-3",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "serviceName": "Terapia de Pareja",
-      "patientName": "Lucía y Marcos",
-      "patientEmail": "lucia.marcos@email.com",
+      "patientName": "Lucía Benavídez",
+      "patientEmail": "lu.benavidez@gmail.com",
       "patientPhone": "1123456003",
       "patientDni": "32123456",
-      "date": "2026-08-18",
-      "time": "18:00",
+      "date": "2026-09-01",
+      "time": "19:00",
       "status": "CONFIRMED",
       "notes": "Primera sesión conjunta.",
       "location": "Consulta Online",
       "healthInsurance": "Particular (Sin cobertura)"
     },
     {
-      "id": "apt-4",
+      "id": "apt-ele-4",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "serviceName": "Consulta",
       "patientName": "Martín Spinetta",
       "patientEmail": "martin.spin@gmail.com",
       "patientPhone": "1123456789",
       "patientDni": "38123456",
-      "date": "2026-08-19",
-      "time": "10:00",
+      "date": "2026-09-02",
+      "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Paciente indica que está con picos de estrés laboral elevados.",
       "location": "Consultorio Palermo",
       "healthInsurance": "OSDE"
     },
     {
-      "id": "apt-5",
-      "serviceName": "Desarrollo Personal",
-      "patientName": "Carla Ruiz",
-      "patientEmail": "carla.ruiz@email.com",
-      "patientPhone": "1123456005",
-      "patientDni": "33123456",
-      "date": "2026-08-19",
-      "time": "15:00",
-      "status": "CONFIRMED",
-      "notes": "",
-      "location": "Centro Médico Belgrano",
-      "healthInsurance": "Galeno"
-    },
-    {
-      "id": "apt-6",
-      "serviceName": "Prescripción de Receta",
-      "patientName": "Tomás Gómez",
-      "patientEmail": "tomas.g@email.com",
-      "patientPhone": "1123456006",
-      "patientDni": "34123456",
-      "date": "2026-08-19",
-      "time": "18:00",
-      "status": "CONFIRMED",
-      "notes": "Renovación de medicación.",
-      "location": "Consulta Online",
-      "healthInsurance": "OSDE"
-    },
-    {
-      "id": "apt-7",
+      "id": "apt-ele-5",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "serviceName": "Consulta",
       "patientName": "Laura Giménez",
       "patientEmail": "laurag@live.com.ar",
       "patientPhone": "1198765432",
       "patientDni": "35987654",
-      "date": "2026-08-20",
+      "date": "2026-09-03",
       "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Primera visita presencial.",
@@ -288,55 +1212,31 @@
       "healthInsurance": "Swiss Medical"
     },
     {
-      "id": "apt-8",
-      "serviceName": "Terapia de Pareja",
-      "patientName": "Ana y Juan",
-      "patientEmail": "ana.juan@email.com",
-      "patientPhone": "1123456008",
-      "patientDni": "36123456",
-      "date": "2026-08-20",
-      "time": "16:00",
-      "status": "PENDING",
-      "notes": "",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "Particular (Sin cobertura)"
-    },
-    {
-      "id": "apt-9",
+      "id": "apt-ele-6",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "serviceName": "Consulta",
       "patientName": "Andrés Mendoza",
       "patientEmail": "andres.men@outlook.com",
       "patientPhone": "1133334444",
       "patientDni": "40111222",
-      "date": "2026-08-21",
+      "date": "2026-09-04",
       "time": "11:00",
       "status": "CONFIRMED",
-      "notes": "Sesión online rápida.",
+      "notes": "Sesión online.",
       "location": "Consulta Online",
       "healthInsurance": "Particular (Sin cobertura)"
     },
     {
-      "id": "apt-10",
-      "serviceName": "Desarrollo Personal",
-      "patientName": "Valentina Silva",
-      "patientEmail": "valen.silva@email.com",
-      "patientPhone": "1123456010",
-      "patientDni": "37123456",
-      "date": "2026-08-22",
-      "time": "10:30",
-      "status": "CONFIRMED",
-      "notes": "",
-      "location": "Centro Médico Belgrano",
-      "healthInsurance": "OSDE"
-    },
-    {
-      "id": "apt-11",
+      "id": "apt-ele-7",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "serviceName": "Consulta",
       "patientName": "Julián Castro",
-      "patientEmail": "julian.castro@email.com",
+      "patientEmail": "julian.castro@gmail.com",
       "patientPhone": "1123456011",
       "patientDni": "38123457",
-      "date": "2026-08-23",
+      "date": "2026-09-06",
       "time": "19:00",
       "status": "PENDING",
       "notes": "Consulta sobre estrés y ansiedad.",
@@ -344,169 +1244,33 @@
       "healthInsurance": "Swiss Medical"
     },
     {
-      "id": "apt-12",
-      "serviceName": "Prescripción de Receta",
-      "patientName": "Mariana López",
-      "patientEmail": "mariana.l@email.com",
-      "patientPhone": "1123456012",
-      "patientDni": "39123456",
-      "date": "2026-08-24",
-      "time": "08:30",
-      "status": "CANCELLED",
-      "notes": "El paciente reprogramó para la próxima semana.",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "Galeno"
-    },
-    {
-      "id": "apt-13",
+      "id": "apt-ele-8",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "serviceName": "Consulta",
       "patientName": "Esteban Rey",
-      "patientEmail": "esteban.rey@email.com",
+      "patientEmail": "esteban.rey@gmail.com",
       "patientPhone": "1123456013",
       "patientDni": "40123456",
-      "date": "2026-08-26",
-      "time": "14:00",
-      "status": "CANCELLED",
+      "date": "2026-09-09",
+      "time": "18:00",
+      "status": "CONFIRMED",
       "notes": "",
       "location": "Centro Médico Belgrano",
       "healthInsurance": "OSDE"
     },
     {
-      "id": "apt-14",
-      "serviceName": "Terapia de Pareja",
-      "patientName": "Clara y Federico",
-      "patientEmail": "clara.fede@email.com",
-      "patientPhone": "1123456014",
-      "patientDni": "41123456",
-      "date": "2026-08-29",
-      "time": "18:30",
-      "status": "CONFIRMED",
-      "notes": "",
-      "location": "Consulta Online",
-      "healthInsurance": "Particular (Sin cobertura)"
-    },
-    {
-      "id": "apt-15",
-      "serviceName": "Desarrollo Personal",
-      "patientName": "Sebastián Ríos",
-      "patientEmail": "sebas.rios@email.com",
-      "patientPhone": "1123456015",
-      "patientDni": "42123456",
-      "date": "2026-09-02",
-      "time": "16:00",
-      "status": "PENDING",
-      "notes": "Primera entrevista.",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "Swiss Medical"
-    },
-    {
-      "serviceName": "Consulta",
-      "patientName": "Esteban Rey",
-      "patientEmail": "esteban.rey@email.com",
-      "patientPhone": "1123456013",
-      "patientDni": "40123456",
-      "date": "2026-08-19",
-      "time": "11:00",
-      "status": "CONFIRMED",
-      "notes": "[Serie: sesión de 4]",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "OSDE",
-      "id": "apt-mt0rexg2-0-267"
-    },
-    {
-      "serviceName": "Consulta",
-      "patientName": "Esteban Rey",
-      "patientEmail": "esteban.rey@email.com",
-      "patientPhone": "1123456013",
-      "patientDni": "40123456",
-      "date": "2026-08-26",
-      "time": "11:00",
-      "status": "CONFIRMED",
-      "notes": "[Serie: sesión de 4]",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "OSDE",
-      "id": "apt-mt0rexg3-1-44"
-    },
-    {
-      "serviceName": "Consulta",
-      "patientName": "Esteban Rey",
-      "patientEmail": "esteban.rey@email.com",
-      "patientPhone": "1123456013",
-      "patientDni": "40123456",
-      "date": "2026-09-02",
-      "time": "11:00",
-      "status": "CONFIRMED",
-      "notes": "[Serie: sesión de 4]",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "OSDE",
-      "id": "apt-mt0rexg3-2-49"
-    },
-    {
-      "serviceName": "Consulta",
-      "patientName": "Esteban Rey",
-      "patientEmail": "esteban.rey@email.com",
-      "patientPhone": "1123456013",
-      "patientDni": "40123456",
-      "date": "2026-09-09",
-      "time": "11:00",
-      "status": "CONFIRMED",
-      "notes": "[Serie: sesión de 4]",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "OSDE",
-      "id": "apt-mt0rexg4-3-123"
-    },
-    {
-      "serviceName": "Terapia de Pareja",
-      "patientName": "Ana y Juan",
-      "patientEmail": "ana.juan@email.com",
-      "patientPhone": "1123456008",
-      "patientDni": "36123456",
-      "date": "2026-08-19",
-      "time": "17:00",
-      "status": "CONFIRMED",
-      "notes": "",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "Particular (Sin cobertura)",
-      "id": "apt-mt0s79xf-0-541"
-    },
-    {
-      "serviceName": "Consulta",
-      "patientName": "Diego Torres",
-      "patientEmail": "diego.t@email.com",
-      "patientPhone": "1123456002",
-      "patientDni": "31123456",
-      "date": "2026-08-19",
-      "time": "20:00",
-      "status": "PENDING",
-      "notes": "",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "Swiss Medical",
-      "id": "apt-mt0s7tt8-0-239"
-    },
-    {
-      "id": "apt-mtg53pii426",
-      "serviceName": "Consulta",
-      "patientName": "Matias Joaquin Diaz",
-      "patientEmail": "matidiaz10.md@gmail.com",
-      "patientPhone": "3853115268",
-      "patientDni": "39583171",
-      "date": "2026-08-31",
-      "time": "10:00",
-      "status": "CANCELLED",
-      "notes": "[Cancelado por el paciente]",
-      "location": "Consultorio Palermo",
-      "healthInsurance": "OSDE"
-    },
-    {
-      "id": "apt-mtg5b221541",
+      "id": "apt-mtkmoy0x771",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
       "serviceName": "Consulta",
       "patientName": "Matias Diaz",
       "patientEmail": "matidiaz10.md@gmail.com",
       "patientPhone": "3853115268",
       "patientDni": "39583171",
-      "date": "2026-08-31",
-      "time": "10:00",
-      "status": "CONFIRMED",
+      "date": "2026-09-03",
+      "time": "17:00",
+      "status": "PENDING",
       "notes": "",
       "location": "Consultorio Palermo",
       "healthInsurance": "OSDE"
@@ -514,149 +1278,214 @@
   ],
   "patients": [
     {
-      "id": "pat-30123456",
-      "nombre": "Sofía Álvarez",
-      "email": "sofia.alvarez@email.com",
-      "telefono": "1123456001",
-      "dni": "30123456",
-      "obraSocial": "OSDE",
-      "fechaAlta": "2026-07-20"
+      "id": "pat-cta-consultorio-sm-31485296",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Romina Ferreyra",
+      "email": "rominaferreyra84@gmail.com",
+      "telefono": "1160254871",
+      "dni": "31485296",
+      "obraSocial": "OSECAC",
+      "fechaAlta": "2026-07-19"
     },
     {
-      "id": "pat-31123456",
-      "nombre": "Diego Torres",
-      "email": "diego.t@email.com",
-      "telefono": "1123456002",
-      "dni": "31123456",
-      "obraSocial": "Swiss Medical",
+      "id": "pat-cta-consultorio-sm-12958374",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Hugo Benítez",
+      "email": "hbenitez1958@hotmail.com",
+      "telefono": "1144762903",
+      "dni": "12958374",
+      "obraSocial": "PAMI",
       "fechaAlta": "2026-07-21"
     },
     {
-      "id": "pat-32123456",
-      "nombre": "Lucía y Marcos",
-      "email": "lucia.marcos@email.com",
+      "id": "pat-cta-consultorio-sm-36741852",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Federico Acosta",
+      "email": "fedeacosta92@gmail.com",
+      "telefono": "1157983041",
+      "dni": "36741852",
+      "obraSocial": "OSDE",
+      "fechaAlta": "2026-07-23"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-17203948",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Marta Villalba",
+      "email": "marta.villalba@yahoo.com.ar",
+      "telefono": "1149035782",
+      "dni": "17203948",
+      "obraSocial": "IOMA",
+      "fechaAlta": "2026-07-25"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-40185263",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Julieta Paredes",
+      "email": "julipardes@gmail.com",
+      "telefono": "1132478569",
+      "dni": "40185263",
+      "obraSocial": "Swiss Medical",
+      "fechaAlta": "2026-07-27"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-33629471",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Verónica Ludueña",
+      "email": "vero.luduena@gmail.com",
+      "telefono": "1165042183",
+      "dni": "33629471",
+      "obraSocial": "Galeno",
+      "fechaAlta": "2026-07-31"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-43512087",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Nicolás Ferrero",
+      "email": "nicoferrero01@gmail.com",
+      "telefono": "1170392485",
+      "dni": "43512087",
+      "obraSocial": "Particular (Sin cobertura)",
+      "fechaAlta": "2026-08-02"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-29384756",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Pablo Giordano",
+      "email": "pgiordano@outlook.com",
+      "telefono": "1158741296",
+      "dni": "29384756",
+      "obraSocial": "Medifé",
+      "fechaAlta": "2026-08-08"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-16849302",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Silvia Cáceres",
+      "email": "silvia.caceres62@gmail.com",
+      "telefono": "1141936758",
+      "dni": "16849302",
+      "obraSocial": "Unión Personal",
+      "fechaAlta": "2026-08-12"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-42058613",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Camila Ortega",
+      "email": "cami.ortega@gmail.com",
+      "telefono": "1163805247",
+      "dni": "42058613",
+      "obraSocial": "Sancor Salud",
+      "fechaAlta": "2026-08-14"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-20174958",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Oscar Medina",
+      "email": "oscarmedina55@yahoo.com.ar",
+      "telefono": "1152309864",
+      "dni": "20174958",
+      "obraSocial": "OSDE",
+      "fechaAlta": "2026-08-16"
+    },
+    {
+      "id": "pat-cta-elena-ramos-30123456",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Sofía Álvarez",
+      "email": "sofialvarez.psi@gmail.com",
+      "telefono": "1123456001",
+      "dni": "30123456",
+      "obraSocial": "OSDE",
+      "fechaAlta": "2026-08-18"
+    },
+    {
+      "id": "pat-cta-elena-ramos-31123456",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Diego Torres",
+      "email": "diegotorres78@gmail.com",
+      "telefono": "1123456002",
+      "dni": "31123456",
+      "obraSocial": "Swiss Medical",
+      "fechaAlta": "2026-08-20"
+    },
+    {
+      "id": "pat-cta-elena-ramos-32123456",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Lucía Benavídez",
+      "email": "lu.benavidez@gmail.com",
       "telefono": "1123456003",
       "dni": "32123456",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-07-22"
+      "fechaAlta": "2026-08-22"
     },
     {
-      "id": "pat-38123456",
+      "id": "pat-cta-elena-ramos-38123456",
+      "cuentaId": "cta-elena-ramos",
       "nombre": "Martín Spinetta",
       "email": "martin.spin@gmail.com",
       "telefono": "1123456789",
       "dni": "38123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-07-23"
+      "fechaAlta": "2026-08-24"
     },
     {
-      "id": "pat-33123456",
-      "nombre": "Carla Ruiz",
-      "email": "carla.ruiz@email.com",
-      "telefono": "1123456005",
-      "dni": "33123456",
-      "obraSocial": "Galeno",
-      "fechaAlta": "2026-07-24"
-    },
-    {
-      "id": "pat-34123456",
-      "nombre": "Tomás Gómez",
-      "email": "tomas.g@email.com",
-      "telefono": "1123456006",
-      "dni": "34123456",
-      "obraSocial": "OSDE",
-      "fechaAlta": "2026-07-25"
-    },
-    {
-      "id": "pat-35987654",
+      "id": "pat-cta-elena-ramos-35987654",
+      "cuentaId": "cta-elena-ramos",
       "nombre": "Laura Giménez",
       "email": "laurag@live.com.ar",
       "telefono": "1198765432",
       "dni": "35987654",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-07-26"
+      "fechaAlta": "2026-08-26"
     },
     {
-      "id": "pat-36123456",
-      "nombre": "Ana y Juan",
-      "email": "ana.juan@email.com",
-      "telefono": "1123456008",
-      "dni": "36123456",
-      "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-07-27"
-    },
-    {
-      "id": "pat-40111222",
+      "id": "pat-cta-elena-ramos-40111222",
+      "cuentaId": "cta-elena-ramos",
       "nombre": "Andrés Mendoza",
       "email": "andres.men@outlook.com",
       "telefono": "1133334444",
       "dni": "40111222",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-07-28"
+      "fechaAlta": "2026-08-28"
     },
     {
-      "id": "pat-37123456",
-      "nombre": "Valentina Silva",
-      "email": "valen.silva@email.com",
-      "telefono": "1123456010",
-      "dni": "37123456",
-      "obraSocial": "OSDE",
-      "fechaAlta": "2026-07-29"
-    },
-    {
-      "id": "pat-38123457",
+      "id": "pat-cta-elena-ramos-38123457",
+      "cuentaId": "cta-elena-ramos",
       "nombre": "Julián Castro",
-      "email": "julian.castro@email.com",
+      "email": "julian.castro@gmail.com",
       "telefono": "1123456011",
       "dni": "38123457",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-07-30"
+      "fechaAlta": "2026-08-30"
     },
     {
-      "id": "pat-39123456",
-      "nombre": "Mariana López",
-      "email": "mariana.l@email.com",
-      "telefono": "1123456012",
-      "dni": "39123456",
-      "obraSocial": "Galeno",
-      "fechaAlta": "2026-07-31"
-    },
-    {
-      "id": "pat-40123456",
+      "id": "pat-cta-elena-ramos-40123456",
+      "cuentaId": "cta-elena-ramos",
       "nombre": "Esteban Rey",
-      "email": "esteban.rey@email.com",
+      "email": "esteban.rey@gmail.com",
       "telefono": "1123456013",
       "dni": "40123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-08-01"
+      "fechaAlta": "2026-09-01"
     },
     {
-      "id": "pat-41123456",
-      "nombre": "Clara y Federico",
-      "email": "clara.fede@email.com",
-      "telefono": "1123456014",
-      "dni": "41123456",
-      "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-08-02"
-    },
-    {
-      "id": "pat-42123456",
-      "nombre": "Sebastián Ríos",
-      "email": "sebas.rios@email.com",
-      "telefono": "1123456015",
-      "dni": "42123456",
-      "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-08-03"
-    },
-    {
-      "id": "pat-39583171",
-      "nombre": "Matias Joaquin Diaz",
+      "id": "pat-cta-elena-ramos-39583171",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Matias Diaz",
       "email": "matidiaz10.md@gmail.com",
       "telefono": "3853115268",
       "dni": "39583171",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-08-31"
+      "fechaAlta": "2026-09-03"
     }
   ],
-  "blockedDates": []
+  "blockedDates": [
+    {
+      "id": "blk-lema-1",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-lema",
+      "startDate": "2026-09-14",
+      "endDate": "2026-09-16",
+      "reason": "Congreso Argentino de Psiquiatría"
+    }
+  ]
 }

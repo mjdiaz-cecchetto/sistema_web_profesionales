@@ -18,7 +18,7 @@ import { todayLocal } from '../../../core/date-utils';
           <div class="min-w-0">
             <p class="text-teal-700 text-[10px] font-bold uppercase tracking-[0.18em]">{{ todayFormatted }}</p>
             <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-teal-950 truncate">
-              ¡Hola, {{ doctorName() }}!
+              ¡Hola! {{ saludo() }}
               <span class="text-sm font-semibold text-teal-800 ml-2 hidden md:inline">
                 Tenés <span class="font-extrabold">{{ todayApptsCount() }} {{ todayApptsCount() === 1 ? 'turno' : 'turnos' }}</span> para hoy
                 y <span class="font-extrabold">{{ pendingCount() }}</span> por confirmar.
@@ -82,7 +82,9 @@ import { todayLocal } from '../../../core/date-utils';
                         {{ statusLabel(appt.status) }}
                       </span>
                     </div>
-                    <p class="text-[11px] text-stone-500 mt-0.5 truncate">{{ appt.serviceName }} · {{ appt.location }}</p>
+                    <p class="text-[11px] text-stone-500 mt-0.5 truncate">
+                      <span *ngIf="adminService.esConsultorio()" class="font-bold text-teal-700">{{ adminService.nombreDe(appt.profesionalId) }} · </span>{{ appt.serviceName }} · {{ appt.location }}
+                    </p>
                     <p *ngIf="appt.notes" class="text-[10px] italic text-stone-500 mt-1 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-100 truncate" [title]="appt.notes">
                       "{{ appt.notes }}"
                     </p>
@@ -175,25 +177,29 @@ import { todayLocal } from '../../../core/date-utils';
   `
 })
 export class DashboardComponent {
-  private adminService = inject(AdminService);
+  adminService = inject(AdminService);
 
   todayDateString = todayLocal();
   todayFormatted = this.formatToday(new Date());
 
-  doctorName = computed(() => {
+  saludo = computed(() => {
+    if (this.adminService.esConsultorio() && this.adminService.seleccionId() === 'ALL') {
+      return `Así viene el día en ${this.adminService.cuenta()?.nombre ?? 'tu consultorio'}.`;
+    }
     const nombre = this.adminService.profile()?.nombre ?? '';
-    return nombre.split(' ').slice(0, 2).join(' ') || '¡Bienvenida!';
+    const corto = nombre.split(' ').slice(0, 2).join(' ');
+    return corto ? `Este es el resumen de ${corto}.` : 'Este es el resumen de tu consultorio.';
   });
 
   todayAppts = computed(() =>
-    this.adminService.appointments()
+    this.adminService.turnosVisibles()
       .filter(a => a.date === this.todayDateString)
       .sort((a, b) => a.time.localeCompare(b.time))
   );
 
   todayApptsCount = computed(() => this.todayAppts().length);
-  pendingCount = computed(() => this.adminService.appointments().filter(a => a.status === 'PENDING').length);
-  totalReservationsCount = computed(() => this.adminService.appointments().filter(a => a.status !== 'CANCELLED').length);
+  pendingCount = computed(() => this.adminService.turnosVisibles().filter(a => a.status === 'PENDING').length);
+  totalReservationsCount = computed(() => this.adminService.turnosVisibles().filter(a => a.status !== 'CANCELLED').length);
   uniquePatientsCount = computed(() => this.adminService.patients().length);
 
   statCards = computed(() => [

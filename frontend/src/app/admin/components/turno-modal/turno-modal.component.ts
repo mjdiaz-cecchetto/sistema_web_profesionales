@@ -71,6 +71,25 @@ interface CeldaMini {
         <!-- Cuerpo scrolleable -->
         <div class="flex-grow overflow-y-auto px-5 sm:px-7 py-5 space-y-5">
 
+          <!-- ===== Profesional (solo en modo consultorio) ===== -->
+          <div *ngIf="adminService.esConsultorio()" class="space-y-2">
+            <label class="field-label">Profesional</label>
+            <div class="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-0.5">
+              <button *ngFor="let p of adminService.profesionalesActivos()"
+                      (click)="cambiarProfesional(p.id)"
+                      [ngClass]="profId() === p.id
+                        ? 'bg-teal-100 text-teal-900 border-teal-300'
+                        : 'bg-white text-stone-500 border-stone-200 hover:border-teal-300 hover:text-teal-800'"
+                      class="snap-start shrink-0 flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 rounded-full border text-[11px] font-bold transition-colors">
+                <span class="w-6 h-6 rounded-full overflow-hidden bg-teal-200 border border-teal-300 flex items-center justify-center text-[8px] font-extrabold text-teal-900 shrink-0">
+                  <img *ngIf="p.avatarUrl" [src]="p.avatarUrl" class="w-full h-full object-cover">
+                  <ng-container *ngIf="!p.avatarUrl">{{ inicialesDe(p.nombre) }}</ng-container>
+                </span>
+                {{ p.nombre }}
+              </button>
+            </div>
+          </div>
+
           <!-- ===== 1. Paciente ===== -->
           <div class="space-y-2">
             <label class="field-label">1 · Paciente</label>
@@ -451,6 +470,7 @@ export class TurnoModalComponent {
   @Input() set turnoEditar(turno: Appointment | null) {
     if (!turno) return;
     this.turnoOriginal.set(turno);
+    this.profId.set(turno.profesionalId);
     this.elegirFecha(turno.date);
     this.hora.set(turno.time);
     this.servicioNombre.set(turno.serviceName);
@@ -461,7 +481,8 @@ export class TurnoModalComponent {
 
     const pac = this.adminService.patients().find(p => p.dni === turno.patientDni);
     this.pacienteSeleccionado.set(pac ?? {
-      id: 'pat-' + turno.patientDni,
+      id: 'pat-' + turno.cuentaId + '-' + turno.patientDni,
+      cuentaId: turno.cuentaId,
       nombre: turno.patientName,
       email: turno.patientEmail,
       telefono: turno.patientPhone,
@@ -478,6 +499,9 @@ export class TurnoModalComponent {
   // ---- Estado del formulario ----
   turnoOriginal = signal<Appointment | null>(null);
   modoEdicion = computed(() => this.turnoOriginal() !== null);
+
+  /** Profesional del turno (independiente del selector global del panel). */
+  profId = signal<string>('');
 
   busquedaPaciente = signal('');
   pacienteSeleccionado = signal<Patient | null>(null);
@@ -518,24 +542,31 @@ export class TurnoModalComponent {
     return list.slice(0, 6);
   });
 
+  /** Profesional elegido en el modal (objeto completo). */
+  profesional = computed(() => this.adminService.profesionalPorId(this.profId()));
+
   lugares = computed(() => {
-    const dirs = (this.adminService.profile()?.direcciones ?? []).map(d => d.tipo);
+    const dirs = (this.profesional()?.direcciones ?? []).map(d => d.tipo);
     return dirs.length > 0 ? dirs : ['Consultorio'];
   });
 
-  /** Solo servicios activos se ofrecen para turnos nuevos. */
-  serviciosActivos = computed(() => this.adminService.services().filter(s => s.activo !== false));
+  /** Solo servicios activos DEL profesional elegido. */
+  serviciosActivos = computed(() =>
+    this.adminService.serviciosDe(this.profId()).filter(s => s.activo !== false)
+  );
 
   /** true si el turno en edición usa un servicio inactivo o eliminado (se muestra igual). */
   servicioFueraDeLista = computed(() =>
     !!this.servicioNombre() && !this.serviciosActivos().some(s => s.name === this.servicioNombre())
   );
 
-  /** Turnos activos que cuentan para conflictos (excluye cancelados y el que se edita). */
+  /** Turnos activos del profesional elegido (excluye cancelados y el que se edita).
+   *  Las reglas de solapamiento y paciente-único-por-día aplican POR PROFESIONAL. */
   private turnosActivos = computed(() => {
     const editandoId = this.turnoOriginal()?.id;
+    const prof = this.profId();
     return this.adminService.appointments()
-      .filter(a => a.status !== 'CANCELLED' && a.id !== editandoId);
+      .filter(a => a.status !== 'CANCELLED' && a.id !== editandoId && a.profesionalId === prof);
   });
 
   nombreMesMini = computed(() => {
@@ -549,8 +580,8 @@ export class TurnoModalComponent {
     const anio = this.anioMini();
     const seleccionada = this.fecha();
     const activos = this.turnosActivos();
-    const avail = this.adminService.availability();
-    const bloqueos = this.adminService.blockedDates();
+    const avail = this.adminService.availabilityDe(this.profId());
+    const bloqueos = this.adminService.bloqueosDe(this.profId());
     const hoy = todayLocal();
     const fechaOriginal = this.turnoOriginal()?.date;
 
@@ -604,7 +635,7 @@ export class TurnoModalComponent {
     const f = this.fecha();
     if (!f) return [];
     const dow = parseLocalDate(f).getDay();
-    const config = this.adminService.availability().find(c => c.dayIndex === dow);
+    const config = this.adminService.availabilityDe(this.profId()).find(c => c.dayIndex === dow);
     if (!config || !config.active) return [];
 
     const ocupados = new Set(
@@ -622,7 +653,7 @@ export class TurnoModalComponent {
     const cantidad = this.repetir() && !this.modoEdicion() ? this.sesiones() : 1;
     const freq = this.frecuencia();
     const activos = this.turnosActivos();
-    const avail = this.adminService.availability();
+    const avail = this.adminService.availabilityDe(this.profId());
     const dniPaciente = this.pacienteSeleccionado()?.dni;
 
     const fechas: FechaGenerada[] = [];
@@ -692,15 +723,36 @@ export class TurnoModalComponent {
   });
 
   constructor() {
+    // Profesional inicial: el del selector global (o el primero activo).
+    effect(() => {
+      if (!this.profId() && this.adminService.focoId()) {
+        this.profId.set(this.adminService.focoId());
+      }
+    });
+
+    // Defaults de lugar y servicio según el profesional elegido.
     effect(() => {
       const lugares = this.lugares();
-      if (!this.lugar() && lugares.length > 0) this.lugar.set(lugares[0]);
+      if (lugares.length > 0 && !lugares.includes(this.lugar())) this.lugar.set(lugares[0]);
 
       const servicios = this.serviciosActivos();
       if (!this.modoEdicion() && servicios.length > 0 && !servicios.some(s => s.name === this.servicioNombre())) {
         this.servicioNombre.set(servicios[0].name);
       }
     });
+  }
+
+  /** Cambiar el profesional del turno: resetea la hora (los horarios difieren). */
+  cambiarProfesional(id: string) {
+    if (id === this.profId()) return;
+    this.profId.set(id);
+    this.hora.set('');
+  }
+
+  inicialesDe(nombre: string): string {
+    const partes = nombre.split(' ').filter(Boolean);
+    if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
+    return nombre.slice(0, 2).toUpperCase();
   }
 
   // ---- Alta rápida de paciente ----
@@ -829,6 +881,7 @@ export class TurnoModalComponent {
     if (original) {
       this.guardando.set(true);
       const ok = await this.adminService.updateAppointment(original.id, {
+        profesionalId: this.profId(),
         serviceName: this.servicioNombre(),
         patientName: pac.nombre,
         patientEmail: pac.email,
@@ -855,6 +908,7 @@ export class TurnoModalComponent {
       : '';
 
     const nuevos = fechasACrear.map(fg => ({
+      profesionalId: this.profId(),
       serviceName: this.servicioNombre(),
       patientName: pac.nombre,
       patientEmail: pac.email,

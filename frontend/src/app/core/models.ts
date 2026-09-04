@@ -18,7 +18,34 @@ export interface SpecialtyConfig {
   detalle: string;
 }
 
+/**
+ * Cuenta del sistema (tenant): puede ser un CONSULTORIO (con varios
+ * profesionales) o un PROFESIONAL independiente. Cada cuenta tiene su
+ * login, su panel y su página pública propia (/c/{slug} o /p/{slug}).
+ */
+export interface Cuenta {
+  id: string;
+  tipo: 'consultorio' | 'profesional';
+  email: string;
+  password: string; // mock: en el backend real será un hash
+  nombre: string;
+  slug: string;
+  descripcion: string;
+  bannerUrl?: string;
+}
+
+/** @deprecated alias temporal — usar Cuenta. */
+export type Consultorio = Cuenta;
+
 export interface ProfessionalProfile {
+  /** Identificador del profesional. */
+  id: string;
+  /** Cuenta (consultorio o profesional independiente) a la que pertenece. */
+  cuentaId: string;
+  /** Especialidad/categoría (ej. Psicología, Odontología) — agrupa en la página del consultorio. */
+  especialidad: string;
+  /** false = no atiende actualmente (no aparece para pacientes ni turnos nuevos). */
+  activo?: boolean;
   nombre: string;
   titulo: string;
   avatarUrl: string;
@@ -34,6 +61,8 @@ export interface ProfessionalProfile {
 
 export interface Patient {
   id: string;
+  /** Padrón por cuenta (compartido entre los profesionales del consultorio). */
+  cuentaId: string;
   nombre: string;
   email: string;
   telefono: string;
@@ -46,6 +75,9 @@ export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
 
 export interface Appointment {
   id: string;
+  cuentaId: string;
+  /** Profesional que atiende el turno. */
+  profesionalId: string;
   serviceName: string;
   patientName: string;
   patientEmail: string;
@@ -59,6 +91,13 @@ export interface Appointment {
   healthInsurance: string;
 }
 
+/** Disponibilidad semanal de UN profesional (colección `availabilities`, id = id del profesional). */
+export interface ProfessionalAvailability {
+  id: string; // = id del profesional
+  cuentaId: string;
+  days: DayAvailability[];
+}
+
 export interface DayAvailability {
   day: string;      // 'Lunes', 'Martes', ...
   dayIndex: number; // 0 (Domingo) a 6 (Sábado)
@@ -68,6 +107,9 @@ export interface DayAvailability {
 
 export interface BlockedDateRange {
   id: string;
+  cuentaId: string;
+  /** Profesional al que aplica el bloqueo. */
+  profesionalId: string;
   startDate: string; // YYYY-MM-DD
   endDate: string;   // YYYY-MM-DD
   reason: string;
@@ -75,6 +117,9 @@ export interface BlockedDateRange {
 
 export interface Service {
   id: string;
+  cuentaId: string;
+  /** Profesional que ofrece este servicio. */
+  profesionalId: string;
   name: string;
   description: string;
   durationMinutes: number;

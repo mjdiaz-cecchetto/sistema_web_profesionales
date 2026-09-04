@@ -1,12 +1,14 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormArray, Validators } from '@angular/forms';
 import { AdminService, AdminProfile } from '../../services/admin.service';
+import { ProfesionalPickerComponent } from '../profesional-picker/profesional-picker.component';
 
 @Component({
   selector: 'app-perfil-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ProfesionalPickerComponent, RouterModule],
   template: `
     <div class="space-y-6 animate-fade-in" *ngIf="perfilForm; else loadingTpl">
 
@@ -16,12 +18,14 @@ import { AdminService, AdminProfile } from '../../services/admin.service';
           <h1 class="text-2xl font-extrabold text-stone-900 tracking-tight">Mi Perfil Público</h1>
           <p class="text-sm text-stone-500 mt-0.5">Administrá la información que ven tus pacientes al agendar turnos.</p>
         </div>
-        <a href="/client" target="_blank"
+        <a [routerLink]="linkPublico()" target="_blank"
            class="btn-secondary !text-xs !py-2 inline-flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
           Ver cómo queda
         </a>
       </div>
+
+      <app-profesional-picker></app-profesional-picker>
 
       <!-- Alerta de éxito -->
       <div *ngIf="showSuccessAlert()" class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-sm font-semibold flex items-center justify-between animate-scale-in">
@@ -225,6 +229,14 @@ import { AdminService, AdminProfile } from '../../services/admin.service';
 })
 export class PerfilEditorComponent {
   adminService = inject(AdminService);
+
+  /** Página pública donde el paciente ve este perfil. */
+  linkPublico(): (string | undefined)[] {
+    const c = this.adminService.cuenta();
+    if (!c) return ['/'];
+    if (c.tipo === 'profesional') return ['/p', c.slug];
+    return ['/c', c.slug, 'p', this.adminService.focoId()];
+  }
   private fb = inject(FormBuilder);
 
   perfilForm!: FormGroup;
@@ -249,12 +261,13 @@ export class PerfilEditorComponent {
   }
 
   constructor() {
-    // El perfil llega de forma asíncrona: construir el formulario cuando esté disponible.
-    let inicializado = false;
+    // Construir el formulario cuando el perfil está disponible,
+    // y reconstruirlo si cambia el profesional en foco (modo consultorio).
+    let idAnterior = '';
     effect(() => {
       const prof = this.adminService.profile();
-      if (prof && !inicializado) {
-        inicializado = true;
+      if (prof && prof.id !== idAnterior) {
+        idAnterior = prof.id;
         this.buildForm(prof);
       }
     });

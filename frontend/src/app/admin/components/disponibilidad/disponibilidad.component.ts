@@ -2,12 +2,13 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, DayAvailability } from '../../services/admin.service';
+import { ProfesionalPickerComponent } from '../profesional-picker/profesional-picker.component';
 import { formatDMY, todayLocal } from '../../../core/date-utils';
 
 @Component({
   selector: 'app-disponibilidad',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProfesionalPickerComponent],
   template: `
     <div class="space-y-6 animate-fade-in">
 
@@ -25,6 +26,8 @@ import { formatDMY, todayLocal } from '../../../core/date-utils';
           {{ mostrarBloqueador() ? 'Ocultar Bloqueador de Fechas' : 'Bloquear Fechas (Vacaciones / Feriados)' }}
         </button>
       </div>
+
+      <app-profesional-picker></app-profesional-picker>
 
       <!-- Alerta de éxito -->
       <div *ngIf="showSuccessAlert()" class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-sm font-semibold flex items-center justify-between animate-scale-in">
@@ -215,7 +218,7 @@ import { formatDMY, todayLocal } from '../../../core/date-utils';
   `
 })
 export class DisponibilidadComponent {
-  private adminService = inject(AdminService);
+  adminService = inject(AdminService);
 
   availabilityList = signal<DayAvailability[]>([]);
   newSlotTimes: string[] = Array(7).fill('08:00');
@@ -231,7 +234,7 @@ export class DisponibilidadComponent {
 
   showSuccessAlert = signal(false);
 
-  blockedDatesList = computed(() => this.adminService.blockedDates());
+  blockedDatesList = computed(() => this.adminService.bloqueosDelFoco());
 
   monthName = computed(() => {
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -296,13 +299,14 @@ export class DisponibilidadComponent {
   });
 
   constructor() {
-    // La disponibilidad llega de forma asíncrona desde la API:
-    // copiar al estado editable local cuando llega (si el usuario aún no editó).
-    let inicializado = false;
+    // Copiar la disponibilidad del profesional en foco al estado editable,
+    // y volver a copiarla cada vez que cambia el profesional seleccionado.
+    let focoAnterior = '';
     effect(() => {
+      const foco = this.adminService.focoId();
       const data = this.adminService.availability();
-      if (!inicializado && data.length > 0) {
-        inicializado = true;
+      if (foco && foco !== focoAnterior && data.length > 0) {
+        focoAnterior = foco;
         this.availabilityList.set(JSON.parse(JSON.stringify(data)));
       }
     });

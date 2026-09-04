@@ -23,11 +23,11 @@ import { CommonModule } from '@angular/common';
         
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
-          <button (click)="prevMonth(); $event.stopPropagation()" class="p-1.5 hover:bg-stone-100 rounded-lg text-stone-500 transition-colors">
+          <button type="button" (click)="prevMonth(); $event.stopPropagation()" class="p-1.5 hover:bg-stone-100 rounded-lg text-stone-500 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
           </button>
           <div class="font-bold text-stone-800 text-sm tracking-tight">{{ currentMonthName() }} {{ currentYear() }}</div>
-          <button (click)="nextMonth(); $event.stopPropagation()" class="p-1.5 hover:bg-stone-100 rounded-lg text-stone-500 transition-colors">
+          <button type="button" (click)="nextMonth(); $event.stopPropagation()" class="p-1.5 hover:bg-stone-100 rounded-lg text-stone-500 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
           </button>
         </div>
@@ -40,7 +40,7 @@ import { CommonModule } from '@angular/common';
         <!-- Grid -->
         <div class="grid grid-cols-7 gap-1">
           <div *ngFor="let day of calendarDays()" class="aspect-square flex items-center justify-center">
-            <button *ngIf="day" 
+            <button type="button" *ngIf="day" 
                     (click)="selectDate(day); $event.stopPropagation()"
                     [class.bg-teal-500]="isSelected(day)"
                     [class.text-white]="isSelected(day)"
@@ -57,10 +57,10 @@ import { CommonModule } from '@angular/common';
 
         <!-- Clear Button -->
         <div class="mt-4 pt-3 border-t border-stone-100 flex justify-between items-center">
-          <button (click)="goToToday(); $event.stopPropagation()" class="text-xs font-bold text-stone-500 hover:text-stone-700 transition-colors">
+          <button type="button" (click)="goToToday(); $event.stopPropagation()" class="text-xs font-bold text-stone-500 hover:text-stone-700 transition-colors">
             Hoy
           </button>
-          <button (click)="_value.set(''); valueChange.emit(''); isOpen.set(false); $event.stopPropagation()" class="text-xs font-bold text-teal-600 hover:text-teal-700 transition-colors">
+          <button type="button" (click)="_value.set(''); valueChange.emit(''); isOpen.set(false); $event.stopPropagation()" class="text-xs font-bold text-teal-600 hover:text-teal-700 transition-colors">
             Limpiar
           </button>
         </div>
@@ -82,7 +82,7 @@ export class DatePickerComponent {
   _value = signal('');
   @Input() set value(val: string) {
     this._value.set(val);
-    if (val) {
+    if (val && typeof val === 'string' && val.includes('-')) {
       const [y, m, d] = val.split('-');
       this.currentMonth.set(new Date(parseInt(y), parseInt(m) - 1, 1));
     }
@@ -152,7 +152,7 @@ export class DatePickerComponent {
   }
 
   isSelected(day: number): boolean {
-    if (!this._value()) return false;
+    if (!this._value() || typeof this._value() !== 'string' || !this._value().includes('-')) return false;
     const [y, m, d] = this._value().split('-');
     return parseInt(y) === this.currentMonth().getFullYear() &&
            parseInt(m) === this.currentMonth().getMonth() + 1 &&
@@ -161,7 +161,7 @@ export class DatePickerComponent {
 
   get formattedValue() {
     const val = this._value();
-    if (!val) return '';
+    if (!val || typeof val !== 'string' || !val.includes('-')) return val || '';
     const [y, m, d] = val.split('-');
     return `${d}/${m}/${y}`;
   }

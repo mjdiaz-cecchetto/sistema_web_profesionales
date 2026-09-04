@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
+import { ProfesionalPickerComponent } from '../profesional-picker/profesional-picker.component';
 import { Service } from '../../../core/models';
 
 /**
@@ -13,7 +14,7 @@ import { Service } from '../../../core/models';
 @Component({
   selector: 'app-servicios',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProfesionalPickerComponent],
   host: { class: 'block xl:h-full' },
   template: `
     <div class="xl:h-full flex flex-col gap-3 animate-fade-in min-h-0">
@@ -39,8 +40,10 @@ import { Service } from '../../../core/models';
         </button>
       </div>
 
+      <app-profesional-picker class="shrink-0"></app-profesional-picker>
+
       <p class="text-xs text-stone-400 shrink-0 -mt-1">
-        Estos son los motivos de consulta que ven tus pacientes al reservar. Los inactivos no se ofrecen para turnos nuevos.
+        {{ adminService.esConsultorio() ? 'Servicios de ' + (adminService.profile()?.nombre || '') + '. ' : '' }}Estos son los motivos de consulta que ven tus pacientes al reservar. Los inactivos no se ofrecen para turnos nuevos.
       </p>
 
       <!-- Listado -->
@@ -219,10 +222,10 @@ import { Service } from '../../../core/models';
   `
 })
 export class ServiciosComponent {
-  private adminService = inject(AdminService);
+  adminService = inject(AdminService);
 
   servicios = computed(() =>
-    this.adminService.services().slice().sort((a, b) => a.name.localeCompare(b.name))
+    this.adminService.serviciosDelFoco().slice().sort((a, b) => a.name.localeCompare(b.name))
   );
 
   // Modal alta/edición
@@ -243,9 +246,10 @@ export class ServiciosComponent {
     return srv.activo !== false;
   }
 
-  /** Cantidad de turnos existentes que usan este servicio. */
+  /** Cantidad de turnos existentes que usan este servicio (del profesional en foco). */
   usosDe(nombre: string): number {
-    return this.adminService.appointments().filter(a => a.serviceName === nombre).length;
+    const foco = this.adminService.focoId();
+    return this.adminService.appointments().filter(a => a.serviceName === nombre && a.profesionalId === foco).length;
   }
 
   // ---- Validaciones ----
@@ -253,7 +257,7 @@ export class ServiciosComponent {
     const v = this.formNombre().trim();
     if (!v) return 'El nombre es obligatorio.';
     const idActual = this.editando()?.id;
-    if (this.adminService.services().some(s => s.name.toLowerCase() === v.toLowerCase() && s.id !== idActual)) {
+    if (this.adminService.serviciosDelFoco().some(s => s.name.toLowerCase() === v.toLowerCase() && s.id !== idActual)) {
       return 'Ya existe un servicio con ese nombre.';
     }
     return '';

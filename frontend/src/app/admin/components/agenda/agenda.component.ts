@@ -184,7 +184,7 @@ type RangoRapido = 'TODOS' | 'HOY' | 'SEMANA' | 'MES';
                     </span>
                   </div>
                   <p class="text-[11px] text-stone-500 truncate" [title]="appt.serviceName + ' · ' + appt.location">
-                    {{ appt.serviceName }} · <span class="font-semibold text-stone-600">{{ appt.location }}</span>
+                    <span *ngIf="adminService.esConsultorio()" class="font-bold text-teal-700">{{ adminService.nombreDe(appt.profesionalId) }} · </span>{{ appt.serviceName }} · <span class="font-semibold text-stone-600">{{ appt.location }}</span>
                   </p>
                   <p *ngIf="appt.notes" class="text-[10px] text-amber-800 truncate italic bg-amber-50 border border-amber-100 rounded-md px-2 py-0.5" [title]="appt.notes">
                     "{{ appt.notes }}"
@@ -279,7 +279,7 @@ type RangoRapido = 'TODOS' | 'HOY' | 'SEMANA' | 'MES';
   `
 })
 export class AgendaComponent {
-  private adminService = inject(AdminService);
+  adminService = inject(AdminService);
 
   searchQuery = signal('');
   statusFilter = signal('ALL');
@@ -308,9 +308,9 @@ export class AgendaComponent {
     { label: 'Mes', value: 'MES' }
   ];
 
-  locations = computed(() => [...new Set(this.adminService.appointments().map(a => a.location))].sort());
-  services = computed(() => [...new Set(this.adminService.appointments().map(a => a.serviceName))].sort());
-  insurances = computed(() => [...new Set(this.adminService.appointments().map(a => a.healthInsurance))].sort());
+  locations = computed(() => [...new Set(this.adminService.turnosVisibles().map(a => a.location))].sort());
+  services = computed(() => [...new Set(this.adminService.turnosVisibles().map(a => a.serviceName))].sort());
+  insurances = computed(() => [...new Set(this.adminService.turnosVisibles().map(a => a.healthInsurance))].sort());
 
   /** Filtros avanzados activos (los que viven dentro del panel). */
   filtrosAvanzadosCount = computed(() => {
@@ -332,7 +332,7 @@ export class AgendaComponent {
   });
 
   filteredAppointments = computed(() => {
-    const list = this.adminService.appointments();
+    const list = this.adminService.turnosVisibles();
     const query = this.searchQuery().toLowerCase().trim();
     const status = this.statusFilter();
     const location = this.locationFilter();
@@ -470,7 +470,7 @@ export class AgendaComponent {
     const [y, m, d] = appt.date.split('-').map(Number);
     const dia = dias[new Date(y, m - 1, d).getDay()];
     const fecha = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const profesional = this.adminService.profile()?.nombre ?? '';
+    const profesional = this.adminService.nombreDe(appt.profesionalId);
     const estado = appt.status === 'CONFIRMED' ? 'Te confirmo' : 'Te recuerdo';
     const mensaje = `Hola ${appt.patientName}! ${estado} tu turno de ${appt.serviceName} el ${dia} ${fecha} a las ${appt.time} hs en ${appt.location}. Cualquier cambio avisame por acá. ${profesional}`;
     return linkWhatsapp(appt.patientPhone, mensaje);

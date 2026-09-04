@@ -15,10 +15,10 @@
         <a href="#funciones" class="text-sm font-medium text-stone-600 hover:text-teal-600 transition-colors">Funciones</a>
         <a href="#demo" class="text-sm font-medium text-stone-600 hover:text-teal-600 transition-colors">Demo Paciente</a>
         <div class="flex items-center gap-4">
-          <button class="text-sm font-semibold text-stone-700 hover:text-teal-600 transition-colors">Ingresar</button>
-          <button class="text-sm font-semibold bg-teal-600 text-white px-5 py-2.5 rounded-full hover:bg-teal-700 transition-colors shadow-sm">
+          <a routerLink="/login" class="text-sm font-semibold text-stone-700 hover:text-teal-600 transition-colors">Ingresar</a>
+          <a routerLink="/login" class="text-sm font-semibold bg-teal-600 text-white px-5 py-2.5 rounded-full hover:bg-teal-700 transition-colors shadow-sm">
             Crear cuenta gratis
-          </button>
+          </a>
         </div>
       </div>
     </div>
@@ -38,11 +38,14 @@
       Creá tu perfil profesional, organizá tus pacientes y permití que reserven turnos automáticamente desde tu link público. Gratis durante la fase beta.
     </p>
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-      <button class="w-full sm:w-auto px-8 py-4 bg-teal-600 text-white font-semibold rounded-full hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20 text-lg">
-        Crear mi consultorio gratis
-      </button>
-      <a routerLink="/client" class="w-full sm:w-auto px-8 py-4 bg-white text-stone-700 font-semibold rounded-full border border-stone-200 hover:border-teal-500 hover:text-teal-700 transition-all text-lg">
-        Ver demo de paciente
+      <a routerLink="/login" class="w-full sm:w-auto px-8 py-4 bg-teal-600 text-white font-semibold rounded-full hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20 text-lg">
+        Ingresar a mi panel
+      </a>
+      <a routerLink="/c/centro-san-martin" class="w-full sm:w-auto px-8 py-4 bg-white text-stone-700 font-semibold rounded-full border border-stone-200 hover:border-teal-500 hover:text-teal-700 transition-all text-lg">
+        Demo: Consultorio
+      </a>
+      <a routerLink="/p/dra-elena-ramos" class="w-full sm:w-auto px-8 py-4 bg-white text-stone-700 font-semibold rounded-full border border-stone-200 hover:border-teal-500 hover:text-teal-700 transition-all text-lg">
+        Demo: Profesional
       </a>
     </div>
   </div>
@@ -115,7 +118,7 @@
           </li>
         </ul>
 
-        <a routerLink="/client" class="inline-flex items-center gap-2 text-teal-600 font-semibold hover:text-teal-700 transition-colors">
+        <a routerLink="/p/dra-elena-ramos" class="inline-flex items-center gap-2 text-teal-600 font-semibold hover:text-teal-700 transition-colors">
           Probar vista de paciente ahora
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
         </a>

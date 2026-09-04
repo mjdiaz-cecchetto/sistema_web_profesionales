@@ -6,30 +6,18 @@ import {
   Appointment,
   BlockedDateRange,
   BookingRequest,
+  Cuenta,
   DayAvailability,
   HealthInsurance,
+  ProfessionalAvailability,
   ProfessionalProfile,
   Service,
   TimeSlot
 } from '../../core/models';
 import { addDaysLocal, addMinutes, parseLocalDate } from '../../core/date-utils';
 
-/** Vista simplificada del profesional para la página pública. */
-export interface Professional {
-  id: string;
-  name: string;
-  title: string;
-  bio: string;
-  avatarUrl: string;
-  bannerUrl: string;
-  whatsapp: string;
-  phrase: string;
-  modality: string;
-  specialties: string[];
-}
-
 /**
- * Servicio de la vista del paciente.
+ * Servicio de la vista del paciente (multi-profesional).
  * Consume la API local (json-server en localhost:3000).
  */
 @Injectable({ providedIn: 'root' })
@@ -40,37 +28,38 @@ export class ClientService {
   /** Días hacia adelante para los que se generan turnos disponibles. */
   private readonly DIAS_AGENDA = 21;
 
-  getProfile(): Observable<ProfessionalProfile> {
-    return this.http.get<ProfessionalProfile>(`${this.api}/profile`);
-  }
-
-  getProfessionalInfo(): Observable<Professional> {
-    return this.getProfile().pipe(
-      map(p => ({
-        id: 'prof-1',
-        name: p.nombre,
-        title: p.titulo,
-        bio: p.biografia,
-        avatarUrl: p.avatarUrl,
-        bannerUrl: p.bannerUrl,
-        whatsapp: p.whatsapp || '',
-        phrase: p.frasePrincipal,
-        modality: p.modalidad,
-        specialties: (p.areas ?? []).map(a => a.nombre)
-      }))
+  /** Resuelve una cuenta pública por su slug (/c/{slug} o /p/{slug}). */
+  getCuentaPorSlug(slug: string): Observable<Cuenta> {
+    return this.http.get<Cuenta[]>(`${this.api}/cuentas?slug=${encodeURIComponent(slug)}`).pipe(
+      map(list => {
+        const cuenta = list[0];
+        if (!cuenta) throw new Error('Cuenta no encontrada: ' + slug);
+        return cuenta;
+      })
     );
   }
 
-  /** Disponibilidad semanal (para mostrar horarios de atención en la página pública). */
-  getWeeklyAvailability(): Observable<DayAvailability[]> {
-    return this.http.get<{ days: DayAvailability[] }>(`${this.api}/availability`).pipe(
+  /** Profesionales activos de una cuenta. */
+  getProfessionals(cuentaId: string): Observable<ProfessionalProfile[]> {
+    return this.http.get<ProfessionalProfile[]>(`${this.api}/professionals?cuentaId=${encodeURIComponent(cuentaId)}`).pipe(
+      map(list => list.filter(p => p.activo !== false))
+    );
+  }
+
+  getProfessional(profId: string): Observable<ProfessionalProfile> {
+    return this.http.get<ProfessionalProfile>(`${this.api}/professionals/${profId}`);
+  }
+
+  /** Disponibilidad semanal de un profesional. */
+  getWeeklyAvailability(profId: string): Observable<DayAvailability[]> {
+    return this.http.get<ProfessionalAvailability>(`${this.api}/availabilities/${profId}`).pipe(
       map(a => a.days ?? [])
     );
   }
 
-  /** Servicios ofrecidos al paciente (solo los activos). */
-  getServices(): Observable<Service[]> {
-    return this.http.get<Service[]>(`${this.api}/services`).pipe(
+  /** Servicios activos de un profesional. */
+  getServices(profId: string): Observable<Service[]> {
+    return this.http.get<Service[]>(`${this.api}/services?profesionalId=${encodeURIComponent(profId)}`).pipe(
       map(list => list.filter(s => s.activo !== false))
     );
   }
@@ -82,29 +71,23 @@ export class ClientService {
   }
 
   /**
-   * Genera los turnos disponibles combinando:
-   * disponibilidad semanal + fechas bloqueadas + turnos ya reservados (no cancelados).
+   * Turnos disponibles de un profesional:
+   * su disponibilidad semanal − sus bloqueos − sus turnos activos.
    */
-  getAvailableTimeSlots(serviceId: string): Observable<TimeSlot[]> {
-    return this.getBookingCalendar(serviceId).pipe(map(r => r.slots));
+  getAvailableTimeSlots(profId: string, serviceId: string): Observable<TimeSlot[]> {
+    return this.getBookingCalendar(profId, serviceId).pipe(map(r => r.slots));
   }
 
-  /**
-   * Igual que getAvailableTimeSlots pero además informa qué días laborables
-   * quedaron completamente ocupados (para pintarlos en el calendario).
-   */
-  getBookingCalendar(serviceId: string): Observable<{ slots: TimeSlot[]; fullyBookedDates: string[] }> {
+  getBookingCalendar(profId: string, serviceId: string): Observable<{ slots: TimeSlot[]; fullyBookedDates: string[] }> {
     return forkJoin({
-      avail: this.http.get<{ days: DayAvailability[] }>(`${this.api}/availability`),
-      appts: this.http.get<Appointment[]>(`${this.api}/appointments`),
-      blocked: this.http.get<BlockedDateRange[]>(`${this.api}/blockedDates`),
-      services: this.getServices()
+      avail: this.getWeeklyAvailability(profId),
+      appts: this.http.get<Appointment[]>(`${this.api}/appointments?profesionalId=${encodeURIComponent(profId)}`),
+      blocked: this.http.get<BlockedDateRange[]>(`${this.api}/blockedDates?profesionalId=${encodeURIComponent(profId)}`),
+      services: this.getServices(profId)
     }).pipe(
       map(({ avail, appts, blocked, services }) => {
-        const config = avail.days ?? [];
         const duracion = services.find(s => s.id === serviceId)?.durationMinutes ?? 60;
 
-        // Un turno cancelado libera su horario.
         const ocupados = new Set(
           appts.filter(a => a.status !== 'CANCELLED').map(a => `${a.date}|${a.time}`)
         );
@@ -120,7 +103,7 @@ export class ClientService {
           if (bloqueada) continue;
 
           const dayOfWeek = parseLocalDate(fecha).getDay();
-          const configDia = config.find(c => c.dayIndex === dayOfWeek);
+          const configDia = avail.find(c => c.dayIndex === dayOfWeek);
           if (!configDia || !configDia.active || configDia.slots.length === 0) continue;
 
           let libresEnElDia = 0;
@@ -136,7 +119,6 @@ export class ClientService {
             });
           }
 
-          // Día laborable sin ningún horario libre → completamente ocupado
           if (libresEnElDia === 0) fullyBookedDates.push(fecha);
         }
         return { slots, fullyBookedDates };
@@ -145,25 +127,25 @@ export class ClientService {
   }
 
   /**
-   * Crea el turno (estado PENDING: el profesional lo confirma desde su panel)
+   * Crea el turno (estado PENDING) con su profesional,
    * y da de alta al paciente si su DNI no existe todavía.
    */
   createAppointment(reserva: BookingRequest): Observable<Appointment> {
+    const profId = reserva.professionalId;
     return forkJoin({
-      services: this.getServices(),
-      profile: this.getProfile()
+      services: this.getServices(profId),
+      profesional: this.getProfessional(profId)
     }).pipe(
-      switchMap(({ services, profile }) => {
+      switchMap(({ services, profesional }) => {
         const servicio = services.find(s => s.id === reserva.serviceId);
         const p = reserva.patientData;
 
-        const esParticular = p.healthInsurance.toLowerCase().includes('particular');
-        const location = esParticular
-          ? 'Consulta Online'
-          : profile.direcciones?.[0]?.tipo || 'Consultorio';
+        const location = profesional.direcciones?.[0]?.tipo || 'Consultorio';
 
         const nuevoTurno: Appointment = {
           id: 'apt-' + Date.now().toString(36) + Math.floor(Math.random() * 1000),
+          cuentaId: profesional.cuentaId,
+          profesionalId: profId,
           serviceName: servicio?.name || 'Consulta',
           patientName: `${p.firstName.trim()} ${p.lastName.trim()}`,
           patientEmail: p.email,
@@ -186,15 +168,13 @@ export class ClientService {
 
   // ===== Gestión de turnos por DNI (autogestión del paciente) =====
 
-  /** Turnos del paciente identificado por DNI. */
-  getTurnosPorDni(dni: string): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.api}/appointments?patientDni=${encodeURIComponent(dni.trim())}`);
+  /** Turnos de un DNI dentro de una cuenta (cada centro/profesional ve solo los suyos). */
+  getTurnosPorDni(cuentaId: string, dni: string): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(
+      `${this.api}/appointments?cuentaId=${encodeURIComponent(cuentaId)}&patientDni=${encodeURIComponent(dni.trim())}`
+    );
   }
 
-  /**
-   * Reprograma un turno: nueva fecha y hora, vuelve a estado PENDING
-   * para que el profesional lo re-confirme.
-   */
   reprogramarTurno(turno: Appointment, nuevaFecha: string, nuevaHora: string): Observable<Appointment> {
     const notaBase = (turno.notes || '').replace(/\s*\[Reprogramado por el paciente[^\]]*\]/g, '').trim();
     const nota = `${notaBase} [Reprogramado por el paciente: antes ${turno.date} ${turno.time} hs]`.trim();
@@ -206,7 +186,6 @@ export class ClientService {
     });
   }
 
-  /** Cancela un turno del paciente. */
   cancelarTurno(turno: Appointment): Observable<Appointment> {
     const notaBase = (turno.notes || '').trim();
     const nota = `${notaBase} [Cancelado por el paciente]`.trim();
@@ -216,13 +195,14 @@ export class ClientService {
     });
   }
 
-  /** Da de alta al paciente si su DNI no está registrado. */
+  /** Da de alta al paciente si su DNI no está registrado en la cuenta (padrón por cuenta). */
   private ensurePatient(appt: Appointment): Observable<unknown> {
-    return this.http.get<unknown[]>(`${this.api}/patients?dni=${appt.patientDni}`).pipe(
+    return this.http.get<unknown[]>(`${this.api}/patients?cuentaId=${encodeURIComponent(appt.cuentaId)}&dni=${appt.patientDni}`).pipe(
       switchMap(existentes => {
         if (existentes.length > 0) return of(null);
         return this.http.post(`${this.api}/patients`, {
-          id: 'pat-' + appt.patientDni,
+          id: 'pat-' + appt.cuentaId + '-' + appt.patientDni,
+          cuentaId: appt.cuentaId,
           nombre: appt.patientName,
           email: appt.patientEmail,
           telefono: appt.patientPhone,

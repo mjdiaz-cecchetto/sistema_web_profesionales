@@ -7,7 +7,7 @@ export type {
   TimeSlot,
   BookingRequest,
   BookingPatientData,
-  Appointment
+  Appointment,
+  ProfessionalProfile,
+  Consultorio
 } from '../../core/models';
-
-export type { Professional } from '../services/client.service';

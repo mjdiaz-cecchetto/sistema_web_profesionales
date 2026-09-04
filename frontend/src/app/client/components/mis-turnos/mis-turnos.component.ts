@@ -1,9 +1,11 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ClientService } from '../../services/client.service';
-import { Appointment, ProfessionalProfile, Service, TimeSlot } from '../../../core/models';
+import { Cuenta } from '../../../core/models';
+import { Appointment, ProfessionalProfile, TimeSlot } from '../../../core/models';
 import { formatDMY, parseLocalDate, todayLocal } from '../../../core/date-utils';
 import { linkWhatsapp } from '../../../core/whatsapp';
 
@@ -29,12 +31,12 @@ interface CeldaAgenda {
       <!-- Header simple -->
       <header class="bg-white/80 backdrop-blur-xl border-b border-stone-200/60 sticky top-0 z-40">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
-          <a routerLink="/client" class="flex items-center gap-2 text-stone-500 hover:text-teal-800 transition-colors">
+          <a [routerLink]="linkInicio()" class="flex items-center gap-2 text-stone-500 hover:text-teal-800 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
             <span class="text-xs font-bold">Volver</span>
           </a>
           <span class="font-extrabold text-stone-900 text-sm">Gestionar mi turno</span>
-          <a routerLink="/client/turnos" class="text-xs font-bold text-teal-700 hover:underline">Nuevo turno</a>
+          <a [routerLink]="linkTurnos()" class="text-xs font-bold text-teal-700 hover:underline">Nuevo turno</a>
         </div>
       </header>
 
@@ -93,7 +95,9 @@ interface CeldaAgenda {
                   <p class="font-extrabold text-stone-900 text-base leading-tight">
                     {{ nombreDia(turno.date) | titlecase }} {{ formatFecha(turno.date) }} · <span class="text-teal-700">{{ turno.time }} hs</span>
                   </p>
-                  <p class="text-xs text-stone-500 mt-1">{{ turno.serviceName }} · {{ turno.location }}</p>
+                  <p class="text-xs text-stone-500 mt-1">
+                    <span *ngIf="esConsultorio()" class="font-bold text-teal-700">{{ nombreProfesionalDe(turno) }} · </span>{{ turno.serviceName }} · {{ turno.location }}
+                  </p>
                   <span class="chip mt-2 !text-[9px]"
                         [class.chip-confirmed]="turno.status === 'CONFIRMED'"
                         [class.chip-pending]="turno.status === 'PENDING'">
@@ -225,7 +229,7 @@ interface CeldaAgenda {
               <svg class="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             </div>
             <p class="text-sm text-stone-500">No encontramos turnos próximos para el DNI <span class="font-bold text-stone-700">{{ dniBuscado() }}</span>.</p>
-            <a routerLink="/client/turnos" class="inline-flex btn-primary !text-xs">Reservar un turno</a>
+            <a [routerLink]="linkTurnos()" class="inline-flex btn-primary !text-xs">Reservar un turno</a>
           </div>
 
           <!-- Historial pasado (informativo) -->
@@ -235,7 +239,9 @@ interface CeldaAgenda {
               <div *ngFor="let t of turnosPasados()" class="px-5 py-3 flex items-center justify-between gap-3 text-[11px]"
                    [class.opacity-60]="t.status === 'CANCELLED'">
                 <span class="font-bold text-stone-600">{{ formatFecha(t.date) }} · {{ t.time }} hs</span>
-                <span class="text-stone-500 truncate flex-1 text-center">{{ t.serviceName }}</span>
+                <span class="text-stone-500 truncate flex-1 text-center">
+                  <span *ngIf="esConsultorio()" class="font-bold text-teal-700">{{ nombreProfesionalDe(t) }} · </span>{{ t.serviceName }}
+                </span>
                 <span class="chip !text-[9px] shrink-0"
                       [class.chip-confirmed]="t.status === 'CONFIRMED'"
                       [class.chip-pending]="t.status === 'PENDING'"
@@ -251,8 +257,30 @@ interface CeldaAgenda {
     </div>
   `
 })
-export class MisTurnosComponent {
+export class MisTurnosComponent implements OnInit {
   private clientService = inject(ClientService);
+  private route = inject(ActivatedRoute);
+
+  /** Cuenta pública (consultorio o profesional) resuelta por el :slug de la URL. */
+  cuenta = signal<Cuenta | null>(null);
+  slug = signal('');
+
+  linkInicio = computed(() => [this.tipoRuta(), this.slug()]);
+  linkTurnos = computed(() => [this.tipoRuta(), this.slug(), 'turnos']);
+  private tipoRuta(): string {
+    return this.cuenta()?.tipo === 'consultorio' ? '/c' : '/p';
+  }
+
+  ngOnInit(): void {
+    const slug = this.route.snapshot.paramMap.get('slug') ?? '';
+    this.slug.set(slug);
+    this.clientService.getCuentaPorSlug(slug).subscribe({
+      next: cuenta => {
+        this.cuenta.set(cuenta);
+        this.clientService.getProfessionals(cuenta.id).subscribe({ next: p => this.profesionales.set(p) });
+      }
+    });
+  }
 
   dni = signal('');
   dniBuscado = signal('');
@@ -261,8 +289,7 @@ export class MisTurnosComponent {
   busquedaHecha = signal(false);
 
   turnos = signal<Appointment[]>([]);
-  perfil = signal<ProfessionalProfile | null>(null);
-  servicios = signal<Service[]>([]);
+  profesionales = signal<ProfessionalProfile[]>([]);
 
   // Gestión (reprogramar / cancelar)
   turnoEnGestion = signal<string | null>(null);
@@ -348,8 +375,14 @@ export class MisTurnosComponent {
       return;
     }
 
+    const cuentaId = this.cuenta()?.id;
+    if (!cuentaId) {
+      this.errorDni.set('No pudimos cargar la página. Recargá e intentá de nuevo.');
+      return;
+    }
+
     this.buscando.set(true);
-    this.clientService.getTurnosPorDni(dni).subscribe({
+    this.clientService.getTurnosPorDni(cuentaId, dni).subscribe({
       next: turnos => {
         this.turnos.set(turnos);
         this.dniBuscado.set(dni);
@@ -363,10 +396,14 @@ export class MisTurnosComponent {
       }
     });
 
-    if (!this.perfil()) {
-      this.clientService.getProfile().subscribe({ next: p => this.perfil.set(p) });
-      this.clientService.getServices().subscribe({ next: s => this.servicios.set(s) });
-    }
+  }
+
+  nombreProfesionalDe(turno: Appointment): string {
+    return this.profesionales().find(p => p.id === turno.profesionalId)?.nombre ?? '';
+  }
+
+  esConsultorio(): boolean {
+    return this.cuenta()?.tipo === 'consultorio';
   }
 
   // ---- Reprogramación ----
@@ -378,8 +415,17 @@ export class MisTurnosComponent {
     this.mensajeExito.set('');
 
     this.cargandoSlots.set(true);
-    const servicio = this.servicios().find(s => s.name === turno.serviceName);
-    this.clientService.getAvailableTimeSlots(servicio?.id ?? 'srv-1').subscribe({
+    this.clientService.getServices(turno.profesionalId).subscribe({
+      next: serviciosProf => {
+        const servicio = serviciosProf.find(s => s.name === turno.serviceName);
+        this.buscarSlots(turno, servicio?.id ?? '');
+      },
+      error: () => this.buscarSlots(turno, '')
+    });
+  }
+
+  private buscarSlots(turno: Appointment, servicioId: string): void {
+    this.clientService.getAvailableTimeSlots(turno.profesionalId, servicioId).subscribe({
       next: slots => {
         this.slotsDisponibles.set(slots);
         this.cargandoSlots.set(false);
@@ -419,7 +465,7 @@ export class MisTurnosComponent {
         this.guardando.set(false);
         this.cerrarGestion();
         this.mensajeExito.set(`Tu turno se movió al ${this.nombreDia(actualizado.date)} ${formatDMY(actualizado.date)} a las ${actualizado.time} hs. Queda pendiente de confirmación.`);
-        this.armarAvisoWhatsapp(`Hola! Soy ${actualizado.patientName} (DNI ${actualizado.patientDni}). Reprogramé mi turno de ${actualizado.serviceName} para el ${this.nombreDia(actualizado.date)} ${formatDMY(actualizado.date)} a las ${actualizado.time} hs. Quedo a la espera de tu confirmación. ¡Gracias!`);
+        this.armarAvisoWhatsapp(actualizado, `Hola! Soy ${actualizado.patientName} (DNI ${actualizado.patientDni}). Reprogramé mi turno de ${actualizado.serviceName} para el ${this.nombreDia(actualizado.date)} ${formatDMY(actualizado.date)} a las ${actualizado.time} hs. Quedo a la espera de tu confirmación. ¡Gracias!`);
       },
       error: () => this.guardando.set(false)
     });
@@ -442,7 +488,7 @@ export class MisTurnosComponent {
         this.guardando.set(false);
         this.cerrarGestion();
         this.mensajeExito.set(`Tu turno del ${formatDMY(turno.date)} a las ${turno.time} hs fue cancelado.`);
-        this.armarAvisoWhatsapp(`Hola! Soy ${turno.patientName} (DNI ${turno.patientDni}). Tuve que cancelar mi turno de ${turno.serviceName} del ${formatDMY(turno.date)} a las ${turno.time} hs. Disculpá las molestias.`);
+        this.armarAvisoWhatsapp(turno, `Hola! Soy ${turno.patientName} (DNI ${turno.patientDni}). Tuve que cancelar mi turno de ${turno.serviceName} del ${formatDMY(turno.date)} a las ${turno.time} hs. Disculpá las molestias.`);
       },
       error: () => this.guardando.set(false)
     });
@@ -455,8 +501,8 @@ export class MisTurnosComponent {
     this.nuevaHora.set('');
   }
 
-  private armarAvisoWhatsapp(mensaje: string): void {
-    const whatsapp = this.perfil()?.whatsapp;
+  private armarAvisoWhatsapp(turno: Appointment, mensaje: string): void {
+    const whatsapp = this.profesionales().find(p => p.id === turno.profesionalId)?.whatsapp;
     this.linkAvisoWhatsapp.set(whatsapp ? linkWhatsapp(whatsapp, mensaje) : '');
   }
 
