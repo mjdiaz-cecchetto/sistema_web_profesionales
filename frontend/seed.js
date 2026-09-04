@@ -52,6 +52,44 @@ const ONLINE = (detalle) => ({
 });
 
 const db = {
+  // ===== Administradores de la PLATAFORMA (back-office /gestion) =====
+  administradores: [
+    {
+      id: 'adm-1',
+      nombre: 'Matias',
+      email: 'admin@plataforma.com',
+      password: 'admin123'
+    }
+  ],
+
+  // ===== Planes de membresía de la plataforma =====
+  planes: [
+    {
+      id: 'plan-demo',
+      nombre: 'Demo',
+      precioMensual: 0,
+      descripcion: 'Para conocer el sistema. Sin cobro.',
+      maxProfesionales: 1,
+      activo: true
+    },
+    {
+      id: 'plan-profesional',
+      nombre: 'Profesional',
+      precioMensual: 15000,
+      descripcion: 'Profesional independiente: agenda, pacientes y página pública.',
+      maxProfesionales: 1,
+      activo: true
+    },
+    {
+      id: 'plan-consultorio',
+      nombre: 'Consultorio',
+      precioMensual: 40000,
+      descripcion: 'Centros con equipo: hasta 10 profesionales, página del centro.',
+      maxProfesionales: 10,
+      activo: true
+    }
+  ],
+
   // ===== Cuentas (tenants): cada una con su login y su página pública =====
   cuentas: [
     {
@@ -62,7 +100,10 @@ const db = {
       nombre: 'Centro Médico San Martín',
       slug: 'centro-san-martin',
       descripcion: 'Centro de salud interdisciplinario en el corazón de San Martín. Psicología, psiquiatría, odontología, nutrición y kinesiología en un mismo lugar, con turnos online y atención con las principales obras sociales.',
-      bannerUrl: ''
+      bannerUrl: '',
+      estado: 'activa',
+      plan: 'plan-consultorio',
+      fechaAlta: fechaLocal(-120)
     },
     {
       id: ELE,
@@ -72,7 +113,10 @@ const db = {
       nombre: 'Dra. Elena Ramos',
       slug: 'dra-elena-ramos',
       descripcion: 'Psicóloga clínica de adultos. Atención presencial en Palermo y Belgrano, y consultas online.',
-      bannerUrl: ''
+      bannerUrl: '',
+      estado: 'activa',
+      plan: 'plan-profesional',
+      fechaAlta: fechaLocal(-45)
     }
   ],
 
@@ -373,9 +417,30 @@ db.blockedDates = [
   { id: 'blk-lema-1', cuentaId: CSM, profesionalId: 'prof-lema', startDate: fechaLocal(12), endDate: fechaLocal(14), reason: 'Congreso Argentino de Psiquiatría' }
 ];
 
+// Período (YYYY-MM) desplazado n meses desde hoy
+function periodo(mesesAtras) {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - mesesAtras);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+function fechaEnPeriodo(mesesAtras, dia) {
+  return `${periodo(mesesAtras)}-${String(dia).padStart(2, '0')}`;
+}
+
+// ===== Cobros registrados (mock manual): CSM al día, Elena adeuda el mes actual =====
+db.pagos = [
+  { id: 'pago-1', cuentaId: CSM, periodo: periodo(3), fecha: fechaEnPeriodo(3, 5), monto: 40000, medio: 'transferencia', notas: 'Primer mes' },
+  { id: 'pago-2', cuentaId: CSM, periodo: periodo(2), fecha: fechaEnPeriodo(2, 4), monto: 40000, medio: 'transferencia' },
+  { id: 'pago-3', cuentaId: CSM, periodo: periodo(1), fecha: fechaEnPeriodo(1, 6), monto: 40000, medio: 'mercadopago' },
+  { id: 'pago-4', cuentaId: CSM, periodo: periodo(0), fecha: fechaEnPeriodo(0, 3), monto: 40000, medio: 'mercadopago' },
+  { id: 'pago-5', cuentaId: ELE, periodo: periodo(1), fecha: fechaEnPeriodo(1, 9), monto: 15000, medio: 'transferencia' }
+];
+
 const destino = path.join(__dirname, 'db.json');
 fs.writeFileSync(destino, JSON.stringify(db, null, 2), 'utf8');
 console.log(`✔ db.json generado en ${destino} (hoy: ${fechaLocal(0)})`);
+console.log(`  · Administrador de la plataforma → admin@plataforma.com / admin123 · /gestion`);
 for (const c of db.cuentas) {
   const profs = db.professionals.filter(p => p.cuentaId === c.id).length;
   const turnos = db.appointments.filter(a => a.cuentaId === c.id).length;

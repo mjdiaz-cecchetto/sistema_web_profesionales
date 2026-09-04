@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { LandingComponent } from './landing/landing.component';
-import { authGuard } from './core/auth.guard';
+import { authGuard, gestionGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   {
@@ -26,6 +26,12 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [authGuard],
     loadChildren: () => import('./admin/admin.routes').then(m => m.adminRoutes)
+  },
+  // Back-office de la PLATAFORMA (solo administradores): gestión de cuentas
+  {
+    path: 'gestion',
+    canActivate: [gestionGuard],
+    loadChildren: () => import('./gestion/gestion.routes').then(m => m.gestionRoutes)
   },
   // Ruta vieja (compatibilidad): la demo del consultorio
   {

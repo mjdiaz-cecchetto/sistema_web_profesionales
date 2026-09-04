@@ -9,14 +9,15 @@ interface CuentaDemo {
   detalle: string;
   email: string;
   password: string;
-  icono: 'consultorio' | 'profesional';
+  icono: 'consultorio' | 'profesional' | 'admin';
 }
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
-  templateUrl: './login.component.html'
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.scss'
 })
 export class LoginComponent {
   private auth = inject(AuthService);
@@ -43,6 +44,13 @@ export class LoginComponent {
       email: 'elena.ramos@gmail.com',
       password: 'elena123',
       icono: 'profesional'
+    },
+    {
+      etiqueta: 'Administrador de la Plataforma',
+      detalle: 'Back-office · gestión de cuentas',
+      email: 'admin@plataforma.com',
+      password: 'admin123',
+      icono: 'admin'
     }
   ];
 
@@ -66,6 +74,6 @@ export class LoginComponent {
       this.error.set(err);
       return;
     }
-    this.router.navigate(['/admin']);
+    this.router.navigateByUrl(this.auth.destino());
   }
 }

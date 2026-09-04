@@ -33,7 +33,8 @@ export class ClientService {
     return this.http.get<Cuenta[]>(`${this.api}/cuentas?slug=${encodeURIComponent(slug)}`).pipe(
       map(list => {
         const cuenta = list[0];
-        if (!cuenta) throw new Error('Cuenta no encontrada: ' + slug);
+        // Una cuenta suspendida se comporta como inexistente para el público.
+        if (!cuenta || cuenta.estado === 'suspendida') throw new Error('Cuenta no disponible: ' + slug);
         return cuenta;
       })
     );

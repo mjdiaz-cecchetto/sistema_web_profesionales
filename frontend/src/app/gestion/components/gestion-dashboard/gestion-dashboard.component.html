@@ -1,0 +1,154 @@
+<!-- Encabezado -->
+<div class="mb-6">
+  <h1 class="text-2xl font-extrabold text-stone-800 tracking-tight">Dashboard</h1>
+  <p class="text-sm text-stone-500 mt-1">Así viene la plataforma en {{ mesActual() }}. Totales agregados — sin datos de pacientes.</p>
+</div>
+
+<!-- API caída -->
+<div *ngIf="gestion.apiError()" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-2xl px-5 py-4 mb-6">
+  No se pudo conectar con la API local. Ejecutá <code class="font-mono bg-red-100 px-1.5 py-0.5 rounded">npm run api</code> y recargá.
+</div>
+
+<div *ngIf="gestion.loading() && !gestion.apiError()" class="bg-white border border-stone-200 rounded-2xl p-10 text-center text-sm text-stone-400">
+  Cargando…
+</div>
+
+<ng-container *ngIf="!gestion.loading() && !gestion.apiError()">
+
+  <!-- ===== KPIs ===== -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white border border-stone-200 rounded-2xl px-5 py-4">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-stone-400">Cuentas activas</p>
+      <p class="text-3xl font-extrabold text-stone-800 mt-1.5">{{ gestion.cuentasActivas().length }}</p>
+      <p class="text-xs text-stone-400 mt-1">{{ gestion.cuentasSuspendidas().length }} suspendida{{ gestion.cuentasSuspendidas().length === 1 ? '' : 's' }}</p>
+    </div>
+    <div class="bg-white border border-stone-200 rounded-2xl px-5 py-4">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-stone-400">Profesionales</p>
+      <p class="text-3xl font-extrabold text-stone-800 mt-1.5">{{ gestion.totalProfesionales() }}</p>
+      <p class="text-xs text-stone-400 mt-1">{{ gestion.totalPacientes() }} pacientes en la plataforma</p>
+    </div>
+    <div class="bg-white border border-stone-200 rounded-2xl px-5 py-4">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-stone-400">Turnos este mes</p>
+      <p class="text-3xl font-extrabold text-stone-800 mt-1.5">{{ gestion.turnosMesPlataforma() }}</p>
+      <p class="text-xs text-stone-400 mt-1">en todas las cuentas</p>
+    </div>
+    <div class="bg-white border border-stone-200 rounded-2xl px-5 py-4">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-stone-400">Ingresos del mes</p>
+      <p class="text-3xl font-extrabold text-teal-700 mt-1.5">{{ monto(gestion.ingresosMes()) }}</p>
+      <p class="text-xs text-stone-400 mt-1">cobros registrados del período</p>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-4 mb-6">
+
+    <!-- ===== Cobranza ===== -->
+    <div class="bg-white border border-stone-200 rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-extrabold text-stone-800 text-sm">Cobranza del período</h2>
+        <a routerLink="/gestion/cobros" class="text-xs font-bold text-teal-700 hover:underline">Ir a Cobros →</a>
+      </div>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
+          {{ cobranzaAlDia() }} al día
+        </span>
+        <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-red-50 text-red-700 border border-red-100">
+          {{ gestion.cuentasVencidas().length }} con pago pendiente
+        </span>
+        <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-stone-50 text-stone-500 border border-stone-200">
+          {{ cobranzaSinCargo() }} sin cargo
+        </span>
+      </div>
+      <div *ngIf="gestion.cuentasVencidas().length; else todoAlDia" class="space-y-2">
+        <div *ngFor="let c of gestion.cuentasVencidas()"
+             class="flex items-center justify-between gap-3 bg-red-50/50 border border-red-100 rounded-xl px-4 py-2.5">
+          <div class="min-w-0">
+            <p class="text-sm font-bold text-stone-800 truncate">{{ c.nombre }}</p>
+            <p class="text-[11px] text-stone-400">Plan {{ gestion.nombrePlan(c.plan) }} · {{ monto(gestion.planPorId(c.plan)?.precioMensual ?? 0) }}/mes</p>
+          </div>
+          <a routerLink="/gestion/cobros" [queryParams]="{ cuenta: c.id }"
+             class="shrink-0 text-[11px] font-bold text-red-700 border border-red-200 hover:bg-red-100 rounded-lg px-2.5 py-1.5 transition-colors">
+            Registrar cobro
+          </a>
+        </div>
+      </div>
+      <ng-template #todoAlDia>
+        <p class="text-sm text-stone-400 bg-stone-50 border border-stone-100 rounded-xl px-4 py-3">
+          Todas las cuentas con plan pago registran su cobro de este período.
+        </p>
+      </ng-template>
+    </div>
+
+    <!-- ===== Actividad por cuenta (turnos del mes, agregado) ===== -->
+    <div class="bg-white border border-stone-200 rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-extrabold text-stone-800 text-sm">Actividad del mes por cuenta</h2>
+        <span class="text-[11px] text-stone-400 font-semibold">turnos agendados</span>
+      </div>
+      <div class="space-y-3">
+        <div *ngFor="let fila of actividad()">
+          <div class="flex items-center justify-between gap-3 mb-1">
+            <p class="text-xs font-bold text-stone-700 truncate">
+              {{ fila.cuenta.nombre }}
+              <span *ngIf="fila.cuenta.estado === 'suspendida'" class="text-red-500 font-bold">· suspendida</span>
+            </p>
+            <span class="text-xs font-bold text-stone-500 tabular-nums shrink-0">{{ fila.turnos }}</span>
+          </div>
+          <div class="h-2.5 bg-stone-100 rounded-r-[4px] overflow-hidden">
+            <div class="h-full bg-teal-600 rounded-r-[4px]" [style.width.%]="fila.porcentaje"></div>
+          </div>
+        </div>
+        <p *ngIf="!actividad().length" class="text-sm text-stone-400">Todavía no hay cuentas.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-4">
+
+    <!-- ===== Últimos cobros ===== -->
+    <div class="lg:col-span-2 bg-white border border-stone-200 rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-extrabold text-stone-800 text-sm">Últimos cobros registrados</h2>
+        <a routerLink="/gestion/cobros" class="text-xs font-bold text-teal-700 hover:underline">Ver todos →</a>
+      </div>
+      <table class="w-full text-sm">
+        <tbody>
+          <tr *ngFor="let p of ultimosPagos()" class="border-b border-stone-50 last:border-0">
+            <td class="py-2.5 text-stone-500 text-xs w-20">{{ fechaCorta(p.fecha) }}</td>
+            <td class="py-2.5 font-bold text-stone-700">{{ nombreCuenta(p.cuentaId) }}</td>
+            <td class="py-2.5 text-stone-400 text-xs">período {{ p.periodo }}</td>
+            <td class="py-2.5 text-stone-400 text-xs capitalize">{{ p.medio }}</td>
+            <td class="py-2.5 text-right font-extrabold text-stone-800 tabular-nums">{{ monto(p.monto) }}</td>
+          </tr>
+          <tr *ngIf="!ultimosPagos().length">
+            <td class="py-6 text-center text-sm text-stone-400" colspan="5">Todavía no hay cobros registrados.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== Atajos ===== -->
+    <div class="bg-white border border-stone-200 rounded-2xl p-5">
+      <h2 class="font-extrabold text-stone-800 text-sm mb-3">Atajos</h2>
+      <div class="space-y-2">
+        <a routerLink="/gestion/cuentas" [queryParams]="{ nueva: 1 }"
+           class="flex items-center gap-3 rounded-xl border border-stone-200 hover:border-teal-500 hover:bg-teal-50 px-4 py-3 text-sm font-bold text-stone-700 transition-colors">
+          <svg class="w-[18px] h-[18px] text-teal-700" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+          Nueva cuenta
+        </a>
+        <a routerLink="/gestion/cobros" [queryParams]="{ registrar: 1 }"
+           class="flex items-center gap-3 rounded-xl border border-stone-200 hover:border-teal-500 hover:bg-teal-50 px-4 py-3 text-sm font-bold text-stone-700 transition-colors">
+          <svg class="w-[18px] h-[18px] text-teal-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          Registrar cobro
+        </a>
+        <a routerLink="/gestion/membresias"
+           class="flex items-center gap-3 rounded-xl border border-stone-200 hover:border-teal-500 hover:bg-teal-50 px-4 py-3 text-sm font-bold text-stone-700 transition-colors">
+          <svg class="w-[18px] h-[18px] text-teal-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+          Planes de membresía
+        </a>
+      </div>
+      <p class="text-[11px] text-stone-400 mt-4 leading-relaxed">
+        Reportes y configuración de la plataforma llegan más adelante.
+      </p>
+    </div>
+  </div>
+</ng-container>

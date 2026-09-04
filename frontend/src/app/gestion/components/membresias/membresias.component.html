@@ -1,0 +1,114 @@
+<div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-extrabold text-stone-800 tracking-tight">Membresías</h1>
+    <p class="text-sm text-stone-500 mt-1">Planes que la plataforma ofrece a consultorios y profesionales.</p>
+  </div>
+  <button (click)="abrir('nuevo')"
+          class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl px-4 py-2.5 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+    Nuevo plan
+  </button>
+</div>
+
+<div *ngIf="gestion.apiError()" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-2xl px-5 py-4 mb-6">
+  No se pudo conectar con la API local. Ejecutá <code class="font-mono bg-red-100 px-1.5 py-0.5 rounded">npm run api</code> y recargá.
+</div>
+
+<div *ngIf="gestion.loading() && !gestion.apiError()" class="bg-white border border-stone-200 rounded-2xl p-10 text-center text-sm text-stone-400">
+  Cargando…
+</div>
+
+<div *ngIf="!gestion.loading() && !gestion.apiError()" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+  <div *ngFor="let plan of gestion.planes()"
+       class="bg-white border border-stone-200 rounded-2xl p-5 flex flex-col"
+       [class.opacity-60]="!plan.activo">
+    <div class="flex items-start justify-between gap-3 mb-2">
+      <h2 class="font-extrabold text-stone-800">{{ plan.nombre }}</h2>
+      <span class="text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-lg shrink-0"
+            [ngClass]="plan.activo ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-stone-100 text-stone-500 border border-stone-200'">
+        {{ plan.activo ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+    <p class="text-2xl font-extrabold text-teal-700 tabular-nums">
+      {{ plan.precioMensual === 0 ? 'Gratis' : monto(plan.precioMensual) }}
+      <span *ngIf="plan.precioMensual > 0" class="text-xs font-bold text-stone-400">/ mes</span>
+    </p>
+    <p class="text-sm text-stone-500 mt-2 flex-grow">{{ plan.descripcion }}</p>
+    <div class="flex items-center gap-2 text-[11px] font-semibold text-stone-400 mt-3">
+      <span class="bg-stone-50 border border-stone-200 rounded-lg px-2 py-1">
+        {{ plan.maxProfesionales === 0 ? 'Profesionales ilimitados' : (plan.maxProfesionales + ' profesional' + (plan.maxProfesionales === 1 ? '' : 'es')) }}
+      </span>
+      <span class="bg-stone-50 border border-stone-200 rounded-lg px-2 py-1">
+        {{ usos(plan.id) }} cuenta{{ usos(plan.id) === 1 ? '' : 's' }}
+      </span>
+    </div>
+    <div class="flex items-center gap-2 mt-4 pt-4 border-t border-stone-100">
+      <button (click)="abrir(plan)"
+              class="flex-1 text-xs font-bold text-stone-600 border border-stone-200 hover:border-stone-300 hover:bg-stone-50 rounded-lg px-3 py-2 transition-colors">
+        Editar
+      </button>
+      <button (click)="toggleActivo(plan)"
+              class="flex-1 text-xs font-bold rounded-lg px-3 py-2 border transition-colors"
+              [ngClass]="plan.activo ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-emerald-700 border-emerald-200 hover:bg-emerald-50'">
+        {{ plan.activo ? 'Desactivar' : 'Activar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<p *ngIf="!gestion.loading() && !gestion.apiError()" class="text-[11px] text-stone-400 mt-4">
+  Un plan inactivo no se ofrece al crear o editar cuentas; las cuentas que ya lo tienen lo conservan.
+  El cobro de las membresías se registra en <span class="font-bold">Cobros</span>.
+</p>
+
+<!-- Modal alta/edición de plan -->
+<div *ngIf="modal()" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-[2px] flex items-center justify-center p-4" (click)="modal.set(null)">
+  <div class="bg-white rounded-3xl border border-stone-200 shadow-2xl w-full max-w-md max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()">
+    <div class="px-6 pt-6 pb-4 border-b border-stone-100">
+      <h2 class="text-lg font-extrabold text-stone-800 tracking-tight">{{ modal() === 'nuevo' ? 'Nuevo plan' : 'Editar plan' }}</h2>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Nombre</label>
+        <input type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Profesional, Consultorio…"
+               class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Precio mensual (ARS)</label>
+          <input type="number" min="0" [ngModel]="precio()" (ngModelChange)="precio.set(+$event || 0)"
+                 class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Máx. profesionales</label>
+          <input type="number" min="0" [ngModel]="maxProfesionales()" (ngModelChange)="maxProfesionales.set(+$event || 0)"
+                 class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+          <p class="text-[10px] text-stone-400 mt-1">0 = sin límite</p>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Descripción</label>
+        <textarea rows="2" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)"
+                  class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 resize-none"></textarea>
+      </div>
+      <label class="flex items-center gap-2.5 text-sm font-semibold text-stone-600 cursor-pointer">
+        <input type="checkbox" [ngModel]="activo()" (ngModelChange)="activo.set($event)"
+               class="w-4 h-4 rounded border-stone-300 text-teal-600 focus:ring-teal-500/40">
+        Disponible para cuentas nuevas
+      </label>
+      <div *ngIf="error()" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">{{ error() }}</div>
+    </div>
+    <div class="px-6 py-4 border-t border-stone-100 flex items-center justify-end gap-2">
+      <button (click)="modal.set(null)" class="px-4 py-2.5 rounded-xl text-sm font-bold text-stone-500 hover:bg-stone-100 transition-colors">Cancelar</button>
+      <button (click)="guardar()" [disabled]="gestion.saving()"
+              class="px-5 py-2.5 rounded-xl text-sm font-bold bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 transition-colors">
+        {{ gestion.saving() ? 'Guardando…' : (modal() === 'nuevo' ? 'Crear plan' : 'Guardar cambios') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div *ngIf="toast()" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl max-w-[90vw]">
+  {{ toast() }}
+</div>

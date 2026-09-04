@@ -1,0 +1,149 @@
+<div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-extrabold text-stone-800 tracking-tight">Cobros</h1>
+    <p class="text-sm text-stone-500 mt-1">Registro manual de cobros de membresía. Con la pasarela de pagos, esto se automatiza.</p>
+  </div>
+  <button (click)="abrirRegistro()"
+          class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl px-4 py-2.5 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+    Registrar cobro
+  </button>
+</div>
+
+<div *ngIf="gestion.apiError()" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-2xl px-5 py-4 mb-6">
+  No se pudo conectar con la API local. Ejecutá <code class="font-mono bg-red-100 px-1.5 py-0.5 rounded">npm run api</code> y recargá.
+</div>
+
+<div *ngIf="gestion.loading() && !gestion.apiError()" class="bg-white border border-stone-200 rounded-2xl p-10 text-center text-sm text-stone-400">
+  Cargando…
+</div>
+
+<ng-container *ngIf="!gestion.loading() && !gestion.apiError()">
+
+  <!-- Pendientes del período -->
+  <div *ngIf="gestion.cuentasVencidas().length" class="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-4">
+    <p class="text-sm font-bold text-amber-900 mb-2">Pendientes del período {{ gestion.periodoActual() }}</p>
+    <div class="flex flex-wrap gap-2">
+      <button *ngFor="let c of gestion.cuentasVencidas()" (click)="abrirRegistro(c.id)"
+              class="text-xs font-bold text-amber-900 bg-white border border-amber-200 hover:border-amber-400 rounded-lg px-3 py-1.5 transition-colors">
+        {{ c.nombre }} · {{ monto(gestion.planPorId(c.plan)?.precioMensual ?? 0) }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white border border-stone-200 rounded-2xl px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+    <select [ngModel]="filtroCuenta()" (ngModelChange)="filtroCuenta.set($event)"
+            class="rounded-xl border border-stone-200 px-3 py-2 text-sm font-semibold text-stone-600 focus:outline-none focus:ring-2 focus:ring-teal-500/40">
+      <option value="">Todas las cuentas</option>
+      <option *ngFor="let c of gestion.cuentas()" [value]="c.id">{{ c.nombre }}</option>
+    </select>
+    <select [ngModel]="filtroPeriodo()" (ngModelChange)="filtroPeriodo.set($event)"
+            class="rounded-xl border border-stone-200 px-3 py-2 text-sm font-semibold text-stone-600 focus:outline-none focus:ring-2 focus:ring-teal-500/40">
+      <option value="">Todos los períodos</option>
+      <option *ngFor="let per of periodos()" [value]="per">{{ per }}</option>
+    </select>
+    <select [ngModel]="filtroMedio()" (ngModelChange)="filtroMedio.set($event)"
+            class="rounded-xl border border-stone-200 px-3 py-2 text-sm font-semibold text-stone-600 capitalize focus:outline-none focus:ring-2 focus:ring-teal-500/40">
+      <option value="">Todos los medios</option>
+      <option *ngFor="let m of medios" [value]="m">{{ m }}</option>
+    </select>
+    <span class="ml-auto text-sm text-stone-500">
+      {{ pagosFiltrados().length }} cobro{{ pagosFiltrados().length === 1 ? '' : 's' }} ·
+      <span class="font-extrabold text-stone-800 tabular-nums">{{ monto(totalFiltrado()) }}</span>
+    </span>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[680px]">
+        <thead>
+          <tr class="text-left text-[11px] uppercase tracking-wider text-stone-400 border-b border-stone-100">
+            <th class="px-5 py-3.5 font-bold">Fecha</th>
+            <th class="px-3 py-3.5 font-bold">Cuenta</th>
+            <th class="px-3 py-3.5 font-bold">Período</th>
+            <th class="px-3 py-3.5 font-bold">Medio</th>
+            <th class="px-3 py-3.5 font-bold">Notas</th>
+            <th class="px-5 py-3.5 font-bold text-right">Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of pagosFiltrados()" class="border-b border-stone-50 last:border-0 hover:bg-stone-50/60 transition-colors">
+            <td class="px-5 py-3.5 text-stone-500 text-xs">{{ fechaCorta(p.fecha) }}</td>
+            <td class="px-3 py-3.5 font-bold text-stone-700">{{ nombreCuenta(p.cuentaId) }}</td>
+            <td class="px-3 py-3.5 text-stone-500 tabular-nums">{{ p.periodo }}</td>
+            <td class="px-3 py-3.5 text-stone-500 capitalize">{{ p.medio }}</td>
+            <td class="px-3 py-3.5 text-stone-400 text-xs max-w-[220px] truncate">{{ p.notas || '—' }}</td>
+            <td class="px-5 py-3.5 text-right font-extrabold text-stone-800 tabular-nums">{{ monto(p.monto) }}</td>
+          </tr>
+          <tr *ngIf="!pagosFiltrados().length">
+            <td colspan="6" class="px-5 py-10 text-center text-sm text-stone-400">No hay cobros con esos filtros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</ng-container>
+
+<!-- Modal registrar cobro -->
+<div *ngIf="modalAbierto()" class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-[2px] flex items-center justify-center p-4" (click)="modalAbierto.set(false)">
+  <div class="bg-white rounded-3xl border border-stone-200 shadow-2xl w-full max-w-md max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()">
+    <div class="px-6 pt-6 pb-4 border-b border-stone-100">
+      <h2 class="text-lg font-extrabold text-stone-800 tracking-tight">Registrar cobro</h2>
+      <p class="text-xs text-stone-400 mt-0.5">Asienta el pago de la membresía de un período.</p>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Cuenta</label>
+        <select [ngModel]="regCuentaId()" (ngModelChange)="onRegCuenta($event)"
+                class="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm font-semibold text-stone-700 focus:outline-none focus:ring-2 focus:ring-teal-500/40">
+          <option value="">Elegí una cuenta…</option>
+          <option *ngFor="let c of cuentasElegibles()" [value]="c.id">
+            {{ c.nombre }} — plan {{ gestion.nombrePlan(c.plan) }}
+          </option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Período</label>
+          <input type="month" [ngModel]="regPeriodo()" (ngModelChange)="regPeriodo.set($event)"
+                 class="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40">
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Monto (ARS)</label>
+          <input type="number" min="0" [ngModel]="regMonto()" (ngModelChange)="regMonto.set(+$event || 0)"
+                 class="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Medio de pago</label>
+        <div class="flex flex-wrap gap-2">
+          <button *ngFor="let m of medios" type="button" (click)="regMedio.set(m)"
+                  class="px-3.5 py-2 rounded-xl border text-sm font-bold capitalize transition-colors"
+                  [ngClass]="regMedio() === m ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-stone-200 text-stone-500 hover:border-stone-300'">
+            {{ m }}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Notas (opcional)</label>
+        <input type="text" [ngModel]="regNotas()" (ngModelChange)="regNotas.set($event)" placeholder="Nº de operación, descuento…"
+               class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40">
+      </div>
+      <div *ngIf="error()" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">{{ error() }}</div>
+    </div>
+    <div class="px-6 py-4 border-t border-stone-100 flex items-center justify-end gap-2">
+      <button (click)="modalAbierto.set(false)" class="px-4 py-2.5 rounded-xl text-sm font-bold text-stone-500 hover:bg-stone-100 transition-colors">Cancelar</button>
+      <button (click)="registrar()" [disabled]="gestion.saving()"
+              class="px-5 py-2.5 rounded-xl text-sm font-bold bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 transition-colors">
+        {{ gestion.saving() ? 'Registrando…' : 'Registrar cobro' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div *ngIf="toast()" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl max-w-[90vw]">
+  {{ toast() }}
+</div>
