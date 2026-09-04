@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { environment } from '../../../environments/environment';
 
 interface CuentaDemo {
   etiqueta: string;
@@ -28,6 +29,9 @@ export class LoginComponent {
   verPassword = signal(false);
   enviando = signal(false);
   error = signal<string | null>(null);
+
+  /** Solo entorno de desarrollo: oculta las credenciales demo en producción. */
+  readonly mostrarDemos = environment.demoCredenciales === true;
 
   /** Accesos de demostración (coinciden con el seed de la API local). */
   readonly demos: CuentaDemo[] = [

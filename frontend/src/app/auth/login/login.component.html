@@ -69,8 +69,8 @@
       </form>
     </div>
 
-    <!-- Cuentas demo -->
-    <div class="mt-5">
+    <!-- Cuentas demo (solo desarrollo: environment.demoCredenciales) -->
+    <div class="mt-5" *ngIf="mostrarDemos">
       <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 text-center mb-2.5">Cuentas de demostración · clic para completar</p>
       <div class="grid gap-2.5">
         <button

@@ -32,6 +32,7 @@ export class ProfesionalesComponent {
 
   consNombre = signal('');
   consDescripcion = signal('');
+  consHorasMinimas = signal(24);
   private consInicializado = false;
 
   // ---- Alta de profesional ----
@@ -60,6 +61,7 @@ export class ProfesionalesComponent {
         this.consInicializado = true;
         this.consNombre.set(c.nombre);
         this.consDescripcion.set(c.descripcion);
+        this.consHorasMinimas.set(c.horasMinimasCancelacion ?? 24);
       }
     });
   }
@@ -114,11 +116,24 @@ export class ProfesionalesComponent {
   }
 
   async guardarConsultorio() {
+    const horas = Math.max(0, Math.min(168, Number(this.consHorasMinimas()) || 0));
+    this.consHorasMinimas.set(horas);
     const ok = await this.adminService.updateCuenta({
       nombre: this.consNombre().trim() || 'Mi Consultorio',
-      descripcion: this.consDescripcion().trim()
+      descripcion: this.consDescripcion().trim(),
+      horasMinimasCancelacion: horas
     });
     if (ok) this.mostrarToast('Datos del consultorio actualizados.');
+  }
+
+  // ===== Límite del plan =====
+
+  /** Texto del límite del plan (para el aviso cuando se alcanza). */
+  avisoLimitePlan(): string {
+    const plan = this.adminService.plan();
+    const limite = this.adminService.limiteProfesionales();
+    const activos = this.adminService.profesionalesActivos().length;
+    return `Tu plan ${plan?.nombre ?? ''} permite hasta ${limite} ${limite === 1 ? 'profesional activo' : 'profesionales activos'} y ya tenés ${activos}. Desactivá uno o consultá por un plan superior.`;
   }
 
   // ===== Especialidades =====
@@ -183,6 +198,10 @@ export class ProfesionalesComponent {
   // ===== Alta de profesional =====
 
   abrirAlta(especialidad?: string) {
+    if (!this.adminService.puedeSumarProfesional()) {
+      this.mostrarToast(this.avisoLimitePlan());
+      return;
+    }
     this.altaNombre.set('');
     this.altaEspecialidad.set(especialidad ?? '');
     this.altaTitulo.set('');
@@ -204,6 +223,11 @@ export class ProfesionalesComponent {
       this.mostrarErrores.set(true);
       return;
     }
+    if (!this.adminService.puedeSumarProfesional()) {
+      this.modalAbierto.set(false);
+      this.mostrarToast(this.avisoLimitePlan());
+      return;
+    }
     this.guardando.set(true);
     const creado = await this.adminService.addProfessional({
       nombre: this.altaNombre().trim(),
@@ -220,6 +244,11 @@ export class ProfesionalesComponent {
 
   async toggleActivo(p: AdminProfile) {
     const nuevoEstado = !(p.activo !== false);
+    // Reactivar también cuenta contra el límite del plan.
+    if (nuevoEstado && !this.adminService.puedeSumarProfesional()) {
+      this.mostrarToast(this.avisoLimitePlan());
+      return;
+    }
     const ok = await this.adminService.updateProfessional(p.id, { activo: nuevoEstado });
     if (ok) {
       this.mostrarToast(nuevoEstado

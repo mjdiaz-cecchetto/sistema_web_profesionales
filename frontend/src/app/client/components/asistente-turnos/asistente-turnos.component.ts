@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { forkJoin, map } from 'rxjs';
 import { ClientService } from '../../services/client.service';
 import { Service, TimeSlot, BookingRequest, ProfessionalProfile } from '../../interfaces/client.models';
 import { Cuenta } from '../../../core/models';
@@ -30,6 +31,35 @@ export class AsistenteTurnosComponent implements OnInit {
   /** Profesional elegido para el turno. Vacío = falta elegir (modo consultorio). */
   profId = signal<string>('');
   profesionalesDisponibles = signal<ProfessionalProfile[]>([]);
+
+  // ---- Selector del consultorio: primero ESPECIALIDAD, después profesional ----
+  /** Especialidad elegida en el paso previo ('' = falta elegir). */
+  especialidadElegida = signal<string>('');
+  /** true si se entró sin profesional en la URL (el "volver" regresa al selector). */
+  private vinoPorSelector = false;
+  /** true mientras se busca el profesional con el turno más próximo. */
+  buscandoProximo = signal(false);
+  errorProximo = signal('');
+
+  /** Especialidades del centro con cantidad de profesionales activos. */
+  especialidadesDisponibles = computed(() => {
+    const conteo = new Map<string, number>();
+    for (const p of this.profesionalesDisponibles()) {
+      const esp = p.especialidad || 'Otros';
+      conteo.set(esp, (conteo.get(esp) ?? 0) + 1);
+    }
+    return [...conteo.entries()]
+      .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  });
+
+  /** Profesionales de la especialidad elegida. */
+  profesionalesDeEspecialidad = computed(() => {
+    const esp = this.especialidadElegida();
+    return this.profesionalesDisponibles()
+      .filter(p => (p.especialidad || 'Otros') === esp)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  });
 
   // State Signals
   pasoActual = signal<number>(1);
@@ -140,7 +170,11 @@ export class AsistenteTurnosComponent implements OnInit {
             } else if (profesionales.length === 1 || cuenta.tipo === 'profesional') {
               this.elegirProfesional(profesionales[0].id);
             } else {
-              // Consultorio sin profesional en la URL: mostrar la elección.
+              // Consultorio sin profesional en la URL: elegir especialidad → profesional.
+              this.vinoPorSelector = true;
+              // Si el centro tiene una sola especialidad, se saltea ese paso.
+              const especialidades = new Set(profesionales.map(p => p.especialidad || 'Otros'));
+              if (especialidades.size === 1) this.especialidadElegida.set([...especialidades][0]);
               this.cargando.set(false);
             }
           },
@@ -149,6 +183,57 @@ export class AsistenteTurnosComponent implements OnInit {
       },
       error: () => { this.errorCarga.set(true); this.cargando.set(false); }
     });
+  }
+
+  elegirEspecialidad(nombre: string): void {
+    this.especialidadElegida.set(nombre);
+    this.errorProximo.set('');
+  }
+
+  volverAEspecialidades(): void {
+    this.especialidadElegida.set('');
+    this.errorProximo.set('');
+  }
+
+  /**
+   * "El turno más próximo": busca la disponibilidad de todos los
+   * profesionales de la especialidad y elige al que tenga el primer
+   * horario libre más cercano.
+   */
+  elegirProximoDisponible(): void {
+    const candidatos = this.profesionalesDeEspecialidad();
+    if (candidatos.length === 0 || this.buscandoProximo()) return;
+
+    this.buscandoProximo.set(true);
+    this.errorProximo.set('');
+
+    forkJoin(candidatos.map(p =>
+      this.clientService.getBookingCalendar(p.id, '').pipe(
+        map(({ slots }) => ({ profId: p.id, primero: slots[0] ?? null }))
+      )
+    )).subscribe({
+      next: resultados => {
+        const conTurnos = resultados.filter(r => r.primero !== null);
+        conTurnos.sort((a, b) =>
+          (a.primero!.date + a.primero!.startTime).localeCompare(b.primero!.date + b.primero!.startTime)
+        );
+        this.buscandoProximo.set(false);
+        if (conTurnos.length === 0) {
+          this.errorProximo.set('Ninguno de los profesionales de esta especialidad tiene turnos disponibles en las próximas semanas.');
+          return;
+        }
+        this.elegirProfesional(conTurnos[0].profId);
+      },
+      error: () => {
+        this.buscandoProximo.set(false);
+        this.errorProximo.set('No pudimos buscar la disponibilidad. Probá de nuevo.');
+      }
+    });
+  }
+
+  /** Fecha corta legible (para mostrar el primer turno de cada profesional). */
+  fechaCorta(fecha: string): string {
+    return formatDMY(fecha);
   }
 
   /** Selecciona el profesional y carga sus datos. */
@@ -218,6 +303,10 @@ export class AsistenteTurnosComponent implements OnInit {
   pasoAnterior() {
     if (this.pasoActual() > 1) {
       this.pasoActual.set(this.pasoActual() - 1);
+    } else if (this.vinoPorSelector && this.profId()) {
+      // Volver a la elección de profesional (misma especialidad).
+      this.profId.set('');
+      this.servicioSeleccionado.set(null);
     } else if (this.esConsultorio() && this.profId()) {
       this.router.navigate(['/c', this.slug(), 'p', this.profId()]);
     } else if (this.esConsultorio()) {

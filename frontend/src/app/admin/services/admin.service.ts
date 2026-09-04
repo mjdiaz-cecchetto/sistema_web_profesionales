@@ -10,6 +10,7 @@ import {
   DayAvailability,
   Especialidad,
   Patient,
+  Plan,
   ProfessionalAvailability,
   ProfessionalProfile,
   Service,
@@ -54,6 +55,8 @@ export class AdminService {
   healthInsurances = signal<string[]>([]);
   /** Catálogo de especialidades de la cuenta (administrable en Mi Equipo). */
   especialidades = signal<Especialidad[]>([]);
+  /** Plan de membresía de la cuenta (para aplicar sus límites). */
+  plan = signal<Plan | null>(null);
 
   /** Selector global del panel: 'ALL' (todos) o el id de un profesional. */
   seleccionId = signal<string>('ALL');
@@ -106,6 +109,15 @@ export class AdminService {
     this.especialidadesOrdenadas().filter(e => e.activo !== false)
   );
 
+  /** Máximo de profesionales activos que permite el plan (0 = sin límite). */
+  limiteProfesionales = computed(() => this.plan()?.maxProfesionales ?? 0);
+
+  /** true si el plan admite activar/sumar un profesional más. */
+  puedeSumarProfesional = computed(() => {
+    const limite = this.limiteProfesionales();
+    return limite === 0 || this.profesionalesActivos().length < limite;
+  });
+
   /** Última cuenta cargada, para recargar al cambiar de sesión. */
   private cuentaCargada = '';
 
@@ -152,7 +164,7 @@ export class AdminService {
     this.loading.set(true);
     this.apiError.set(false);
 
-    let pendientes = 8;
+    let pendientes = 9;
     const done = () => { if (--pendientes === 0) this.loading.set(false); };
     const fail = () => { this.apiError.set(true); done(); };
 
@@ -193,6 +205,44 @@ export class AdminService {
       next: list => { this.especialidades.set(list); done(); },
       error: fail
     });
+    const planId = this.cuenta()?.plan;
+    if (planId) {
+      this.http.get<Plan>(`${this.api}/planes/${planId}`).subscribe({
+        next: plan => { this.plan.set(plan); done(); },
+        error: () => { this.plan.set(null); done(); } // plan borrado: sin límite
+      });
+    } else {
+      this.plan.set(null);
+      done();
+    }
+  }
+
+  /**
+   * Cancela TODOS los turnos activos y futuros de una serie.
+   * Devuelve cuántos canceló (los pasados o ya cancelados no se tocan).
+   */
+  async cancelarSerie(serieId: string): Promise<number> {
+    const hoy = new Date();
+    const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+    const objetivo = this.appointments().filter(a =>
+      a.serieId === serieId &&
+      (a.status === 'PENDING' || a.status === 'CONFIRMED') &&
+      a.date >= hoyStr
+    );
+    if (objetivo.length === 0) return 0;
+
+    this.saving.set(true);
+    const resultados = await Promise.all(objetivo.map(a => new Promise<boolean>(resolve => {
+      this.http.patch<Appointment>(`${this.api}/appointments/${a.id}`, { status: 'CANCELLED' }).subscribe({
+        next: act => {
+          this.appointments.set(this.appointments().map(x => (x.id === a.id ? act : x)));
+          resolve(true);
+        },
+        error: () => { this.apiError.set(true); resolve(false); }
+      });
+    })));
+    this.saving.set(false);
+    return resultados.filter(Boolean).length;
   }
 
   // ---- Especialidades (catálogo de la cuenta) ----
@@ -303,7 +353,7 @@ export class AdminService {
   }
 
   // ---- Datos de la cuenta (nombre público, descripción) ----
-  updateCuenta(datos: Partial<Pick<Cuenta, 'nombre' | 'descripcion' | 'bannerUrl'>>): Promise<boolean> {
+  updateCuenta(datos: Partial<Pick<Cuenta, 'nombre' | 'descripcion' | 'bannerUrl' | 'horasMinimasCancelacion'>>): Promise<boolean> {
     const id = this.cuenta()?.id;
     if (!id) return Promise.resolve(false);
     this.saving.set(true);

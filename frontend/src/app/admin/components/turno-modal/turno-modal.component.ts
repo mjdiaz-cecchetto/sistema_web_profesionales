@@ -492,11 +492,12 @@ export class TurnoModalComponent {
     const fechasACrear = this.fechasGeneradas().filter(f => !f.conflicto);
     if (fechasACrear.length === 0) return;
 
-    const serieNota = this.repetir() && fechasACrear.length > 1
-      ? ` [Serie: sesión de ${fechasACrear.length}]`
-      : '';
+    const esSerie = this.repetir() && fechasACrear.length > 1;
+    const serieNota = esSerie ? ` [Serie: sesión de ${fechasACrear.length}]` : '';
+    const serieId = esSerie ? 'serie-' + Date.now().toString(36) + Math.floor(Math.random() * 1000) : undefined;
 
     const nuevos = fechasACrear.map(fg => ({
+      serieId,
       profesionalId: this.profId(),
       serviceName: this.servicioNombre(),
       patientName: pac.nombre,

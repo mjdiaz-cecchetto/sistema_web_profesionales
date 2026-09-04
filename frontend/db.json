@@ -45,7 +45,8 @@
       "bannerUrl": "",
       "estado": "activa",
       "plan": "plan-consultorio",
-      "fechaAlta": "2026-05-07"
+      "fechaAlta": "2026-05-07",
+      "horasMinimasCancelacion": 24
     },
     {
       "id": "cta-elena-ramos",
@@ -58,7 +59,8 @@
       "bannerUrl": "",
       "estado": "activa",
       "plan": "plan-profesional",
-      "fechaAlta": "2026-07-21"
+      "fechaAlta": "2026-07-21",
+      "horasMinimasCancelacion": 24
     }
   ],
   "especialidades": [
@@ -374,6 +376,22 @@
           "detalle": "Brindo un espacio neutral de escucha activa para identificar patrones destructivos y mejorar la empatía."
         }
       ]
+    },
+    {
+      "id": "prof-mtnj2a02",
+      "cuentaId": "cta-consultorio-sm",
+      "activo": true,
+      "especialidad": "Psicología",
+      "nombre": "Eduardo Ferreyra",
+      "titulo": "Pscologia",
+      "whatsapp": "385311456",
+      "avatarUrl": "",
+      "bannerUrl": "",
+      "frasePrincipal": "",
+      "biografia": "",
+      "modalidad": "",
+      "direcciones": [],
+      "areas": []
     }
   ],
   "availabilities": [
@@ -805,6 +823,54 @@
           "slots": []
         }
       ]
+    },
+    {
+      "id": "prof-mtnj2a02",
+      "cuentaId": "cta-consultorio-sm",
+      "days": [
+        {
+          "day": "Lunes",
+          "dayIndex": 1,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Martes",
+          "dayIndex": 2,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Miércoles",
+          "dayIndex": 3,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Jueves",
+          "dayIndex": 4,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Viernes",
+          "dayIndex": 5,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Sábado",
+          "dayIndex": 6,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Domingo",
+          "dayIndex": 0,
+          "active": false,
+          "slots": []
+        }
+      ]
     }
   ],
   "services": [
@@ -980,7 +1046,7 @@
       "patientDni": "31485296",
       "date": "2026-09-01",
       "time": "15:00",
-      "status": "CONFIRMED",
+      "status": "ATTENDED",
       "notes": "Sesión de seguimiento.",
       "location": "Centro Médico San Martín",
       "healthInsurance": "OSECAC"
@@ -996,7 +1062,7 @@
       "patientDni": "12958374",
       "date": "2026-09-02",
       "time": "09:30",
-      "status": "CONFIRMED",
+      "status": "ATTENDED",
       "notes": "Paciente de PAMI, trae orden.",
       "location": "Centro Médico San Martín",
       "healthInsurance": "PAMI"
@@ -1004,6 +1070,7 @@
     {
       "id": "apt-csm-3",
       "cuentaId": "cta-consultorio-sm",
+      "serieId": "serie-kine-acosta",
       "profesionalId": "prof-vega",
       "serviceName": "Sesión de Kinesiología",
       "patientName": "Federico Acosta",
@@ -1012,7 +1079,7 @@
       "patientDni": "36741852",
       "date": "2026-09-03",
       "time": "09:00",
-      "status": "CONFIRMED",
+      "status": "ATTENDED",
       "notes": "Post-quirúrgico LCA, sesión 6 de 12.",
       "location": "Centro Médico San Martín",
       "healthInsurance": "OSDE"
@@ -1052,6 +1119,7 @@
     {
       "id": "apt-csm-6",
       "cuentaId": "cta-consultorio-sm",
+      "serieId": "serie-kine-acosta",
       "profesionalId": "prof-vega",
       "serviceName": "Sesión de Kinesiología",
       "patientName": "Federico Acosta",
@@ -1210,6 +1278,40 @@
       "healthInsurance": "OSDE"
     },
     {
+      "id": "apt-csm-16",
+      "cuentaId": "cta-consultorio-sm",
+      "serieId": "serie-kine-acosta",
+      "profesionalId": "prof-vega",
+      "serviceName": "Sesión de Kinesiología",
+      "patientName": "Federico Acosta",
+      "patientEmail": "fedeacosta92@gmail.com",
+      "patientPhone": "1157983041",
+      "patientDni": "36741852",
+      "date": "2026-09-12",
+      "time": "09:00",
+      "status": "CONFIRMED",
+      "notes": "Post-quirúrgico LCA, sesión 8 de 12. [Serie: sesión de 4]",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "OSDE"
+    },
+    {
+      "id": "apt-csm-17",
+      "cuentaId": "cta-consultorio-sm",
+      "serieId": "serie-kine-acosta",
+      "profesionalId": "prof-vega",
+      "serviceName": "Sesión de Kinesiología",
+      "patientName": "Federico Acosta",
+      "patientEmail": "fedeacosta92@gmail.com",
+      "patientPhone": "1157983041",
+      "patientDni": "36741852",
+      "date": "2026-09-19",
+      "time": "09:00",
+      "status": "PENDING",
+      "notes": "Post-quirúrgico LCA, sesión 9 de 12. [Serie: sesión de 4]",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "OSDE"
+    },
+    {
       "id": "apt-ele-1",
       "cuentaId": "cta-elena-ramos",
       "profesionalId": "prof-elena",
@@ -1236,7 +1338,7 @@
       "patientDni": "31123456",
       "date": "2026-09-02",
       "time": "18:00",
-      "status": "CONFIRMED",
+      "status": "ATTENDED",
       "notes": "Sesión de seguimiento.",
       "location": "Centro Médico Belgrano",
       "healthInsurance": "Swiss Medical"
@@ -1252,7 +1354,7 @@
       "patientDni": "32123456",
       "date": "2026-09-03",
       "time": "19:00",
-      "status": "CONFIRMED",
+      "status": "NO_SHOW",
       "notes": "Primera sesión conjunta.",
       "location": "Consulta Online",
       "healthInsurance": "Particular (Sin cobertura)"
@@ -1457,7 +1559,7 @@
       "telefono": "1123456001",
       "dni": "30123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-08-20"
+      "fechaAlta": "2026-08-24"
     },
     {
       "id": "pat-cta-elena-ramos-31123456",
@@ -1467,7 +1569,7 @@
       "telefono": "1123456002",
       "dni": "31123456",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-08-22"
+      "fechaAlta": "2026-08-26"
     },
     {
       "id": "pat-cta-elena-ramos-32123456",
@@ -1477,7 +1579,7 @@
       "telefono": "1123456003",
       "dni": "32123456",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-08-24"
+      "fechaAlta": "2026-08-28"
     },
     {
       "id": "pat-cta-elena-ramos-38123456",
@@ -1487,7 +1589,7 @@
       "telefono": "1123456789",
       "dni": "38123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-08-26"
+      "fechaAlta": "2026-08-30"
     },
     {
       "id": "pat-cta-elena-ramos-35987654",
@@ -1497,7 +1599,7 @@
       "telefono": "1198765432",
       "dni": "35987654",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-08-28"
+      "fechaAlta": "2026-09-01"
     },
     {
       "id": "pat-cta-elena-ramos-40111222",
@@ -1507,7 +1609,7 @@
       "telefono": "1133334444",
       "dni": "40111222",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-08-30"
+      "fechaAlta": "2026-09-03"
     },
     {
       "id": "pat-cta-elena-ramos-38123457",
@@ -1517,7 +1619,7 @@
       "telefono": "1123456011",
       "dni": "38123457",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-09-01"
+      "fechaAlta": "2026-09-05"
     },
     {
       "id": "pat-cta-elena-ramos-40123456",
@@ -1527,7 +1629,7 @@
       "telefono": "1123456013",
       "dni": "40123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-09-03"
+      "fechaAlta": "2026-09-07"
     }
   ],
   "blockedDates": [

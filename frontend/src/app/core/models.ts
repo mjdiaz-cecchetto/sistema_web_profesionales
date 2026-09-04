@@ -37,6 +37,8 @@ export interface Cuenta {
   /** Plan de membresía (la gestión de cobros llega más adelante). */
   plan: string;
   fechaAlta: string; // YYYY-MM-DD
+  /** Horas mínimas de anticipación para que el paciente reprograme/cancele (default 24). */
+  horasMinimasCancelacion?: number;
 }
 
 /** @deprecated alias temporal — usar Cuenta. */
@@ -131,11 +133,17 @@ export interface Patient {
   fechaAlta: string; // YYYY-MM-DD
 }
 
-export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+/**
+ * Estados del turno. ATTENDED / NO_SHOW se marcan desde la agenda
+ * cuando el turno ya pasó, y alimentan las métricas de asistencia.
+ */
+export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW';
 
 export interface Appointment {
   id: string;
   cuentaId: string;
+  /** Turnos creados como serie repetida comparten este id (permite cancelar la serie completa). */
+  serieId?: string;
   /** Profesional que atiende el turno. */
   profesionalId: string;
   serviceName: string;

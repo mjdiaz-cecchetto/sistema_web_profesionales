@@ -34,6 +34,18 @@ export class DashboardComponent {
   );
 
   todayApptsCount = computed(() => this.todayAppts().length);
+
+  /** Asistencia real de los últimos 30 días: asistidos / (asistidos + ausentes). */
+  asistencia30 = computed(() => {
+    const desde = new Date();
+    desde.setDate(desde.getDate() - 30);
+    const desdeStr = `${desde.getFullYear()}-${String(desde.getMonth() + 1).padStart(2, '0')}-${String(desde.getDate()).padStart(2, '0')}`;
+    const pasados = this.adminService.turnosVisibles().filter(a => a.date >= desdeStr && a.date < this.todayDateString);
+    const asistidos = pasados.filter(a => a.status === 'ATTENDED').length;
+    const ausentes = pasados.filter(a => a.status === 'NO_SHOW').length;
+    const total = asistidos + ausentes;
+    return { asistidos, ausentes, porcentaje: total > 0 ? Math.round((asistidos / total) * 100) : null };
+  });
   pendingCount = computed(() => this.adminService.turnosVisibles().filter(a => a.status === 'PENDING').length);
   totalReservationsCount = computed(() => this.adminService.turnosVisibles().filter(a => a.status !== 'CANCELLED').length);
   uniquePatientsCount = computed(() => this.adminService.patients().length);
@@ -58,15 +70,24 @@ export class DashboardComponent {
       icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'
     },
     {
-      label: 'Reservas Activas',
-      value: this.totalReservationsCount(),
-      chipClass: 'bg-purple-100 text-purple-700',
+      label: 'Asistencia (30 días)',
+      value: this.asistencia30().porcentaje !== null ? this.asistencia30().porcentaje + '%' : '—',
+      sub: this.asistencia30().porcentaje !== null
+        ? `${this.asistencia30().asistidos} asistieron · ${this.asistencia30().ausentes} faltaron`
+        : 'Marcá Asistió / No vino en la agenda',
+      chipClass: 'bg-sky-100 text-sky-700',
       icon: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z'
     }
   ]);
 
   statusLabel(status: string): string {
-    return status === 'CONFIRMED' ? 'Confirmado' : status === 'PENDING' ? 'Pendiente' : 'Cancelado';
+    switch (status) {
+      case 'CONFIRMED': return 'Confirmado';
+      case 'PENDING': return 'Pendiente';
+      case 'ATTENDED': return 'Asistió';
+      case 'NO_SHOW': return 'No asistió';
+      default: return 'Cancelado';
+    }
   }
 
   private formatToday(d: Date): string {

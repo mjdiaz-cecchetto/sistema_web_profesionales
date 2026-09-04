@@ -169,6 +169,19 @@ export class MisTurnosComponent implements OnInit {
 
   }
 
+  /** Horas mínimas de anticipación para cambios (configuradas por la cuenta; default 24). */
+  horasMinimas(): number {
+    return this.cuenta()?.horasMinimasCancelacion ?? 24;
+  }
+
+  /** true si el turno todavía puede reprogramarse/cancelarse online. */
+  puedeGestionar(turno: Appointment): boolean {
+    const [y, m, d] = turno.date.split('-').map(Number);
+    const [hh, mm] = turno.time.split(':').map(Number);
+    const inicio = new Date(y, m - 1, d, hh, mm).getTime();
+    return inicio - Date.now() >= this.horasMinimas() * 60 * 60 * 1000;
+  }
+
   nombreProfesionalDe(turno: Appointment): string {
     return this.profesionales().find(p => p.id === turno.profesionalId)?.nombre ?? '';
   }
@@ -179,6 +192,7 @@ export class MisTurnosComponent implements OnInit {
 
   // ---- Reprogramación ----
   abrirReprogramacion(turno: Appointment): void {
+    if (!this.puedeGestionar(turno)) return;
     this.turnoEnGestion.set(turno.id);
     this.modoGestion.set('REPROGRAMAR');
     this.nuevaFecha.set('');
@@ -244,6 +258,7 @@ export class MisTurnosComponent implements OnInit {
 
   // ---- Cancelación ----
   abrirCancelacion(turno: Appointment): void {
+    if (!this.puedeGestionar(turno)) return;
     this.turnoEnGestion.set(turno.id);
     this.modoGestion.set('CANCELAR');
     this.mensajeExito.set('');

@@ -79,7 +79,7 @@
           </div>
 
           <!-- Acciones (mismo tamaño) -->
-          <div *ngIf="turnoEnGestion() !== turno.id" class="px-5 pb-4 flex gap-2">
+          <div *ngIf="turnoEnGestion() !== turno.id && puedeGestionar(turno)" class="px-5 pb-4 flex gap-2">
             <button (click)="abrirReprogramacion(turno)"
                     class="flex-1 bg-teal-100 hover:bg-teal-200 text-teal-900 border border-teal-200 px-3 py-3 rounded-xl text-xs font-extrabold transition-colors flex items-center justify-center gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
@@ -90,6 +90,14 @@
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               Cancelar Turno
             </button>
+          </div>
+
+          <!-- Dentro de la ventana mínima: sin cambios online -->
+          <div *ngIf="turnoEnGestion() !== turno.id && !puedeGestionar(turno)" class="px-5 pb-4">
+            <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-3.5 py-2.5 text-[11px] font-semibold flex items-start gap-2">
+              <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span>Los cambios online se aceptan hasta <span class="font-extrabold">{{ horasMinimas() }} hs antes</span> del turno. Si necesitás modificarlo, comunicate directamente con el consultorio.</span>
+            </div>
           </div>
 
           <!-- ===== Panel de reprogramación: mini agenda + horas ===== -->
@@ -215,10 +223,11 @@
               <span *ngIf="esConsultorio()" class="font-bold text-teal-700">{{ nombreProfesionalDe(t) }} · </span>{{ t.serviceName }}
             </span>
             <span class="chip !text-[9px] shrink-0"
-                  [class.chip-confirmed]="t.status === 'CONFIRMED'"
+                  [class.chip-confirmed]="t.status === 'CONFIRMED' || t.status === 'ATTENDED'"
                   [class.chip-pending]="t.status === 'PENDING'"
-                  [class.chip-cancelled]="t.status === 'CANCELLED'">
-              {{ t.status === 'CONFIRMED' ? 'Realizado' : t.status === 'PENDING' ? 'Pendiente' : 'Cancelado' }}
+                  [class.chip-cancelled]="t.status === 'CANCELLED'"
+                  [ngClass]="{'bg-orange-100 text-orange-800 border-orange-200': t.status === 'NO_SHOW'}">
+              {{ t.status === 'ATTENDED' ? 'Asististe' : t.status === 'NO_SHOW' ? 'No asististe' : t.status === 'CONFIRMED' ? 'Realizado' : t.status === 'PENDING' ? 'Pendiente' : 'Cancelado' }}
             </span>
           </div>
         </div>

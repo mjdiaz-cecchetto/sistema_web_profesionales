@@ -15,12 +15,59 @@
         <p class="text-stone-500 text-sm">Cargando información...</p>
       </div>
 
-      <!-- Elegir profesional (modo consultorio, sin profesional en la URL) -->
-      <div *ngIf="!cargando() && !profId()" class="animate-fade-in flex-1">
-        <h3 class="text-lg font-medium text-stone-800 mb-2">¿Con quién querés atenderte?</h3>
-        <p class="text-sm text-stone-500 mb-6">Elegí un profesional para ver sus servicios y horarios.</p>
+      <!-- ===== Selector del consultorio: PASO A — especialidad ===== -->
+      <div *ngIf="!cargando() && !profId() && !especialidadElegida()" class="animate-fade-in flex-1">
+        <h3 class="text-lg font-medium text-stone-800 mb-2">¿Qué especialidad buscás?</h3>
+        <p class="text-sm text-stone-500 mb-6">Elegí el área y después el profesional (o dejá que te asignemos el turno más próximo).</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button *ngFor="let e of especialidadesDisponibles()"
+                  (click)="elegirEspecialidad(e.nombre)"
+                  class="border-2 border-transparent bg-stone-50 hover:bg-teal-50 hover:border-teal-300 rounded-2xl p-4 sm:p-5 transition-all duration-200 flex items-center gap-4 text-left">
+            <div class="w-11 h-11 rounded-2xl bg-teal-200 border border-teal-300 flex items-center justify-center text-teal-900 shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+            </div>
+            <div class="min-w-0 flex-grow">
+              <h4 class="font-bold text-stone-900">{{ e.nombre }}</h4>
+              <p class="text-xs text-stone-500 mt-0.5">{{ e.cantidad }} {{ e.cantidad === 1 ? 'profesional' : 'profesionales' }}</p>
+            </div>
+            <svg class="w-5 h-5 text-stone-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Selector del consultorio: PASO B — profesional de la especialidad ===== -->
+      <div *ngIf="!cargando() && !profId() && especialidadElegida()" class="animate-fade-in flex-1">
+        <button *ngIf="especialidadesDisponibles().length > 1"
+                (click)="volverAEspecialidades()"
+                class="text-xs font-bold text-stone-400 hover:text-teal-700 transition-colors mb-3 inline-flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+          Otras especialidades
+        </button>
+        <h3 class="text-lg font-medium text-stone-800 mb-2">{{ especialidadElegida() }} · ¿con quién querés atenderte?</h3>
+        <p class="text-sm text-stone-500 mb-6">Elegí un profesional, o pedí el turno más próximo y te asignamos uno.</p>
+
         <div class="space-y-3">
-          <button *ngFor="let p of profesionalesDisponibles()"
+          <!-- El turno más próximo -->
+          <button *ngIf="profesionalesDeEspecialidad().length > 1"
+                  (click)="elegirProximoDisponible()"
+                  [disabled]="buscandoProximo()"
+                  class="w-full border-2 border-teal-200 bg-teal-50 hover:bg-teal-100 hover:border-teal-300 rounded-2xl p-4 sm:p-5 transition-all duration-200 flex items-center gap-4 text-left disabled:opacity-70">
+            <div class="w-14 h-14 rounded-2xl bg-teal-200 border border-teal-300 flex items-center justify-center text-teal-900 shrink-0">
+              <div *ngIf="buscandoProximo()" class="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-800"></div>
+              <svg *ngIf="!buscandoProximo()" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <div class="min-w-0 flex-grow">
+              <h4 class="font-bold text-teal-950">{{ buscandoProximo() ? 'Buscando la disponibilidad más cercana…' : 'El turno más próximo' }}</h4>
+              <p class="text-xs text-teal-800 mt-0.5">Te asignamos el profesional de {{ especialidadElegida() }} con el horario libre más cercano.</p>
+            </div>
+            <svg class="w-5 h-5 text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+
+          <p *ngIf="errorProximo()" class="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-2.5">
+            {{ errorProximo() }}
+          </p>
+
+          <button *ngFor="let p of profesionalesDeEspecialidad()"
                   (click)="elegirProfesional(p.id)"
                   class="w-full border-2 border-transparent bg-stone-50 hover:bg-teal-50 hover:border-teal-300 rounded-2xl p-4 sm:p-5 transition-all duration-200 flex items-center gap-4 text-left">
             <div class="w-14 h-14 rounded-2xl overflow-hidden bg-teal-200 border border-teal-300 flex items-center justify-center text-teal-900 font-extrabold shrink-0">

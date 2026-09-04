@@ -14,11 +14,12 @@ interface CeldaDia {
   isSelected: boolean;
   confirmed: number;
   pending: number;
+  attended: number;
   cancelled: number;
   total: number;
 }
 
-type FiltroEstado = 'ALL' | 'CONFIRMED' | 'PENDING' | 'CANCELLED';
+type FiltroEstado = 'ALL' | 'CONFIRMED' | 'PENDING' | 'ATTENDED' | 'NO_SHOW' | 'CANCELLED';
 
 @Component({
   selector: 'app-agenda-calendario',
@@ -52,6 +53,8 @@ export class AgendaCalendarioComponent {
     { label: 'Todos', value: 'ALL', dotClass: '', activeClass: 'bg-teal-100 text-teal-900 border-teal-200' },
     { label: 'Confirmados', value: 'CONFIRMED', dotClass: 'bg-emerald-400', activeClass: 'bg-emerald-100 text-emerald-900 border-emerald-200' },
     { label: 'Pendientes', value: 'PENDING', dotClass: 'bg-amber-400', activeClass: 'bg-amber-100 text-amber-900 border-amber-200' },
+    { label: 'Asistió', value: 'ATTENDED', dotClass: 'bg-sky-400', activeClass: 'bg-sky-100 text-sky-800 border-sky-200' },
+    { label: 'No asistió', value: 'NO_SHOW', dotClass: 'bg-orange-400', activeClass: 'bg-orange-100 text-orange-800 border-orange-200' },
     { label: 'Cancelados', value: 'CANCELLED', dotClass: 'bg-rose-400', activeClass: 'bg-rose-100 text-rose-800 border-rose-200' }
   ];
 
@@ -77,6 +80,8 @@ export class AgendaCalendarioComponent {
       ALL: list.length,
       CONFIRMED: list.filter(a => a.status === 'CONFIRMED').length,
       PENDING: list.filter(a => a.status === 'PENDING').length,
+      ATTENDED: list.filter(a => a.status === 'ATTENDED').length,
+      NO_SHOW: list.filter(a => a.status === 'NO_SHOW').length,
       CANCELLED: list.filter(a => a.status === 'CANCELLED').length
     };
   });
@@ -105,7 +110,7 @@ export class AgendaCalendarioComponent {
 
     const cells: CeldaDia[] = [];
     for (let i = 0; i < diaSemanaInicio; i++) {
-      cells.push({ date: null, dayNum: null, isToday: false, isSelected: false, confirmed: 0, pending: 0, cancelled: 0, total: 0 });
+      cells.push({ date: null, dayNum: null, isToday: false, isSelected: false, confirmed: 0, pending: 0, attended: 0, cancelled: 0, total: 0 });
     }
 
     const todayStr = todayLocal();
@@ -121,6 +126,7 @@ export class AgendaCalendarioComponent {
         isSelected: fechaStr === seleccionado,
         confirmed: turnos.filter(t => t.status === 'CONFIRMED').length,
         pending: turnos.filter(t => t.status === 'PENDING').length,
+        attended: turnos.filter(t => t.status === 'ATTENDED' || t.status === 'NO_SHOW').length,
         cancelled: turnos.filter(t => t.status === 'CANCELLED').length,
         total: turnos.length
       });
@@ -213,11 +219,21 @@ export class AgendaCalendarioComponent {
     setTimeout(() => this.toastMensaje.set(''), 5000);
   }
 
-  statusLabel(status: string): string {
-    return status === 'CONFIRMED' ? 'Confirmado' : status === 'PENDING' ? 'Pendiente' : 'Cancelado';
+  esPasado(appt: { date: string }): boolean {
+    return appt.date < todayLocal();
   }
 
-  changeStatus(id: string, status: 'CONFIRMED' | 'CANCELLED') {
+  statusLabel(status: string): string {
+    switch (status) {
+      case 'CONFIRMED': return 'Confirmado';
+      case 'PENDING': return 'Pendiente';
+      case 'ATTENDED': return 'Asistió';
+      case 'NO_SHOW': return 'No asistió';
+      default: return 'Cancelado';
+    }
+  }
+
+  changeStatus(id: string, status: 'CONFIRMED' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW') {
     this.adminService.updateAppointmentStatus(id, status);
   }
 

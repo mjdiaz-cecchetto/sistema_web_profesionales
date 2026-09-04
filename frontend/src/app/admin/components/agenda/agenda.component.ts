@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, AdminAppointment } from '../../services/admin.service';
+import { AppointmentStatus } from '../../../core/models';
 import { DatePickerComponent } from '../../../shared/components/date-picker/date-picker.component';
 import { AgendaTabsComponent } from '../agenda-tabs/agenda-tabs.component';
 import { TurnoModalComponent } from '../turno-modal/turno-modal.component';
@@ -197,11 +198,46 @@ export class AgendaComponent {
   formatDate = formatDMY;
 
   statusLabel(status: string): string {
-    return status === 'CONFIRMED' ? 'Confirmado' : status === 'PENDING' ? 'Pendiente' : 'Cancelado';
+    switch (status) {
+      case 'CONFIRMED': return 'Confirmado';
+      case 'PENDING': return 'Pendiente';
+      case 'ATTENDED': return 'Asistió';
+      case 'NO_SHOW': return 'No asistió';
+      default: return 'Cancelado';
+    }
   }
 
-  changeStatus(id: string, status: 'CONFIRMED' | 'CANCELLED') {
+  /** true si el turno ya pasó (se puede marcar asistencia). */
+  esPasado(appt: AdminAppointment): boolean {
+    return appt.date < todayLocal();
+  }
+
+  changeStatus(id: string, status: AppointmentStatus) {
     this.adminService.updateAppointmentStatus(id, status);
+  }
+
+  // ---- Series ----
+  /** Serie con confirmación pendiente de "cancelar toda la serie". */
+  serieAConfirmar = signal<string | null>(null);
+
+  /** Cantidad de turnos activos y futuros que caerían al cancelar la serie. */
+  serieCancelables(serieId: string): number {
+    const hoy = todayLocal();
+    return this.adminService.appointments()
+      .filter(a => a.serieId === serieId && (a.status === 'PENDING' || a.status === 'CONFIRMED') && a.date >= hoy)
+      .length;
+  }
+
+  sesionesDeSerie(serieId: string): number {
+    return this.adminService.appointments().filter(a => a.serieId === serieId).length;
+  }
+
+  async confirmarCancelarSerie(serieId: string) {
+    const canceladas = await this.adminService.cancelarSerie(serieId);
+    this.serieAConfirmar.set(null);
+    this.mostrarToast(canceladas > 0
+      ? `Se cancelaron ${canceladas} ${canceladas === 1 ? 'turno' : 'turnos'} de la serie.`
+      : 'La serie no tenía turnos activos por venir.');
   }
 
   /** Link wa.me al paciente con la confirmación/recordatorio del turno pre-escrito. */
