@@ -120,6 +120,16 @@ const db = {
     }
   ],
 
+  // ===== Especialidades (catálogo por cuenta, administrable en Mi Equipo) =====
+  especialidades: [
+    { id: 'esp-csm-psico', cuentaId: CSM, nombre: 'Psicología', activo: true },
+    { id: 'esp-csm-psiquia', cuentaId: CSM, nombre: 'Psiquiatría', activo: true },
+    { id: 'esp-csm-odonto', cuentaId: CSM, nombre: 'Odontología', activo: true },
+    { id: 'esp-csm-nutri', cuentaId: CSM, nombre: 'Nutrición', activo: true },
+    { id: 'esp-csm-kine', cuentaId: CSM, nombre: 'Kinesiología', activo: true },
+    { id: 'esp-ele-psico', cuentaId: ELE, nombre: 'Psicología', activo: true }
+  ],
+
   professionals: [
     // ===== Centro Médico San Martín =====
     {

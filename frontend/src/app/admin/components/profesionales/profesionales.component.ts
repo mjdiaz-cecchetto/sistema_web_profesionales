@@ -1,14 +1,22 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AdminService, AdminProfile } from '../../services/admin.service';
+import { AdminService, AdminProfile, Especialidad } from '../../services/admin.service';
 import { todayLocal } from '../../../core/date-utils';
 
+/** Grupo del equipo: una especialidad con sus profesionales. */
+interface GrupoEquipo {
+  nombre: string;
+  especialidad: Especialidad | null; // null = "Sin especialidad"
+  profesionales: AdminProfile[];
+}
+
 /**
- * Gestión del equipo del consultorio: datos del centro,
- * listado de profesionales, alta y activación/desactivación.
- * Con un solo profesional activo, el sistema funciona como cuenta individual.
+ * Gestión del equipo del consultorio: datos del centro, catálogo de
+ * ESPECIALIDADES (alta, renombrar, activar/desactivar, eliminar) y
+ * profesionales agrupados por especialidad. El alta de profesionales
+ * elige una especialidad ya cargada.
  */
 @Component({
   selector: 'app-profesionales',
@@ -26,6 +34,7 @@ export class ProfesionalesComponent {
   consDescripcion = signal('');
   private consInicializado = false;
 
+  // ---- Alta de profesional ----
   modalAbierto = signal(false);
   altaNombre = signal('');
   altaEspecialidad = signal('');
@@ -34,6 +43,14 @@ export class ProfesionalesComponent {
   mostrarErrores = signal(false);
   guardando = signal(false);
   toastMensaje = signal('');
+
+  // ---- Administración de especialidades ----
+  panelEspecialidades = signal(false);
+  nuevaEspecialidad = signal('');
+  errorEspecialidad = signal('');
+  /** Especialidad en edición (id) y su nombre temporal. */
+  editandoEspId = signal<string | null>(null);
+  editandoEspNombre = signal('');
 
   constructor() {
     // Copia editable de los datos del consultorio cuando llegan de la API.
@@ -45,6 +62,39 @@ export class ProfesionalesComponent {
         this.consDescripcion.set(c.descripcion);
       }
     });
+  }
+
+  // ===== Equipo agrupado por especialidad =====
+
+  /**
+   * Grupos para la vista: cada especialidad del catálogo con sus
+   * profesionales (aunque esté vacía), y al final "Sin especialidad"
+   * si quedó algún profesional con una especialidad fuera del catálogo.
+   */
+  grupos = computed<GrupoEquipo[]>(() => {
+    const profesionales = this.adminService.professionals();
+    const catalogo = this.adminService.especialidadesOrdenadas();
+
+    const grupos: GrupoEquipo[] = catalogo.map(e => ({
+      nombre: e.nombre,
+      especialidad: e,
+      profesionales: profesionales
+        .filter(p => p.especialidad === e.nombre)
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+    }));
+
+    const nombresCatalogo = new Set(catalogo.map(e => e.nombre));
+    const sueltos = profesionales
+      .filter(p => !p.especialidad || !nombresCatalogo.has(p.especialidad))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    if (sueltos.length > 0) {
+      grupos.push({ nombre: 'Sin especialidad', especialidad: null, profesionales: sueltos });
+    }
+    return grupos;
+  });
+
+  activosDe(grupo: GrupoEquipo): number {
+    return grupo.profesionales.filter(p => p.activo !== false).length;
   }
 
   iniciales(nombre: string): string {
@@ -71,19 +121,81 @@ export class ProfesionalesComponent {
     if (ok) this.mostrarToast('Datos del consultorio actualizados.');
   }
 
-  /** Especialidades ya usadas en la cuenta, para sugerirlas en el alta. */
-  especialidadesExistentes(): string[] {
-    return Array.from(new Set(this.adminService.professionals().map(p => p.especialidad).filter(Boolean))).sort();
+  // ===== Especialidades =====
+
+  async crearEspecialidad() {
+    const nombre = this.nuevaEspecialidad().trim();
+    this.errorEspecialidad.set('');
+    if (!nombre) return;
+    const creada = await this.adminService.addEspecialidad(nombre);
+    if (creada) {
+      this.nuevaEspecialidad.set('');
+      this.mostrarToast(`Especialidad "${creada.nombre}" creada. Ya podés asignarle profesionales.`);
+    } else {
+      this.errorEspecialidad.set(`"${nombre}" ya existe en el catálogo.`);
+    }
   }
 
-  abrirAlta() {
+  empezarEdicion(e: Especialidad) {
+    this.errorEspecialidad.set('');
+    this.editandoEspId.set(e.id);
+    this.editandoEspNombre.set(e.nombre);
+  }
+
+  cancelarEdicion() {
+    this.editandoEspId.set(null);
+    this.editandoEspNombre.set('');
+  }
+
+  async confirmarEdicion() {
+    const id = this.editandoEspId();
+    if (!id) return;
+    const nombre = this.editandoEspNombre().trim();
+    if (!nombre) return;
+    const ok = await this.adminService.renameEspecialidad(id, nombre);
+    if (ok) {
+      this.cancelarEdicion();
+      this.mostrarToast('Especialidad renombrada (se actualizó en todos sus profesionales).');
+    } else {
+      this.errorEspecialidad.set(`No se pudo renombrar: "${nombre}" ya existe o hubo un error.`);
+    }
+  }
+
+  async toggleEspecialidad(e: Especialidad) {
+    const ok = await this.adminService.toggleEspecialidad(e.id, !(e.activo !== false));
+    if (ok) {
+      this.mostrarToast(e.activo !== false
+        ? `"${e.nombre}" quedó inactiva: no se ofrece para nuevos profesionales.`
+        : `"${e.nombre}" está activa nuevamente.`);
+    }
+  }
+
+  async eliminarEspecialidad(e: Especialidad) {
+    if (this.adminService.usoEspecialidad(e.nombre) > 0) return;
+    const ok = await this.adminService.deleteEspecialidad(e.id);
+    if (ok) this.mostrarToast(`Especialidad "${e.nombre}" eliminada.`);
+  }
+
+  usoDe(e: Especialidad): number {
+    return this.adminService.usoEspecialidad(e.nombre);
+  }
+
+  // ===== Alta de profesional =====
+
+  abrirAlta(especialidad?: string) {
     this.altaNombre.set('');
-    this.altaEspecialidad.set('');
+    this.altaEspecialidad.set(especialidad ?? '');
     this.altaTitulo.set('');
     this.altaWhatsapp.set('');
     this.mostrarErrores.set(false);
     this.toastMensaje.set('');
     this.modalAbierto.set(true);
+  }
+
+  /** Abre el panel de especialidades desde el aviso del modal de alta. */
+  irACrearEspecialidades() {
+    this.modalAbierto.set(false);
+    this.panelEspecialidades.set(true);
   }
 
   async crearProfesional() {
@@ -102,7 +214,7 @@ export class ProfesionalesComponent {
     this.guardando.set(false);
     if (creado) {
       this.modalAbierto.set(false);
-      this.mostrarToast(`${creado.nombre} se sumó al equipo. Completá su perfil, horarios y servicios.`);
+      this.mostrarToast(`${creado.nombre} se sumó a ${creado.especialidad}. Completá su perfil, horarios y servicios.`);
     }
   }
 

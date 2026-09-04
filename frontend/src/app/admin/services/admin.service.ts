@@ -8,6 +8,7 @@ import {
   BlockedDateRange,
   Cuenta,
   DayAvailability,
+  Especialidad,
   Patient,
   ProfessionalAvailability,
   ProfessionalProfile,
@@ -22,6 +23,7 @@ export type {
   BlockedDateRange,
   Cuenta,
   DayAvailability,
+  Especialidad,
   Patient
 };
 export type { LocationConfig, SpecialtyConfig } from '../../core/models';
@@ -50,6 +52,8 @@ export class AdminService {
   patients = signal<Patient[]>([]);
   services = signal<Service[]>([]);
   healthInsurances = signal<string[]>([]);
+  /** Catálogo de especialidades de la cuenta (administrable en Mi Equipo). */
+  especialidades = signal<Especialidad[]>([]);
 
   /** Selector global del panel: 'ALL' (todos) o el id de un profesional. */
   seleccionId = signal<string>('ALL');
@@ -91,6 +95,16 @@ export class AdminService {
 
   /** Bloqueos del profesional en foco. */
   bloqueosDelFoco = computed(() => this.blockedDates().filter(b => b.profesionalId === this.focoId()));
+
+  /** Especialidades ordenadas por nombre. */
+  especialidadesOrdenadas = computed(() =>
+    [...this.especialidades()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+  );
+
+  /** Especialidades ofrecidas para altas nuevas (activas). */
+  especialidadesActivas = computed(() =>
+    this.especialidadesOrdenadas().filter(e => e.activo !== false)
+  );
 
   /** Última cuenta cargada, para recargar al cambiar de sesión. */
   private cuentaCargada = '';
@@ -138,7 +152,7 @@ export class AdminService {
     this.loading.set(true);
     this.apiError.set(false);
 
-    let pendientes = 7;
+    let pendientes = 8;
     const done = () => { if (--pendientes === 0) this.loading.set(false); };
     const fail = () => { this.apiError.set(true); done(); };
 
@@ -174,6 +188,117 @@ export class AdminService {
     this.http.get<HealthInsurance[]>(`${this.api}/healthInsurances`).subscribe({
       next: list => { this.healthInsurances.set(list.map(h => h.name)); done(); },
       error: fail
+    });
+    this.http.get<Especialidad[]>(`${this.api}/especialidades?${q}`).subscribe({
+      next: list => { this.especialidades.set(list); done(); },
+      error: fail
+    });
+  }
+
+  // ---- Especialidades (catálogo de la cuenta) ----
+
+  /** Cantidad de profesionales que tienen asignada la especialidad. */
+  usoEspecialidad(nombre: string): number {
+    return this.professionals().filter(p => p.especialidad === nombre).length;
+  }
+
+  private nombreEspecialidadOcupado(nombre: string, ignorarId?: string): boolean {
+    const n = nombre.trim().toLowerCase();
+    return this.especialidades().some(e => e.id !== ignorarId && e.nombre.trim().toLowerCase() === n);
+  }
+
+  /** Alta de especialidad. Devuelve la creada, o null (error o nombre repetido). */
+  addEspecialidad(nombre: string): Promise<Especialidad | null> {
+    const cuentaId = this.cuenta()?.id ?? '';
+    const limpio = nombre.trim();
+    if (!limpio || this.nombreEspecialidadOcupado(limpio)) return Promise.resolve(null);
+
+    this.saving.set(true);
+    const nueva: Especialidad = {
+      id: 'esp-' + Date.now().toString(36) + Math.floor(Math.random() * 1000),
+      cuentaId,
+      nombre: limpio,
+      activo: true
+    };
+    return new Promise(resolve => {
+      this.http.post<Especialidad>(`${this.api}/especialidades`, nueva).subscribe({
+        next: creada => {
+          this.especialidades.set([...this.especialidades(), creada]);
+          this.saving.set(false);
+          resolve(creada);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(null); }
+      });
+    });
+  }
+
+  /**
+   * Renombra una especialidad y actualiza EN CASCADA a todos los
+   * profesionales de la cuenta que la tenían asignada.
+   */
+  async renameEspecialidad(id: string, nuevoNombre: string): Promise<boolean> {
+    const esp = this.especialidades().find(e => e.id === id);
+    const limpio = nuevoNombre.trim();
+    if (!esp || !limpio || this.nombreEspecialidadOcupado(limpio, id)) return false;
+    if (esp.nombre === limpio) return true;
+
+    this.saving.set(true);
+    const ok = await new Promise<boolean>(resolve => {
+      this.http.patch<Especialidad>(`${this.api}/especialidades/${id}`, { nombre: limpio }).subscribe({
+        next: actualizada => {
+          this.especialidades.set(this.especialidades().map(e => (e.id === id ? actualizada : e)));
+          resolve(true);
+        },
+        error: () => { this.apiError.set(true); resolve(false); }
+      });
+    });
+
+    if (ok) {
+      // Cascada sobre los profesionales que usaban el nombre anterior.
+      const afectados = this.professionals().filter(p => p.especialidad === esp.nombre);
+      await Promise.all(afectados.map(p => new Promise<void>(done => {
+        this.http.patch<ProfessionalProfile>(`${this.api}/professionals/${p.id}`, { especialidad: limpio }).subscribe({
+          next: act => {
+            this.professionals.set(this.professionals().map(x => (x.id === p.id ? act : x)));
+            done();
+          },
+          error: () => { this.apiError.set(true); done(); }
+        });
+      })));
+    }
+    this.saving.set(false);
+    return ok;
+  }
+
+  /** Activa/desactiva una especialidad (inactiva = no se ofrece en altas nuevas). */
+  toggleEspecialidad(id: string, activo: boolean): Promise<boolean> {
+    this.saving.set(true);
+    return new Promise(resolve => {
+      this.http.patch<Especialidad>(`${this.api}/especialidades/${id}`, { activo }).subscribe({
+        next: act => {
+          this.especialidades.set(this.especialidades().map(e => (e.id === id ? act : e)));
+          this.saving.set(false);
+          resolve(true);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(false); }
+      });
+    });
+  }
+
+  /** Elimina una especialidad SOLO si ningún profesional la tiene asignada. */
+  deleteEspecialidad(id: string): Promise<boolean> {
+    const esp = this.especialidades().find(e => e.id === id);
+    if (!esp || this.usoEspecialidad(esp.nombre) > 0) return Promise.resolve(false);
+    this.saving.set(true);
+    return new Promise(resolve => {
+      this.http.delete(`${this.api}/especialidades/${id}`).subscribe({
+        next: () => {
+          this.especialidades.set(this.especialidades().filter(e => e.id !== id));
+          this.saving.set(false);
+          resolve(true);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(false); }
+      });
     });
   }
 

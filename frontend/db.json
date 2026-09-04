@@ -61,6 +61,44 @@
       "fechaAlta": "2026-07-21"
     }
   ],
+  "especialidades": [
+    {
+      "id": "esp-csm-psico",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Psicología",
+      "activo": true
+    },
+    {
+      "id": "esp-csm-psiquia",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Psiquiatría",
+      "activo": true
+    },
+    {
+      "id": "esp-csm-odonto",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Odontología",
+      "activo": true
+    },
+    {
+      "id": "esp-csm-nutri",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Nutrición",
+      "activo": true
+    },
+    {
+      "id": "esp-csm-kine",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Kinesiología",
+      "activo": true
+    },
+    {
+      "id": "esp-ele-psico",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Psicología",
+      "activo": true
+    }
+  ],
   "professionals": [
     {
       "id": "prof-funes",

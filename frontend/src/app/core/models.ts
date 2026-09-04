@@ -84,6 +84,19 @@ export interface Pago {
   notas?: string;
 }
 
+/**
+ * Especialidad del catálogo de una cuenta (colección `especialidades`).
+ * Los profesionales se dan de alta eligiendo una de estas; el nombre
+ * se copia en `ProfessionalProfile.especialidad` (se renombra en cascada).
+ */
+export interface Especialidad {
+  id: string;
+  cuentaId: string;
+  nombre: string;
+  /** false = no se ofrece para nuevos profesionales (las asignadas se conservan). */
+  activo: boolean;
+}
+
 export interface ProfessionalProfile {
   /** Identificador del profesional. */
   id: string;

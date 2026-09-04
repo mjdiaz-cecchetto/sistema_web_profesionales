@@ -212,6 +212,14 @@ export class GestionService {
       cuentaId: cuenta.id,
       days: [1, 2, 3, 4, 5, 6, 0].map(idx => ({ day: dias[idx], dayIndex: idx, active: false, slots: [] }))
     };
+    // El catálogo de especialidades de la cuenta nace con la del profesional.
+    this.http.post(`${this.api}/especialidades`, {
+      id: 'esp-' + Date.now().toString(36),
+      cuentaId: cuenta.id,
+      nombre: especialidad,
+      activo: true
+    }).subscribe({ next: () => {}, error: () => {} });
+
     this.http.post<ProfessionalProfile>(`${this.api}/professionals`, perfil).subscribe({
       next: () => {
         this.metricas.update(m => ({ ...m, [cuenta.id]: { ...m[cuenta.id], profesionales: 1 } }));

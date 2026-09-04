@@ -32,7 +32,7 @@ El sistema maneja **cuentas** (`cuentas` en db.json): cada cuenta es un **consul
 ## ✅ Lo que está hecho y verificado
 
 ### Panel (`/admin`, según la cuenta logueada)
-- **Cuenta consultorio:** selector global en el header ("Todos los profesionales" o uno), vista **Mi Equipo** (datos del centro, alta de profesionales con especialidad, activar/desactivar), chips de profesional en Perfil/Servicios/Disponibilidad, y el modal de turnos permite elegir profesional (reglas de solapamiento **por profesional**).
+- **Cuenta consultorio:** selector global en el header ("Todos los profesionales" o uno), vista **Mi Equipo** con **catálogo de especialidades administrable** (colección `especialidades` por cuenta: alta, renombrar con actualización en cascada de sus profesionales, activar/desactivar — inactiva no se ofrece en altas nuevas —, eliminar solo si no tiene profesionales), **alta de profesionales eligiendo una especialidad ya cargada** (select; "+ Agregar acá" desde cada grupo la preselecciona) y **equipo agrupado por especialidad** (secciones con contador de activos y grupo "Sin especialidad" para huérfanos). Chips de profesional en Perfil/Servicios/Disponibilidad, y el modal de turnos permite elegir profesional (reglas de solapamiento **por profesional**).
 - **Cuenta profesional:** el panel se ve como siempre — sin selector, sin Mi Equipo.
 - **Dashboard** compacto a pantalla completa: métricas, turnos de hoy (con profesional en modo consultorio), aceptar/cancelar, atajos.
 - **Agenda · Lista:** búsqueda y estado visibles, filtros avanzados tras botón, paginador, editar/confirmar/cancelar, WhatsApp por turno.
