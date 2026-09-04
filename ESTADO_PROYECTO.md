@@ -1,6 +1,6 @@
 # Sistema Web para Profesionales — Estado del Proyecto
 
-Registro vivo del estado del proyecto. Última actualización: 04/09/2026 (pulido: asistencia, series, límite de plan, regla 24 hs).
+Registro vivo del estado del proyecto. Última actualización: 04/09/2026 (roles internos: dueño / secretaría / profesional).
 
 ## 🛠️ Stack
 - **Frontend:** Angular 21 (standalone, signals) + TailwindCSS 3 · diseño flat pastel (blanco/gris/verde)
@@ -22,6 +22,8 @@ El sistema maneja **cuentas** (`cuentas` en db.json): cada cuenta es un **consul
 | **Centro Médico San Martín** (consultorio · 5 profesionales: psicología, psiquiatría, odontología, nutrición, kinesiología) | `admin@centrosanmartin.com.ar` / `consultorio123` | `/c/centro-san-martin` |
 | **Dra. Elena Ramos** (profesional independiente · psicología) | `elena.ramos@gmail.com` / `elena123` | `/p/dra-elena-ramos` |
 | **Administrador de la Plataforma** (back-office · gestión de cuentas) | `admin@plataforma.com` / `admin123` | `/gestion` |
+| Secretaría del centro (rol secretaría) | `secretaria@centrosanmartin.com.ar` / `secretaria123` | `/admin` |
+| Lic. Carolina Funes (rol profesional) | `carolina.funes@centrosanmartin.com.ar` / `carolina123` | `/admin` |
 
 - `/login`: pantalla de ingreso (mock contra `cuentas` de json-server; sesión en localStorage). Las cards de demo completan las credenciales con un clic y **solo aparecen si `environment.demoCredenciales` es `true`** (ponerlo en `false` antes de mostrar el sistema).
 - `/admin` está protegido por guard: sin sesión redirige a `/login`. "Cerrar Sesión" funciona.
@@ -31,7 +33,13 @@ El sistema maneja **cuentas** (`cuentas` en db.json): cada cuenta es un **consul
 
 ## ✅ Lo que está hecho y verificado
 
-### Panel (`/admin`, según la cuenta logueada)
+### Roles dentro del consultorio (colección `usuarios`)
+- El email de la **Cuenta** es el **DUEÑO** (todo, como siempre). El dueño crea usuarios del equipo desde **Mi Equipo → Usuarios**: **Secretaría** (gestión completa de agendas y pacientes de todos los profesionales; sin Equipo, Servicios, Disponibilidad ni Perfil Público) y **Profesional** (atado a un profesional del equipo: solo su agenda, los pacientes que él atendió, su disponibilidad, sus servicios y su perfil; sin selector global).
+- Guards por rol en las rutas (`rolGuard`): entrar por URL a una sección prohibida redirige al dashboard. El menú además la esconde.
+- Alta con email único, contraseña inicial, activar/desactivar acceso y reset de contraseña. Un usuario desactivado (o de cuenta suspendida) no puede iniciar sesión.
+- El mismo `/login` resuelve las cuatro identidades: administrador de plataforma → cuenta (dueño) → usuario del equipo.
+
+### Panel (`/admin`, según la cuenta y el rol logueados)
 - **Cuenta consultorio:** selector global en el header ("Todos los profesionales" o uno), vista **Mi Equipo** con **catálogo de especialidades administrable** (colección `especialidades` por cuenta: alta, renombrar con actualización en cascada de sus profesionales, activar/desactivar — inactiva no se ofrece en altas nuevas —, eliminar solo si no tiene profesionales), **alta de profesionales eligiendo una especialidad ya cargada** (select; "+ Agregar acá" desde cada grupo la preselecciona) y **equipo agrupado por especialidad** (secciones con contador de activos y grupo "Sin especialidad" para huérfanos). Chips de profesional en Perfil/Servicios/Disponibilidad, y el modal de turnos permite elegir profesional (reglas de solapamiento **por profesional**).
 - **Cuenta profesional:** el panel se ve como siempre — sin selector, sin Mi Equipo.
 - **Dashboard** compacto a pantalla completa: métricas, turnos de hoy (con profesional en modo consultorio), aceptar/cancelar, atajos.
@@ -78,7 +86,8 @@ El sistema maneja **cuentas** (`cuentas` en db.json): cada cuenta es un **consul
 ### Funcional pendiente (frontend)
 - Rediseño de la **landing B2B** (`/`) al nivel del resto.
 - Reprogramar una serie completa como grupo (hoy: cancelar serie sí; reprogramar es turno por turno).
-- Roles dentro del consultorio (admin vs. secretaría vs. profesional que solo ve lo suyo) — hoy el login del consultorio ve todo. **Definirlo antes del backend.**
+- Invitaciones por email para usuarios del equipo (hoy el dueño define la contraseña inicial) — llega con el backend.
+- Config de horas mínimas para cuentas individuales (hoy solo consultorios la editan; individuales usan 24).
 
 ### Limpieza
 - Borrar carpetas `client/components/booking-wizard` y `landing-home` (stubs vacíos).
