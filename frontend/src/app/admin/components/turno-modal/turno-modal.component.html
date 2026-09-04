@@ -28,7 +28,7 @@
     <div class="flex-grow overflow-y-auto px-5 sm:px-7 py-5 space-y-5">
 
       <!-- ===== Profesional (solo en modo consultorio) ===== -->
-      <div *ngIf="adminService.esConsultorio()" class="space-y-2">
+      <div *ngIf="adminService.esConsultorio() && !adminService.esProfesionalRol()" class="space-y-2">
         <label class="field-label">Profesional</label>
         <div class="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-0.5">
           <button *ngFor="let p of adminService.profesionalesActivos()"

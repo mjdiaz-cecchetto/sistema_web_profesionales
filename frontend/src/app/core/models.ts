@@ -44,6 +44,29 @@ export interface Cuenta {
 /** @deprecated alias temporal — usar Cuenta. */
 export type Consultorio = Cuenta;
 
+/** Rol de un usuario dentro de una cuenta. El login de la cuenta (email de la Cuenta) es el DUEÑO. */
+export type RolUsuario = 'duenio' | 'secretaria' | 'profesional';
+
+/**
+ * Usuario del equipo de una cuenta (colección `usuarios`), creado por el dueño.
+ *  - secretaria: gestiona agendas y pacientes de todos; no toca configuración,
+ *    equipo, disponibilidad, servicios ni perfiles públicos.
+ *  - profesional: solo su agenda, sus pacientes (los que atendió), su
+ *    disponibilidad, sus servicios y su perfil público. Requiere profesionalId.
+ */
+export interface Usuario {
+  id: string;
+  cuentaId: string;
+  nombre: string;
+  email: string;    // único (es el login)
+  password: string; // mock: hash en el backend real
+  rol: 'secretaria' | 'profesional';
+  /** Solo rol profesional: a qué profesional del equipo corresponde. */
+  profesionalId?: string;
+  /** false = no puede iniciar sesión. */
+  activo: boolean;
+}
+
 /**
  * Administrador de la PLATAFORMA (back-office /gestion): da de alta y
  * gestiona cuentas. Por diseño NO tiene acceso a pacientes ni turnos —

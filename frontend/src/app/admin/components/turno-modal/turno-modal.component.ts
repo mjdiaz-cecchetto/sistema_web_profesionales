@@ -122,7 +122,7 @@ export class TurnoModalComponent {
   // ---- Datos derivados ----
   pacientesFiltrados = computed(() => {
     const q = this.busquedaPaciente().toLowerCase().trim();
-    const list = this.adminService.patients()
+    const list = this.adminService.pacientesVisibles()
       .filter(p => !q ||
         p.nombre.toLowerCase().includes(q) ||
         p.dni.toLowerCase().includes(q) ||

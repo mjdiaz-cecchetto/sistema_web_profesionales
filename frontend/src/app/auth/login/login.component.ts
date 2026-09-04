@@ -43,6 +43,20 @@ export class LoginComponent {
       icono: 'consultorio'
     },
     {
+      etiqueta: 'Secretaría · Centro San Martín',
+      detalle: 'Rol secretaría: agendas y pacientes de todo el equipo',
+      email: 'secretaria@centrosanmartin.com.ar',
+      password: 'secretaria123',
+      icono: 'consultorio'
+    },
+    {
+      etiqueta: 'Lic. Carolina Funes (profesional)',
+      detalle: 'Rol profesional: solo su agenda y sus pacientes',
+      email: 'carolina.funes@centrosanmartin.com.ar',
+      password: 'carolina123',
+      icono: 'profesional'
+    },
+    {
       etiqueta: 'Dra. Elena Ramos',
       detalle: 'Profesional independiente · Psicología',
       email: 'elena.ramos@gmail.com',

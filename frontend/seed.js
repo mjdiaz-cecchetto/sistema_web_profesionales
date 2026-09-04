@@ -122,6 +122,29 @@ const db = {
     }
   ],
 
+  // ===== Usuarios del equipo (logins con rol, creados por el dueño) =====
+  usuarios: [
+    {
+      id: 'usr-secretaria-csm',
+      cuentaId: CSM,
+      nombre: 'Rocío Méndez',
+      email: 'secretaria@centrosanmartin.com.ar',
+      password: 'secretaria123',
+      rol: 'secretaria',
+      activo: true
+    },
+    {
+      id: 'usr-funes',
+      cuentaId: CSM,
+      nombre: 'Carolina Funes',
+      email: 'carolina.funes@centrosanmartin.com.ar',
+      password: 'carolina123',
+      rol: 'profesional',
+      profesionalId: 'prof-funes',
+      activo: true
+    }
+  ],
+
   // ===== Especialidades (catálogo por cuenta, administrable en Mi Equipo) =====
   especialidades: [
     { id: 'esp-csm-psico', cuentaId: CSM, nombre: 'Psicología', activo: true },

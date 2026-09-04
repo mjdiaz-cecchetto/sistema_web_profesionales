@@ -38,7 +38,7 @@ export class PacientesComponent {
 
   readonly hoy = todayLocal();
 
-  insurances = computed(() => [...new Set(this.adminService.patients().map(p => p.obraSocial))].sort());
+  insurances = computed(() => [...new Set(this.adminService.pacientesVisibles().map(p => p.obraSocial))].sort());
 
   /** Mapa DNI → próximo turno activo (hoy en adelante). */
   private proximosTurnos = computed(() => {
@@ -71,7 +71,7 @@ export class PacientesComponent {
     const turnos = this.turnosFilter();
     const proximos = this.proximosTurnos();
 
-    const lista = this.adminService.patients().filter(p => {
+    const lista = this.adminService.pacientesVisibles().filter(p => {
       const matchesSearch = !query ||
         p.nombre.toLowerCase().includes(query) ||
         p.dni.toLowerCase().includes(query) ||

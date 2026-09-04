@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { rolGuard } from '../core/auth.guard';
 
 export const adminRoutes: Routes = [
   {
@@ -32,11 +33,13 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'equipo',
+        canActivate: [rolGuard(['duenio'])],
         loadComponent: () => import('./components/profesionales/profesionales.component').then(m => m.ProfesionalesComponent),
         title: 'Admin - Mi Equipo'
       },
       {
         path: 'servicios',
+        canActivate: [rolGuard(['duenio', 'profesional'])],
         loadComponent: () => import('./components/servicios/servicios.component').then(m => m.ServiciosComponent),
         title: 'Admin - Servicios'
       },
@@ -47,11 +50,13 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'disponibilidad',
+        canActivate: [rolGuard(['duenio', 'profesional'])],
         loadComponent: () => import('./components/disponibilidad/disponibilidad.component').then(m => m.DisponibilidadComponent),
         title: 'Admin - Configurar Disponibilidad'
       },
       {
         path: 'perfil',
+        canActivate: [rolGuard(['duenio', 'profesional'])],
         loadComponent: () => import('./components/perfil-editor/perfil-editor.component').then(m => m.PerfilEditorComponent),
         title: 'Admin - Mi Perfil Público'
       }

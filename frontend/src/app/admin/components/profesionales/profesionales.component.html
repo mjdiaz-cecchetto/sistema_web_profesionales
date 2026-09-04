@@ -15,6 +15,14 @@
       <span class="chip !text-[10px] bg-teal-100 text-teal-900 border-teal-200">{{ adminService.professionals().length }}</span>
     </div>
     <div class="flex items-center gap-2 shrink-0">
+      <button (click)="panelUsuarios.set(!panelUsuarios())"
+              class="btn-secondary !text-xs !py-2.5 flex items-center justify-center gap-2"
+              [class.!bg-teal-100]="panelUsuarios()"
+              [class.!border-teal-300]="panelUsuarios()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+        <span class="hidden sm:inline">Usuarios</span>
+        <span class="chip !text-[9px] bg-white text-teal-800 border-teal-200">{{ adminService.usuarios().length }}</span>
+      </button>
       <button (click)="panelEspecialidades.set(!panelEspecialidades())"
               class="btn-secondary !text-xs !py-2.5 flex items-center justify-center gap-2"
               [class.!bg-teal-100]="panelEspecialidades()"
@@ -154,6 +162,107 @@
             </button>
             <button (click)="cancelarEdicion()" class="btn-ghost !py-1.5 !px-2.5 !text-[10px] shrink-0">Cancelar</button>
           </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Usuarios del equipo (logins) ===== -->
+    <div *ngIf="panelUsuarios()" class="card p-5 space-y-4 border-teal-200 animate-fade-in">
+      <div class="flex items-center justify-between gap-2">
+        <div>
+          <h3 class="card-title !text-sm">Usuarios del Equipo</h3>
+          <p class="text-[11px] text-stone-400 mt-0.5">Accesos al panel con permisos limitados: <span class="font-bold">Secretaría</span> gestiona agendas y pacientes de todos; <span class="font-bold">Profesional</span> ve solo lo suyo.</p>
+        </div>
+        <button (click)="panelUsuarios.set(false)" class="p-2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Alta de usuario -->
+      <div class="bg-stone-50 border border-stone-200 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center gap-2">
+          <label class="field-label !normal-case">Rol:</label>
+          <button (click)="elegirRolUsuario('secretaria')"
+                  [ngClass]="usrRol() === 'secretaria' ? 'bg-teal-200 text-teal-900 border-teal-300' : 'bg-white text-stone-500 border-stone-200 hover:border-teal-300'"
+                  class="px-3 py-1.5 rounded-full text-[10px] font-extrabold border transition-colors">Secretaría</button>
+          <button (click)="elegirRolUsuario('profesional')"
+                  [ngClass]="usrRol() === 'profesional' ? 'bg-teal-200 text-teal-900 border-teal-300' : 'bg-white text-stone-500 border-stone-200 hover:border-teal-300'"
+                  class="px-3 py-1.5 rounded-full text-[10px] font-extrabold border transition-colors">Profesional</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
+          <div *ngIf="usrRol() === 'profesional'" class="space-y-1">
+            <label class="field-label">Profesional *</label>
+            <div class="relative">
+              <select [ngModel]="usrProfesionalId()" (ngModelChange)="usrProfesionalId.set($event)" class="input !text-xs appearance-none pr-8">
+                <option value="" disabled>Elegí…</option>
+                <option *ngFor="let pr of profesionalesSinUsuario()" [value]="pr.id">{{ pr.nombre }}</option>
+              </select>
+              <svg class="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <label class="field-label">Nombre *</label>
+            <input type="text" [ngModel]="usrNombre()" (ngModelChange)="usrNombre.set($event)" placeholder="Ej. Rocío Méndez" class="input !text-xs">
+          </div>
+          <div class="space-y-1">
+            <label class="field-label">Email (login) *</label>
+            <input type="email" [ngModel]="usrEmail()" (ngModelChange)="usrEmail.set($event)" placeholder="usuario@centro.com" class="input !text-xs">
+          </div>
+          <div class="space-y-1">
+            <label class="field-label">Contraseña inicial *</label>
+            <input type="text" [ngModel]="usrPassword()" (ngModelChange)="usrPassword.set($event)" placeholder="Mínimo 6 caracteres" class="input !text-xs">
+          </div>
+        </div>
+
+        <p *ngIf="usrError()" class="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">{{ usrError() }}</p>
+
+        <div class="flex justify-end">
+          <button (click)="crearUsuario()" [disabled]="usrGuardando()" class="btn-primary !text-xs !py-2">
+            {{ usrGuardando() ? 'Creando…' : 'Crear Usuario' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Listado -->
+      <div *ngIf="usuariosOrdenados().length === 0" class="text-xs text-stone-400 text-center py-2">
+        Todavía no hay usuarios del equipo. El dueño sigue entrando con el email de la cuenta.
+      </div>
+
+      <div class="space-y-2">
+        <div *ngFor="let u of usuariosOrdenados()"
+             class="border rounded-xl px-3.5 py-2.5 transition-colors"
+             [ngClass]="u.activo !== false ? 'border-stone-200 bg-white' : 'border-stone-200 bg-stone-50 opacity-75'">
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <span class="chip !text-[9px] shrink-0"
+                  [ngClass]="u.rol === 'secretaria' ? 'bg-violet-50 text-violet-800 border-violet-200' : 'bg-teal-50 text-teal-800 border-teal-200'">
+              {{ u.rol === 'secretaria' ? 'Secretaría' : 'Profesional' }}
+            </span>
+            <span class="text-xs font-extrabold text-stone-800 truncate">{{ u.nombre }}</span>
+            <span class="text-[11px] text-stone-400 truncate">{{ u.email }}</span>
+            <span *ngIf="u.rol === 'profesional'" class="text-[10px] text-stone-500 truncate">→ {{ nombreProfesionalDeUsuario(u) }}</span>
+            <span *ngIf="u.activo === false" class="chip !text-[9px] bg-stone-100 text-stone-500 border-stone-200">Sin acceso</span>
+
+            <span class="flex-1"></span>
+
+            <button (click)="abrirReset(u)" *ngIf="resetUsuarioId() !== u.id"
+                    class="text-[10px] font-bold text-stone-500 hover:text-teal-800 hover:bg-teal-50 border border-stone-200 hover:border-teal-200 px-2.5 py-1 rounded-lg transition-colors shrink-0">
+              Resetear contraseña
+            </button>
+            <label class="relative inline-flex items-center cursor-pointer select-none shrink-0"
+                   [title]="u.activo !== false ? 'Quitar acceso' : 'Dar acceso'">
+              <input type="checkbox" [checked]="u.activo !== false" (change)="toggleUsuario(u)" class="sr-only peer">
+              <div class="w-8 h-[18px] bg-stone-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:rounded-full after:h-[13px] after:w-[13px] after:transition-all after:shadow-sm peer-checked:bg-teal-400"></div>
+            </label>
+          </div>
+
+          <!-- Reset inline -->
+          <div *ngIf="resetUsuarioId() === u.id" class="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-stone-100">
+            <input type="text" [ngModel]="resetPassword()" (ngModelChange)="resetPassword.set($event)"
+                   placeholder="Nueva contraseña (mín. 6)" class="input !text-xs !py-1.5 flex-1">
+            <button (click)="confirmarReset()" class="bg-teal-200 hover:bg-teal-300 text-teal-900 border border-teal-300 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors shrink-0">Guardar</button>
+            <button (click)="resetUsuarioId.set(null)" class="btn-ghost !py-1.5 !px-2.5 !text-[10px] shrink-0">Cancelar</button>
+          </div>
         </div>
       </div>
     </div>

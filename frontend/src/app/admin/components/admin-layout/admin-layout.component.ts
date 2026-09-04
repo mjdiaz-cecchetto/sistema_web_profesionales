@@ -4,11 +4,15 @@ import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/rou
 import { AdminService } from '../../services/admin.service';
 import { AuthService } from '../../../core/auth.service';
 
+import { RolUsuario } from '../../../core/models';
+
 interface MenuItem {
   label: string;
   route: string;
   icon: string;
   children?: { label: string; route: string }[];
+  /** Roles que ven este ítem (ausente = todos). */
+  roles?: RolUsuario[];
 }
 
 @Component({
@@ -25,10 +29,24 @@ export class AdminLayoutComponent {
 
   isMobileMenuOpen = signal(false);
 
-  /** "Mi Equipo" solo tiene sentido para cuentas de tipo consultorio. */
-  menuVisibles = computed(() =>
-    this.menuItems.filter(item => item.route !== '/admin/equipo' || this.adminService.esConsultorio())
-  );
+  /** Menú filtrado por rol; "Mi Equipo" además solo aplica a cuentas consultorio. */
+  menuVisibles = computed(() => {
+    const rol = this.auth.rol();
+    return this.menuItems.filter(item => {
+      if (item.roles && !item.roles.includes(rol)) return false;
+      if (item.route === '/admin/equipo' && !this.adminService.esConsultorio()) return false;
+      return true;
+    });
+  });
+
+  /** Etiqueta del rol para el header. */
+  etiquetaRol = computed(() => {
+    switch (this.auth.rol()) {
+      case 'secretaria': return 'Secretaría';
+      case 'profesional': return 'Profesional';
+      default: return this.adminService.esConsultorio() ? 'Consultorio' : 'Cuenta profesional';
+    }
+  });
 
   /** Página pública de la cuenta: /c/{slug} (consultorio) o /p/{slug} (profesional). */
   linkPublico = computed(() => {
@@ -56,6 +74,7 @@ export class AdminLayoutComponent {
     {
       label: 'Mi Equipo',
       route: '/admin/equipo',
+      roles: ['duenio'],
       icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
     },
     {
@@ -70,6 +89,7 @@ export class AdminLayoutComponent {
     {
       label: 'Servicios',
       route: '/admin/servicios',
+      roles: ['duenio', 'profesional'],
       icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
     },
     {
@@ -80,11 +100,13 @@ export class AdminLayoutComponent {
     {
       label: 'Disponibilidad',
       route: '/admin/disponibilidad',
+      roles: ['duenio', 'profesional'],
       icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
     },
     {
       label: 'Mi Perfil Público',
       route: '/admin/perfil',
+      roles: ['duenio', 'profesional'],
       icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
     }
   ];
@@ -114,8 +136,14 @@ export class AdminLayoutComponent {
     return nombre.slice(0, 2).toUpperCase();
   }
 
-  nombre = computed(() => this.adminService.cuenta()?.nombre ?? 'Cargando…');
+  nombre = computed(() => {
+    const u = this.auth.usuario();
+    if (u) return u.nombre;
+    return this.adminService.cuenta()?.nombre ?? 'Cargando…';
+  });
   titulo = computed(() => {
+    const u = this.auth.usuario();
+    if (u) return u.rol === 'secretaria' ? 'Secretaría' : (this.adminService.profile()?.titulo || 'Profesional');
     const c = this.adminService.cuenta();
     if (!c) return '';
     return c.tipo === 'consultorio' ? c.email : (this.adminService.profile()?.titulo ?? '');

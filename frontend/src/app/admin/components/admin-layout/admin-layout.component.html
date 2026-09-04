@@ -134,7 +134,7 @@
           <h2 class="text-base md:text-lg font-extrabold text-stone-800 tracking-tight leading-none truncate">Panel de Control</h2>
           <p class="hidden sm:block text-[11px] text-stone-400 font-medium mt-1 truncate">
             {{ adminService.cuenta()?.nombre }}
-            <span class="text-teal-700 font-bold">· {{ adminService.esConsultorio() ? 'Consultorio' : 'Cuenta profesional' }}</span>
+            <span class="text-teal-700 font-bold">· {{ etiquetaRol() }}</span>
           </p>
         </div>
       </div>
@@ -142,7 +142,7 @@
       <div class="flex items-center gap-2 md:gap-3 shrink-0">
 
         <!-- Selector global de profesional (solo en modo consultorio) -->
-        <div *ngIf="adminService.esConsultorio()" class="relative">
+        <div *ngIf="adminService.esConsultorio() && !auth.esProfesionalRol()" class="relative">
           <button (click)="selectorAbierto.set(!selectorAbierto())"
                   class="flex items-center gap-2 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-xl pl-1.5 pr-3 py-1.5 transition-colors">
             <span class="w-7 h-7 rounded-full overflow-hidden bg-teal-200 border border-teal-300 flex items-center justify-center text-[9px] font-extrabold text-teal-900 shrink-0">

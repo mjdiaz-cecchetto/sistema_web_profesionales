@@ -63,6 +63,27 @@
       "horasMinimasCancelacion": 24
     }
   ],
+  "usuarios": [
+    {
+      "id": "usr-secretaria-csm",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Rocío Méndez",
+      "email": "secretaria@centrosanmartin.com.ar",
+      "password": "secretaria123",
+      "rol": "secretaria",
+      "activo": true
+    },
+    {
+      "id": "usr-funes",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Carolina Funes",
+      "email": "carolina.funes@centrosanmartin.com.ar",
+      "password": "carolina123",
+      "rol": "profesional",
+      "profesionalId": "prof-funes",
+      "activo": true
+    }
+  ],
   "especialidades": [
     {
       "id": "esp-csm-psico",
@@ -376,22 +397,6 @@
           "detalle": "Brindo un espacio neutral de escucha activa para identificar patrones destructivos y mejorar la empatía."
         }
       ]
-    },
-    {
-      "id": "prof-mtnj2a02",
-      "cuentaId": "cta-consultorio-sm",
-      "activo": true,
-      "especialidad": "Psicología",
-      "nombre": "Eduardo Ferreyra",
-      "titulo": "Pscologia",
-      "whatsapp": "385311456",
-      "avatarUrl": "",
-      "bannerUrl": "",
-      "frasePrincipal": "",
-      "biografia": "",
-      "modalidad": "",
-      "direcciones": [],
-      "areas": []
     }
   ],
   "availabilities": [
@@ -809,54 +814,6 @@
             "10:00",
             "11:00"
           ]
-        },
-        {
-          "day": "Sábado",
-          "dayIndex": 6,
-          "active": false,
-          "slots": []
-        },
-        {
-          "day": "Domingo",
-          "dayIndex": 0,
-          "active": false,
-          "slots": []
-        }
-      ]
-    },
-    {
-      "id": "prof-mtnj2a02",
-      "cuentaId": "cta-consultorio-sm",
-      "days": [
-        {
-          "day": "Lunes",
-          "dayIndex": 1,
-          "active": false,
-          "slots": []
-        },
-        {
-          "day": "Martes",
-          "dayIndex": 2,
-          "active": false,
-          "slots": []
-        },
-        {
-          "day": "Miércoles",
-          "dayIndex": 3,
-          "active": false,
-          "slots": []
-        },
-        {
-          "day": "Jueves",
-          "dayIndex": 4,
-          "active": false,
-          "slots": []
-        },
-        {
-          "day": "Viernes",
-          "dayIndex": 5,
-          "active": false,
-          "slots": []
         },
         {
           "day": "Sábado",

@@ -12,6 +12,7 @@ import {
   Patient,
   Plan,
   ProfessionalAvailability,
+  Usuario,
   ProfessionalProfile,
   Service,
   HealthInsurance
@@ -57,6 +58,8 @@ export class AdminService {
   especialidades = signal<Especialidad[]>([]);
   /** Plan de membresía de la cuenta (para aplicar sus límites). */
   plan = signal<Plan | null>(null);
+  /** Usuarios del equipo (secretaría / profesionales con login). Solo los ve el dueño. */
+  usuarios = signal<Usuario[]>([]);
 
   /** Selector global del panel: 'ALL' (todos) o el id de un profesional. */
   seleccionId = signal<string>('ALL');
@@ -65,14 +68,23 @@ export class AdminService {
   apiError = signal<boolean>(false);
   saving = signal<boolean>(false);
 
+  // ---- Rol de quien está logueado ----
+  rol = this.auth.rol;
+  esDuenio = this.auth.esDuenio;
+  esSecretaria = this.auth.esSecretaria;
+  esProfesionalRol = this.auth.esProfesionalRol;
+
   // ---- Derivados multi-profesional ----
   profesionalesActivos = computed(() => this.professionals().filter(p => p.activo !== false));
 
   /** true cuando la cuenta logueada es un consultorio. */
   esConsultorio = computed(() => this.cuenta()?.tipo === 'consultorio');
 
-  /** Profesional "en foco" para las vistas de configuración (si la selección es ALL, el primero activo). */
+  /** Profesional "en foco" para las vistas de configuración (si la selección es ALL, el primero activo).
+   *  Un usuario con rol PROFESIONAL queda siempre clavado en su propio profesional. */
   focoId = computed(() => {
+    const propio = this.auth.profesionalIdUsuario();
+    if (propio) return propio;
     const sel = this.seleccionId();
     if (sel !== 'ALL' && this.professionals().some(p => p.id === sel)) return sel;
     return this.profesionalesActivos()[0]?.id ?? this.professionals()[0]?.id ?? '';
@@ -86,11 +98,25 @@ export class AdminService {
   /** Disponibilidad del profesional en foco. */
   availability = computed<DayAvailability[]>(() => this.disponibilidades()[this.focoId()] ?? []);
 
-  /** Turnos visibles según el selector global. */
+  /** Turnos visibles según el selector global (o SOLO los propios para el rol profesional). */
   turnosVisibles = computed(() => {
-    const sel = this.seleccionId();
     const list = this.appointments();
+    const propio = this.auth.profesionalIdUsuario();
+    if (propio) return list.filter(a => a.profesionalId === propio);
+    const sel = this.seleccionId();
     return sel === 'ALL' ? list : list.filter(a => a.profesionalId === sel);
+  });
+
+  /**
+   * Pacientes visibles según el rol: dueño y secretaría ven el padrón
+   * completo; el rol profesional solo a los pacientes que él atendió
+   * (algún turno suyo, en cualquier estado).
+   */
+  pacientesVisibles = computed(() => {
+    const propio = this.auth.profesionalIdUsuario();
+    if (!propio) return this.patients();
+    const dnis = new Set(this.appointments().filter(a => a.profesionalId === propio).map(a => a.patientDni));
+    return this.patients().filter(p => dnis.has(p.dni));
   });
 
   /** Servicios del profesional en foco. */
@@ -164,7 +190,7 @@ export class AdminService {
     this.loading.set(true);
     this.apiError.set(false);
 
-    let pendientes = 9;
+    let pendientes = 10;
     const done = () => { if (--pendientes === 0) this.loading.set(false); };
     const fail = () => { this.apiError.set(true); done(); };
 
@@ -205,6 +231,10 @@ export class AdminService {
       next: list => { this.especialidades.set(list); done(); },
       error: fail
     });
+    this.http.get<Usuario[]>(`${this.api}/usuarios?${q}`).subscribe({
+      next: list => { this.usuarios.set(list); done(); },
+      error: fail
+    });
     const planId = this.cuenta()?.plan;
     if (planId) {
       this.http.get<Plan>(`${this.api}/planes/${planId}`).subscribe({
@@ -215,6 +245,50 @@ export class AdminService {
       this.plan.set(null);
       done();
     }
+  }
+
+  // ---- Usuarios del equipo (solo dueño) ----
+
+  emailUsuarioOcupado(email: string, ignorarId?: string): boolean {
+    const e = email.trim().toLowerCase();
+    return this.usuarios().some(u => u.id !== ignorarId && u.email.toLowerCase() === e);
+  }
+
+  addUsuario(datos: Omit<Usuario, 'id' | 'cuentaId' | 'activo'>): Promise<Usuario | null> {
+    const cuentaId = this.cuenta()?.id ?? '';
+    if (this.emailUsuarioOcupado(datos.email)) return Promise.resolve(null);
+    this.saving.set(true);
+    const nuevo: Usuario = {
+      ...datos,
+      email: datos.email.trim().toLowerCase(),
+      cuentaId,
+      activo: true,
+      id: 'usr-' + Date.now().toString(36) + Math.floor(Math.random() * 1000)
+    };
+    return new Promise(resolve => {
+      this.http.post<Usuario>(`${this.api}/usuarios`, nuevo).subscribe({
+        next: creado => {
+          this.usuarios.set([...this.usuarios(), creado]);
+          this.saving.set(false);
+          resolve(creado);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(null); }
+      });
+    });
+  }
+
+  updateUsuario(id: string, datos: Partial<Usuario>): Promise<boolean> {
+    this.saving.set(true);
+    return new Promise(resolve => {
+      this.http.patch<Usuario>(`${this.api}/usuarios/${id}`, datos).subscribe({
+        next: act => {
+          this.usuarios.set(this.usuarios().map(u => (u.id === id ? act : u)));
+          this.saving.set(false);
+          resolve(true);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(false); }
+      });
+    });
   }
 
   /**

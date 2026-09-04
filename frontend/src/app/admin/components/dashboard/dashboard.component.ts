@@ -48,7 +48,7 @@ export class DashboardComponent {
   });
   pendingCount = computed(() => this.adminService.turnosVisibles().filter(a => a.status === 'PENDING').length);
   totalReservationsCount = computed(() => this.adminService.turnosVisibles().filter(a => a.status !== 'CANCELLED').length);
-  uniquePatientsCount = computed(() => this.adminService.patients().length);
+  uniquePatientsCount = computed(() => this.adminService.pacientesVisibles().length);
 
   statCards = computed(() => [
     {
