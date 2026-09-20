@@ -96,6 +96,7 @@ const db = {
       id: CSM,
       tipo: 'consultorio',
       email: 'admin@centrosanmartin.com.ar',
+      dni: null, // este consultorio eligió acceder con email
       password: 'consultorio123',
       nombre: 'Centro Médico San Martín',
       slug: 'centro-san-martin',
@@ -104,12 +105,14 @@ const db = {
       estado: 'activa',
       plan: 'plan-consultorio',
       fechaAlta: fechaLocal(-120),
-      horasMinimasCancelacion: 24
+      horasMinimasCancelacion: 24,
+      horasVencimientoPendiente: 12
     },
     {
       id: ELE,
       tipo: 'profesional',
       email: 'elena.ramos@gmail.com',
+      dni: '24853917', // los profesionales independientes acceden con DNI
       password: 'elena123',
       nombre: 'Dra. Elena Ramos',
       slug: 'dra-elena-ramos',
@@ -118,26 +121,43 @@ const db = {
       estado: 'activa',
       plan: 'plan-profesional',
       fechaAlta: fechaLocal(-45),
-      horasMinimasCancelacion: 24
+      horasMinimasCancelacion: 24,
+      horasVencimientoPendiente: 12
     }
   ],
 
   // ===== Usuarios del equipo (logins con rol, creados por el dueño) =====
+  // El login del equipo es por DNI + contraseña (el email queda para avisos
+  // y recuperación de cuenta). profesionalesAsignados (solo secretarias):
+  // ausente/vacío = gestiona todo el centro; con ids = solo esas agendas.
   usuarios: [
     {
       id: 'usr-secretaria-csm',
       cuentaId: CSM,
       nombre: 'Rocío Méndez',
       email: 'secretaria@centrosanmartin.com.ar',
+      dni: '28456123',
       password: 'secretaria123',
       rol: 'secretaria',
-      activo: true
+      activo: true // sin profesionalesAsignados → todo el centro
+    },
+    {
+      id: 'usr-secretaria-odonto',
+      cuentaId: CSM,
+      nombre: 'Valeria Suárez',
+      email: 'valeria.suarez@centrosanmartin.com.ar',
+      dni: '33780415',
+      password: 'valeria123',
+      rol: 'secretaria',
+      profesionalesAsignados: ['prof-rios'],
+      activo: true // secretaria personal de la Od. Ríos
     },
     {
       id: 'usr-funes',
       cuentaId: CSM,
       nombre: 'Carolina Funes',
       email: 'carolina.funes@centrosanmartin.com.ar',
+      dni: '27912384',
       password: 'carolina123',
       rol: 'profesional',
       profesionalId: 'prof-funes',
@@ -425,10 +445,26 @@ const db = {
     { id: 'apt-ele-5', cuentaId: ELE, profesionalId: 'prof-elena', serviceName: 'Consulta', patientName: 'Laura Giménez', patientEmail: 'laurag@live.com.ar', patientPhone: '1198765432', patientDni: '35987654', date: fechaLocal(1), time: '09:00', status: 'CONFIRMED', notes: 'Primera visita presencial.', location: 'Centro Médico Belgrano', healthInsurance: 'Swiss Medical' },
     { id: 'apt-ele-6', cuentaId: ELE, profesionalId: 'prof-elena', serviceName: 'Consulta', patientName: 'Andrés Mendoza', patientEmail: 'andres.men@outlook.com', patientPhone: '1133334444', patientDni: '40111222', date: fechaLocal(2), time: '11:00', status: 'CONFIRMED', notes: 'Sesión online.', location: 'Consulta Online', healthInsurance: 'Particular (Sin cobertura)' },
     { id: 'apt-ele-7', cuentaId: ELE, profesionalId: 'prof-elena', serviceName: 'Consulta', patientName: 'Julián Castro', patientEmail: 'julian.castro@gmail.com', patientPhone: '1123456011', patientDni: '38123457', date: fechaLocal(4), time: '19:00', status: 'PENDING', notes: 'Consulta sobre estrés y ansiedad.', location: 'Consulta Online', healthInsurance: 'Swiss Medical' },
-    { id: 'apt-ele-8', cuentaId: ELE, profesionalId: 'prof-elena', serviceName: 'Consulta', patientName: 'Esteban Rey', patientEmail: 'esteban.rey@gmail.com', patientPhone: '1123456013', patientDni: '40123456', date: fechaLocal(7), time: '18:00', status: 'CONFIRMED', notes: '', location: 'Centro Médico Belgrano', healthInsurance: 'OSDE' }
+    { id: 'apt-ele-8', cuentaId: ELE, profesionalId: 'prof-elena', serviceName: 'Consulta', patientName: 'Esteban Rey', patientEmail: 'esteban.rey@gmail.com', patientPhone: '1123456013', patientDni: '40123456', date: fechaLocal(7), time: '18:00', status: 'CONFIRMED', notes: '', location: 'Centro Médico Belgrano', healthInsurance: 'OSDE' },
+
+    // Turno que ya venció: quedó pendiente y nadie lo confirmó a tiempo
+    { id: 'apt-csm-18', cuentaId: CSM, profesionalId: 'prof-salas', serviceName: 'Control Nutricional', patientName: 'Pablo Giordano', patientEmail: 'pgiordano@outlook.com', patientPhone: '1158741296', patientDni: '29384756', date: fechaLocal(-4), time: '17:30', status: 'EXPIRED', notes: 'Pidió turno online y nunca lo confirmó.', location: 'Centro Médico San Martín', healthInsurance: 'Medifé' },
+    // Pendiente de esta noche sin confirmar: vence al cargar el panel si faltan <12 hs
+    { id: 'apt-csm-19', cuentaId: CSM, profesionalId: 'prof-funes', serviceName: 'Consulta Psicológica', patientName: 'Nicolás Ferrero', patientEmail: 'nicoferrero01@gmail.com', patientPhone: '1170392485', patientDni: '43512087', date: fechaLocal(0), time: '23:00', status: 'PENDING', notes: 'Reserva online de último momento, sin confirmar.', location: 'Centro Médico San Martín', healthInsurance: 'Particular (Sin cobertura)' }
   ],
 
-  patients: []
+  patients: [],
+
+  // ===== Historias clínicas (dato sensible: SOLO las ve el profesional que las escribió) =====
+  historias: [
+    { id: 'hc-1', cuentaId: CSM, pacienteId: 'pat-' + CSM + '-31485296', profesionalId: 'prof-funes', fecha: fechaLocal(-24), motivo: 'Primera entrevista: consulta por ansiedad generalizada', diagnostico: 'Trastorno de ansiedad generalizada (F41.1), intensidad moderada', tratamiento: 'TCC semanal. Psicoeducación sobre el ciclo de la ansiedad y registro de pensamientos automáticos.' },
+    { id: 'hc-2', cuentaId: CSM, pacienteId: 'pat-' + CSM + '-31485296', profesionalId: 'prof-funes', fecha: fechaLocal(-3), motivo: 'Sesión de seguimiento nº 4', diagnostico: 'Evolución favorable: disminución de la frecuencia de crisis', tratamiento: 'Continúa TCC semanal. Se incorpora exposición gradual a situaciones sociales evitadas.' },
+    { id: 'hc-3', cuentaId: CSM, pacienteId: 'pat-' + CSM + '-36741852', profesionalId: 'prof-vega', turnoId: 'apt-csm-3', fecha: fechaLocal(-1), motivo: 'Sesión 6/12 post-quirúrgico LCA rodilla derecha', diagnostico: 'Evolución acorde a protocolo: flexión 120°, sin derrame', tratamiento: 'Fortalecimiento de cuádriceps e isquiotibiales en cadena cerrada. Continuar con bicicleta fija en casa.' },
+    { id: 'hc-4', cuentaId: ELE, pacienteId: 'pat-' + ELE + '-31123456', profesionalId: 'prof-elena', turnoId: 'apt-ele-2', fecha: fechaLocal(-2), motivo: 'Sesión de seguimiento', diagnostico: 'Episodio depresivo leve en remisión', tratamiento: 'Se sostiene frecuencia quincenal. Activación conductual: retomó natación dos veces por semana.' }
+  ],
+
+  // ===== Avisos de WhatsApp registrados (mock: el backend hará el envío real) =====
+  notificaciones: []
 };
 
 // Pacientes únicos por cuenta a partir de los turnos (padrón POR CUENTA)
@@ -479,6 +515,9 @@ const destino = path.join(__dirname, 'db.json');
 fs.writeFileSync(destino, JSON.stringify(db, null, 2), 'utf8');
 console.log(`✔ db.json generado en ${destino} (hoy: ${fechaLocal(0)})`);
 console.log(`  · Administrador de la plataforma → admin@plataforma.com / admin123 · /gestion`);
+for (const u of db.usuarios) {
+  console.log(`  · Usuario equipo [${u.rol}] ${u.nombre} → DNI ${u.dni} / ${u.password}`);
+}
 for (const c of db.cuentas) {
   const profs = db.professionals.filter(p => p.cuentaId === c.id).length;
   const turnos = db.appointments.filter(a => a.cuentaId === c.id).length;

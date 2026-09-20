@@ -20,17 +20,18 @@
 
     <!-- Card de login -->
     <div class="card p-6 sm:p-8">
-      <form (ngSubmit)="ingresar()" autocomplete="on">
-        <label class="field-label" for="login-email">Email</label>
+      <form *ngIf="!modoRecuperar()" (ngSubmit)="ingresar()" autocomplete="on">
+        <label class="field-label" for="login-email">Email o DNI</label>
         <input
           id="login-email"
-          type="email"
-          class="input mb-4"
-          placeholder="tu@email.com"
+          type="text"
+          class="input mb-1"
+          placeholder="tu@email.com o tu DNI"
           autocomplete="username"
           [ngModel]="email()"
           (ngModelChange)="email.set($event)"
           name="email" />
+        <p class="text-[11px] text-gray-400 mb-3">El personal del consultorio ingresa con su DNI.</p>
 
         <label class="field-label" for="login-pass">Contraseña</label>
         <div class="relative mb-1">
@@ -66,6 +67,40 @@
           <span *ngIf="!enviando()">Ingresar al panel</span>
           <span *ngIf="enviando()">Ingresando…</span>
         </button>
+
+        <p class="text-center mt-4">
+          <button type="button" class="text-xs text-gray-400 hover:text-teal-700 transition-colors underline underline-offset-2" (click)="abrirRecuperar()">
+            ¿Olvidaste tu contraseña?
+          </button>
+        </p>
+      </form>
+
+      <!-- Recuperación de cuenta (simulada: el envío real lo hace el backend) -->
+      <form *ngIf="modoRecuperar()" (ngSubmit)="recuperar()">
+        <h2 class="text-base font-bold text-gray-800 mb-1">Recuperar el acceso</h2>
+        <p class="text-xs text-gray-500 mb-4">Ingresá tu email (dueños de cuenta) o tu DNI (personal del consultorio) y te enviamos los pasos para crear una contraseña nueva.</p>
+
+        <label class="field-label" for="rec-id">Email o DNI</label>
+        <input
+          id="rec-id"
+          type="text"
+          class="input mb-3"
+          placeholder="tu@email.com o tu DNI"
+          [ngModel]="recuperarId()"
+          (ngModelChange)="recuperarId.set($event)"
+          name="recuperarId" />
+
+        <p *ngIf="recuperarMsg()" class="text-sm text-teal-900 bg-teal-50 border border-teal-200 rounded-xl px-3.5 py-2.5 mb-3">
+          {{ recuperarMsg() }}
+        </p>
+
+        <button *ngIf="!recuperarMsg()" type="submit" class="btn-primary w-full justify-center" [disabled]="recuperando()">
+          <span *ngIf="!recuperando()">Enviarme las instrucciones</span>
+          <span *ngIf="recuperando()">Enviando…</span>
+        </button>
+        <button type="button" class="btn-secondary w-full justify-center mt-2.5" (click)="modoRecuperar.set(false)">
+          Volver al ingreso
+        </button>
       </form>
     </div>
 
@@ -93,7 +128,10 @@
             </svg>
           </span>
           <span class="min-w-0">
-            <span class="block text-sm font-semibold text-gray-800 truncate">{{ demo.etiqueta }}</span>
+            <span class="flex items-center gap-2 min-w-0">
+              <span class="block text-sm font-semibold text-gray-800 truncate">{{ demo.etiqueta }}</span>
+              <span class="shrink-0 text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full border" [ngClass]="demo.rolClase">{{ demo.rol }}</span>
+            </span>
             <span class="block text-xs text-gray-500 truncate">{{ demo.detalle }}</span>
           </span>
         </button>

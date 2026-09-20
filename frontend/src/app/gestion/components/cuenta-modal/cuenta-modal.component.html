@@ -60,10 +60,39 @@
                class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
       </div>
 
+      <!-- Credencial de acceso: los profesionales van con DNI; los consultorios eligen -->
+      <div *ngIf="tipo() === 'consultorio'">
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-2">Credencial de acceso</label>
+        <div class="flex gap-2">
+          <button type="button" (click)="credencial.set('email')"
+                  class="px-4 py-2 rounded-xl border text-sm font-bold transition-colors"
+                  [ngClass]="credencial() === 'email' ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-stone-200 text-stone-500 hover:border-stone-300'">
+            Con email
+          </button>
+          <button type="button" (click)="credencial.set('dni')"
+                  class="px-4 py-2 rounded-xl border text-sm font-bold transition-colors"
+                  [ngClass]="credencial() === 'dni' ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-stone-200 text-stone-500 hover:border-stone-300'">
+            Con DNI
+          </button>
+        </div>
+      </div>
+      <p *ngIf="tipo() === 'profesional'" class="text-[11px] text-stone-400 -mt-1">
+        Los profesionales independientes acceden con su <span class="font-bold">DNI</span>; el email queda para avisos y recuperación.
+      </p>
+
+      <!-- DNI de acceso -->
+      <div *ngIf="usaDni()">
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">DNI de acceso</label>
+        <input type="text" [ngModel]="dni()" (ngModelChange)="dni.set($event)" placeholder="Sin puntos, ej. 24853917"
+               class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+      </div>
+
       <!-- Email + contraseña -->
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Email de acceso</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">
+            {{ usaDni() ? 'Email (avisos y recuperación)' : 'Email de acceso' }}
+          </label>
           <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" placeholder="cuenta@email.com"
                  class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
         </div>

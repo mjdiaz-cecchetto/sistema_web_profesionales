@@ -203,6 +203,7 @@ export class AgendaComponent {
       case 'PENDING': return 'Pendiente';
       case 'ATTENDED': return 'Asistió';
       case 'NO_SHOW': return 'No asistió';
+      case 'EXPIRED': return 'Vencido';
       default: return 'Cancelado';
     }
   }
@@ -219,6 +220,62 @@ export class AgendaComponent {
   // ---- Series ----
   /** Serie con confirmación pendiente de "cancelar toda la serie". */
   serieAConfirmar = signal<string | null>(null);
+
+  /** Serie con el panel de "mover serie" abierto (+ su profesional). */
+  serieAMover = signal<string | null>(null);
+  /** Fila (turno) desde la que se abrió el panel, para dibujarlo una sola vez. */
+  moverAnclaId = signal<string | null>(null);
+  moverDow = signal<number>(1);
+  moverHora = signal<string>('');
+  moverOmitir = signal(false);
+  moverError = signal('');
+  moverProfId = signal('');
+
+  /** Días con atención del profesional de la serie (para el select). */
+  diasDisponiblesSerie(): { dayIndex: number; day: string }[] {
+    return this.adminService.availabilityDe(this.moverProfId())
+      .filter(c => c.active && c.slots.length > 0)
+      .sort((a, b) => (a.dayIndex === 0 ? 7 : a.dayIndex) - (b.dayIndex === 0 ? 7 : b.dayIndex))
+      .map(c => ({ dayIndex: c.dayIndex, day: c.day }));
+  }
+
+  /** Horarios del día elegido para mover la serie. */
+  horasDisponiblesSerie(): string[] {
+    const config = this.adminService.availabilityDe(this.moverProfId()).find(c => c.dayIndex === this.moverDow());
+    return config?.slots ?? [];
+  }
+
+  abrirMoverSerie(appt: AdminAppointment) {
+    this.serieAConfirmar.set(null);
+    this.moverError.set('');
+    this.moverProfId.set(appt.profesionalId);
+    this.moverOmitir.set(false);
+    // Arranca con el día/hora actuales de la serie.
+    const [y, m, d] = appt.date.split('-').map(Number);
+    this.moverDow.set(new Date(y, m - 1, d).getDay());
+    this.moverHora.set(appt.time);
+    this.moverAnclaId.set(appt.id);
+    this.serieAMover.set(appt.serieId!);
+  }
+
+  cambiarMoverDow(valor: string) {
+    this.moverDow.set(Number(valor));
+    const horas = this.horasDisponiblesSerie();
+    if (!horas.includes(this.moverHora())) this.moverHora.set(horas[0] ?? '');
+  }
+
+  async confirmarMoverSerie(serieId: string) {
+    if (!this.moverHora()) { this.moverError.set('Elegí un horario.'); return; }
+    const r = await this.adminService.reprogramarSerie(serieId, this.moverDow(), this.moverHora(), this.moverOmitir());
+    if (!r.ok) {
+      this.moverError.set(r.motivo ?? 'No se pudo mover la serie.');
+      return;
+    }
+    this.serieAMover.set(null);
+    this.mostrarToast(r.omitidos > 0
+      ? `Se movieron ${r.movidos} turnos de la serie; ${r.omitidos} quedaron como estaban por conflicto.`
+      : `Se movieron ${r.movidos} ${r.movidos === 1 ? 'turno' : 'turnos'} de la serie al nuevo horario.`);
+  }
 
   /** Cantidad de turnos activos y futuros que caerían al cancelar la serie. */
   serieCancelables(serieId: string): number {

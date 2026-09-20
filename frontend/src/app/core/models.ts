@@ -26,7 +26,15 @@ export interface SpecialtyConfig {
 export interface Cuenta {
   id: string;
   tipo: 'consultorio' | 'profesional';
+  /** Email de la cuenta: avisos, recuperación y (si no hay dni) credencial de acceso. */
   email: string;
+  /**
+   * DNI como credencial de acceso (único en la plataforma, junto con los DNI
+   * de usuarios). Las cuentas de PROFESIONAL independiente siempre lo tienen;
+   * los CONSULTORIOS eligen al alta si acceden con email o con DNI.
+   * null/ausente = accede solo con email.
+   */
+  dni?: string | null;
   password: string; // mock: en el backend real será un hash
   nombre: string;
   slug: string;
@@ -39,6 +47,12 @@ export interface Cuenta {
   fechaAlta: string; // YYYY-MM-DD
   /** Horas mínimas de anticipación para que el paciente reprograme/cancele (default 24). */
   horasMinimasCancelacion?: number;
+  /**
+   * Un turno PENDIENTE que nadie confirmó hasta esta cantidad de horas antes
+   * del inicio VENCE (estado EXPIRED) y libera el lugar. 0 = nunca vence.
+   * Default 12. En el backend real lo aplica un job programado.
+   */
+  horasVencimientoPendiente?: number;
 }
 
 /** @deprecated alias temporal — usar Cuenta. */
@@ -58,11 +72,18 @@ export interface Usuario {
   id: string;
   cuentaId: string;
   nombre: string;
-  email: string;    // único (es el login)
+  email: string;    // único (para avisos y recuperación de cuenta)
+  /** DNI del usuario: es su credencial de login (único en la plataforma). */
+  dni: string;
   password: string; // mock: hash en el backend real
   rol: 'secretaria' | 'profesional';
   /** Solo rol profesional: a qué profesional del equipo corresponde. */
   profesionalId?: string;
+  /**
+   * Solo rol secretaria: ids de los profesionales cuyas agendas gestiona.
+   * Ausente o vacío = gestiona todo el centro.
+   */
+  profesionalesAsignados?: string[];
   /** false = no puede iniciar sesión. */
   activo: boolean;
 }
@@ -159,8 +180,10 @@ export interface Patient {
 /**
  * Estados del turno. ATTENDED / NO_SHOW se marcan desde la agenda
  * cuando el turno ya pasó, y alimentan las métricas de asistencia.
+ * EXPIRED: turno pendiente que nadie confirmó a tiempo — libera el lugar
+ * (según Cuenta.horasVencimientoPendiente).
  */
-export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW';
+export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW' | 'EXPIRED';
 
 export interface Appointment {
   id: string;
@@ -217,6 +240,45 @@ export interface Service {
   price?: number;
   /** false = oculto para nuevos turnos (los turnos ya creados no se tocan). Ausente = activo. */
   activo?: boolean;
+}
+
+/**
+ * Entrada de HISTORIA CLÍNICA (colección `historias`). Dato sensible
+ * (Ley 26.529): la carga y la lee ÚNICAMENTE el profesional tratante
+ * que la escribió. Dueño de consultorio y secretaría no acceden.
+ */
+export interface HistoriaClinicaEntry {
+  id: string;
+  cuentaId: string;
+  pacienteId: string;
+  /** Profesional tratante: único que ve y edita esta entrada. */
+  profesionalId: string;
+  /** Turno asociado, si la entrada nace de una consulta puntual. */
+  turnoId?: string;
+  fecha: string; // YYYY-MM-DD
+  motivo: string;
+  diagnostico: string;
+  tratamiento: string;
+}
+
+/**
+ * Aviso de WhatsApp registrado por el sistema (colección `notificaciones`).
+ * MOCK: acá solo se registra; el envío real lo hará el backend vía
+ * WhatsApp Business API cuando se reprograme o cancele un turno.
+ */
+export interface Notificacion {
+  id: string;
+  cuentaId: string;
+  turnoId: string;
+  evento: 'reprogramado' | 'cancelado';
+  /** Quién dispara el aviso: cambios del panel avisan al paciente y viceversa. */
+  origen: 'panel' | 'paciente';
+  canal: 'whatsapp';
+  destinatario: string; // nombre de quien recibe
+  telefono: string;
+  mensaje: string;
+  fecha: string; // ISO
+  estado: 'simulada';
 }
 
 export interface HealthInsurance {

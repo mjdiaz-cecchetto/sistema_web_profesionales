@@ -76,6 +76,12 @@
                  class="input !text-xs">
           <p class="text-[10px] text-stone-400">El paciente no puede reprogramar ni cancelar online con menos anticipación que esta.</p>
         </div>
+        <div class="space-y-1">
+          <label class="field-label">Turnos sin confirmar: vencen (horas antes)</label>
+          <input type="number" min="0" max="168" [ngModel]="consHorasVencimiento()" (ngModelChange)="consHorasVencimiento.set($event)"
+                 class="input !text-xs">
+          <p class="text-[10px] text-stone-400">Un turno pendiente que nadie confirmó hasta esta cantidad de horas antes del inicio vence y libera el lugar. 0 = nunca vence.</p>
+        </div>
       </div>
 
       <div class="flex justify-end">
@@ -171,7 +177,7 @@
       <div class="flex items-center justify-between gap-2">
         <div>
           <h3 class="card-title !text-sm">Usuarios del Equipo</h3>
-          <p class="text-[11px] text-stone-400 mt-0.5">Accesos al panel con permisos limitados: <span class="font-bold">Secretaría</span> gestiona agendas y pacientes de todos; <span class="font-bold">Profesional</span> ve solo lo suyo.</p>
+          <p class="text-[11px] text-stone-400 mt-0.5">Accesos al panel con permisos limitados: <span class="font-bold">Secretaría</span> gestiona las agendas que le asignes (o todo el centro); <span class="font-bold">Profesional</span> ve solo lo suyo. Entran por /login con su DNI.</p>
         </div>
         <button (click)="panelUsuarios.set(false)" class="p-2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors shrink-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -206,13 +212,32 @@
             <input type="text" [ngModel]="usrNombre()" (ngModelChange)="usrNombre.set($event)" placeholder="Ej. Rocío Méndez" class="input !text-xs">
           </div>
           <div class="space-y-1">
-            <label class="field-label">Email (login) *</label>
+            <label class="field-label">DNI (login) *</label>
+            <input type="text" [ngModel]="usrDni()" (ngModelChange)="usrDni.set($event)" placeholder="Sin puntos, ej. 28456123" class="input !text-xs">
+          </div>
+          <div class="space-y-1">
+            <label class="field-label">Email (avisos) *</label>
             <input type="email" [ngModel]="usrEmail()" (ngModelChange)="usrEmail.set($event)" placeholder="usuario@centro.com" class="input !text-xs">
           </div>
           <div class="space-y-1">
             <label class="field-label">Contraseña inicial *</label>
             <input type="text" [ngModel]="usrPassword()" (ngModelChange)="usrPassword.set($event)" placeholder="Mínimo 6 caracteres" class="input !text-xs">
           </div>
+        </div>
+
+        <!-- Secretaría: agendas asignadas -->
+        <div *ngIf="usrRol() === 'secretaria'" class="space-y-1.5">
+          <label class="field-label">¿Qué agendas gestiona?</label>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" (click)="usrAsignados.set([])"
+                    [ngClass]="usrAsignados().length === 0 ? 'bg-violet-100 text-violet-900 border-violet-300' : 'bg-white text-stone-500 border-stone-200 hover:border-violet-300'"
+                    class="px-3 py-1.5 rounded-full text-[10px] font-extrabold border transition-colors">Todo el centro</button>
+            <button type="button" *ngFor="let pr of adminService.profesionalesActivos()"
+                    (click)="toggleAsignado('alta', pr.id)"
+                    [ngClass]="usrAsignados().includes(pr.id) ? 'bg-violet-100 text-violet-900 border-violet-300' : 'bg-white text-stone-500 border-stone-200 hover:border-violet-300'"
+                    class="px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors">{{ pr.nombre }}</button>
+          </div>
+          <p class="text-[10px] text-stone-400">Sin selección = gestiona todas las agendas y pacientes del centro. Con profesionales marcados, solo ve y opera esas agendas.</p>
         </div>
 
         <p *ngIf="usrError()" class="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">{{ usrError() }}</p>
@@ -239,12 +264,17 @@
               {{ u.rol === 'secretaria' ? 'Secretaría' : 'Profesional' }}
             </span>
             <span class="text-xs font-extrabold text-stone-800 truncate">{{ u.nombre }}</span>
-            <span class="text-[11px] text-stone-400 truncate">{{ u.email }}</span>
+            <span class="text-[11px] text-stone-400 truncate">DNI {{ u.dni }}</span>
             <span *ngIf="u.rol === 'profesional'" class="text-[10px] text-stone-500 truncate">→ {{ nombreProfesionalDeUsuario(u) }}</span>
+            <span *ngIf="u.rol === 'secretaria'" class="text-[10px] text-stone-500 truncate">→ {{ agendasDe(u) }}</span>
             <span *ngIf="u.activo === false" class="chip !text-[9px] bg-stone-100 text-stone-500 border-stone-200">Sin acceso</span>
 
             <span class="flex-1"></span>
 
+            <button (click)="abrirAsignacion(u)" *ngIf="u.rol === 'secretaria' && asignarUsuarioId() !== u.id"
+                    class="text-[10px] font-bold text-stone-500 hover:text-violet-800 hover:bg-violet-50 border border-stone-200 hover:border-violet-200 px-2.5 py-1 rounded-lg transition-colors shrink-0">
+              Agendas
+            </button>
             <button (click)="abrirReset(u)" *ngIf="resetUsuarioId() !== u.id"
                     class="text-[10px] font-bold text-stone-500 hover:text-teal-800 hover:bg-teal-50 border border-stone-200 hover:border-teal-200 px-2.5 py-1 rounded-lg transition-colors shrink-0">
               Resetear contraseña
@@ -254,6 +284,23 @@
               <input type="checkbox" [checked]="u.activo !== false" (change)="toggleUsuario(u)" class="sr-only peer">
               <div class="w-8 h-[18px] bg-stone-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:rounded-full after:h-[13px] after:w-[13px] after:transition-all after:shadow-sm peer-checked:bg-teal-400"></div>
             </label>
+          </div>
+
+          <!-- Asignación de agendas inline (solo secretarías) -->
+          <div *ngIf="asignarUsuarioId() === u.id" class="mt-2.5 pt-2.5 border-t border-stone-100 space-y-2">
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" (click)="asignarSeleccion.set([])"
+                      [ngClass]="asignarSeleccion().length === 0 ? 'bg-violet-100 text-violet-900 border-violet-300' : 'bg-white text-stone-500 border-stone-200 hover:border-violet-300'"
+                      class="px-3 py-1.5 rounded-full text-[10px] font-extrabold border transition-colors">Todo el centro</button>
+              <button type="button" *ngFor="let pr of adminService.profesionalesActivos()"
+                      (click)="toggleAsignado('edicion', pr.id)"
+                      [ngClass]="asignarSeleccion().includes(pr.id) ? 'bg-violet-100 text-violet-900 border-violet-300' : 'bg-white text-stone-500 border-stone-200 hover:border-violet-300'"
+                      class="px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors">{{ pr.nombre }}</button>
+            </div>
+            <div class="flex items-center gap-2 justify-end">
+              <button (click)="confirmarAsignacion()" class="bg-violet-100 hover:bg-violet-200 text-violet-900 border border-violet-300 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors shrink-0">Guardar agendas</button>
+              <button (click)="asignarUsuarioId.set(null)" class="btn-ghost !py-1.5 !px-2.5 !text-[10px] shrink-0">Cancelar</button>
+            </div>
           </div>
 
           <!-- Reset inline -->

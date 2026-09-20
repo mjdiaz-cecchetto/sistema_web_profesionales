@@ -45,7 +45,7 @@ export class PacientesComponent {
     const hoy = todayLocal();
     const map = new Map<string, { date: string; time: string; status: string }>();
     const activos = this.adminService.appointments()
-      .filter(a => a.status !== 'CANCELLED' && a.date >= hoy)
+      .filter(a => a.status !== 'CANCELLED' && a.status !== 'EXPIRED' && a.date >= hoy)
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     for (const a of activos) {
       if (!map.has(a.patientDni)) map.set(a.patientDni, { date: a.date, time: a.time, status: a.status });

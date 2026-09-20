@@ -45,6 +45,62 @@
     <!-- Cuerpo scrolleable -->
     <div class="flex-grow overflow-y-auto px-5 sm:px-7 py-4 space-y-5">
 
+      <!-- ===== Historia clínica (solo el profesional tratante ve SUS entradas) ===== -->
+      <div *ngIf="adminService.puedeVerHistoria()" class="space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <p class="field-label !mb-0">Historia clínica ({{ historias().length }})</p>
+          <button *ngIf="!hcFormAbierto()" (click)="abrirHcForm()"
+                  class="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-lg transition-colors">
+            + Nueva entrada
+          </button>
+        </div>
+        <p class="text-[10px] text-stone-400 -mt-1">Confidencial: solo vos ves lo que escribís acá. Ni la secretaría ni el resto del equipo acceden.</p>
+
+        <!-- Alta de entrada -->
+        <div *ngIf="hcFormAbierto()" class="border border-teal-200 bg-teal-50/50 rounded-xl p-3.5 space-y-2.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="space-y-1">
+              <label class="field-label">Fecha *</label>
+              <input type="date" [ngModel]="hcFecha()" (ngModelChange)="hcFecha.set($event)" class="input !text-xs">
+            </div>
+            <div class="space-y-1">
+              <label class="field-label">Motivo de consulta *</label>
+              <input type="text" [ngModel]="hcMotivo()" (ngModelChange)="hcMotivo.set($event)" placeholder="Ej. Control de seguimiento" class="input !text-xs">
+            </div>
+          </div>
+          <div class="space-y-1">
+            <label class="field-label">Diagnóstico *</label>
+            <textarea rows="2" [ngModel]="hcDiagnostico()" (ngModelChange)="hcDiagnostico.set($event)" placeholder="Evaluación y diagnóstico de la consulta." class="input !text-xs resize-none"></textarea>
+          </div>
+          <div class="space-y-1">
+            <label class="field-label">Tratamiento / indicaciones *</label>
+            <textarea rows="2" [ngModel]="hcTratamiento()" (ngModelChange)="hcTratamiento.set($event)" placeholder="Plan de tratamiento, medicación, próximos pasos." class="input !text-xs resize-none"></textarea>
+          </div>
+          <p *ngIf="hcError()" class="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">{{ hcError() }}</p>
+          <div class="flex items-center justify-end gap-2">
+            <button (click)="hcFormAbierto.set(false)" class="btn-ghost !py-1.5 !px-2.5 !text-[10px]">Cancelar</button>
+            <button (click)="guardarHistoria()" [disabled]="hcGuardando()" class="btn-primary !text-[11px] !py-1.5 !px-3">
+              {{ hcGuardando() ? 'Guardando…' : 'Guardar entrada' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Entradas -->
+        <div *ngIf="historias().length > 0" class="border border-stone-200 rounded-xl divide-y divide-stone-100 overflow-hidden">
+          <div *ngFor="let h of historias()" class="px-4 py-3 bg-white space-y-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-[11px] font-extrabold text-stone-700">{{ formatFecha(h.fecha) }}</span>
+              <span class="text-[11px] font-bold text-teal-800 truncate">{{ h.motivo }}</span>
+            </div>
+            <p class="text-[11px] text-stone-600"><span class="font-bold text-stone-400 uppercase text-[9px] tracking-wide">Diagnóstico:</span> {{ h.diagnostico }}</p>
+            <p class="text-[11px] text-stone-600"><span class="font-bold text-stone-400 uppercase text-[9px] tracking-wide">Tratamiento:</span> {{ h.tratamiento }}</p>
+          </div>
+        </div>
+        <p *ngIf="historias().length === 0 && !hcFormAbierto()" class="text-[11px] text-stone-400">
+          Todavía no cargaste entradas de historia clínica para este paciente.
+        </p>
+      </div>
+
       <!-- Próximos -->
       <div *ngIf="proximos().length > 0" class="space-y-2">
         <p class="field-label">Próximas sesiones ({{ proximos().length }})</p>
@@ -66,7 +122,8 @@
             <span class="chip shrink-0 !text-[9px]"
                   [class.chip-confirmed]="t.status === 'CONFIRMED'"
                   [class.chip-pending]="t.status === 'PENDING'"
-                  [class.chip-cancelled]="t.status === 'CANCELLED'">
+                  [class.chip-cancelled]="t.status === 'CANCELLED'"
+                  [ngClass]="{'bg-sky-100 text-sky-800 border-sky-200': t.status === 'ATTENDED', 'bg-orange-100 text-orange-800 border-orange-200': t.status === 'NO_SHOW', 'bg-stone-100 text-stone-500 border-stone-200': t.status === 'EXPIRED'}">
               {{ statusLabel(t.status) }}
             </span>
           </div>
@@ -89,7 +146,8 @@
             <span class="chip shrink-0 !text-[9px]"
                   [class.chip-confirmed]="t.status === 'CONFIRMED'"
                   [class.chip-pending]="t.status === 'PENDING'"
-                  [class.chip-cancelled]="t.status === 'CANCELLED'">
+                  [class.chip-cancelled]="t.status === 'CANCELLED'"
+                  [ngClass]="{'bg-sky-100 text-sky-800 border-sky-200': t.status === 'ATTENDED', 'bg-orange-100 text-orange-800 border-orange-200': t.status === 'NO_SHOW', 'bg-stone-100 text-stone-500 border-stone-200': t.status === 'EXPIRED'}">
               {{ statusLabel(t.status) }}
             </span>
           </div>

@@ -38,6 +38,7 @@
       "id": "cta-consultorio-sm",
       "tipo": "consultorio",
       "email": "admin@centrosanmartin.com.ar",
+      "dni": null,
       "password": "consultorio123",
       "nombre": "Centro Médico San Martín",
       "slug": "centro-san-martin",
@@ -45,13 +46,15 @@
       "bannerUrl": "",
       "estado": "activa",
       "plan": "plan-consultorio",
-      "fechaAlta": "2026-05-07",
-      "horasMinimasCancelacion": 24
+      "fechaAlta": "2026-05-23",
+      "horasMinimasCancelacion": 24,
+      "horasVencimientoPendiente": 12
     },
     {
       "id": "cta-elena-ramos",
       "tipo": "profesional",
       "email": "elena.ramos@gmail.com",
+      "dni": "24853917",
       "password": "elena123",
       "nombre": "Dra. Elena Ramos",
       "slug": "dra-elena-ramos",
@@ -59,8 +62,9 @@
       "bannerUrl": "",
       "estado": "activa",
       "plan": "plan-profesional",
-      "fechaAlta": "2026-07-21",
-      "horasMinimasCancelacion": 24
+      "fechaAlta": "2026-08-06",
+      "horasMinimasCancelacion": 24,
+      "horasVencimientoPendiente": 12
     }
   ],
   "usuarios": [
@@ -69,8 +73,22 @@
       "cuentaId": "cta-consultorio-sm",
       "nombre": "Rocío Méndez",
       "email": "secretaria@centrosanmartin.com.ar",
+      "dni": "28456123",
       "password": "secretaria123",
       "rol": "secretaria",
+      "activo": true
+    },
+    {
+      "id": "usr-secretaria-odonto",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Valeria Suárez",
+      "email": "valeria.suarez@centrosanmartin.com.ar",
+      "dni": "33780415",
+      "password": "valeria123",
+      "rol": "secretaria",
+      "profesionalesAsignados": [
+        "prof-rios"
+      ],
       "activo": true
     },
     {
@@ -78,6 +96,7 @@
       "cuentaId": "cta-consultorio-sm",
       "nombre": "Carolina Funes",
       "email": "carolina.funes@centrosanmartin.com.ar",
+      "dni": "27912384",
       "password": "carolina123",
       "rol": "profesional",
       "profesionalId": "prof-funes",
@@ -1001,7 +1020,7 @@
       "patientEmail": "rominaferreyra84@gmail.com",
       "patientPhone": "1160254871",
       "patientDni": "31485296",
-      "date": "2026-09-01",
+      "date": "2026-09-17",
       "time": "15:00",
       "status": "ATTENDED",
       "notes": "Sesión de seguimiento.",
@@ -1017,7 +1036,7 @@
       "patientEmail": "hbenitez1958@hotmail.com",
       "patientPhone": "1144762903",
       "patientDni": "12958374",
-      "date": "2026-09-02",
+      "date": "2026-09-18",
       "time": "09:30",
       "status": "ATTENDED",
       "notes": "Paciente de PAMI, trae orden.",
@@ -1034,7 +1053,7 @@
       "patientEmail": "fedeacosta92@gmail.com",
       "patientPhone": "1157983041",
       "patientDni": "36741852",
-      "date": "2026-09-03",
+      "date": "2026-09-19",
       "time": "09:00",
       "status": "ATTENDED",
       "notes": "Post-quirúrgico LCA, sesión 6 de 12.",
@@ -1050,7 +1069,7 @@
       "patientEmail": "marta.villalba@yahoo.com.ar",
       "patientPhone": "1149035782",
       "patientDni": "17203948",
-      "date": "2026-09-04",
+      "date": "2026-09-20",
       "time": "10:00",
       "status": "CONFIRMED",
       "notes": "Derivada por la Lic. Funes.",
@@ -1066,7 +1085,7 @@
       "patientEmail": "julipardes@gmail.com",
       "patientPhone": "1132478569",
       "patientDni": "40185263",
-      "date": "2026-09-04",
+      "date": "2026-09-20",
       "time": "14:45",
       "status": "PENDING",
       "notes": "Dolor en muela de juicio inferior derecha.",
@@ -1083,7 +1102,7 @@
       "patientEmail": "fedeacosta92@gmail.com",
       "patientPhone": "1157983041",
       "patientDni": "36741852",
-      "date": "2026-09-05",
+      "date": "2026-09-21",
       "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Post-quirúrgico LCA, sesión 7 de 12.",
@@ -1099,7 +1118,7 @@
       "patientEmail": "vero.luduena@gmail.com",
       "patientPhone": "1165042183",
       "patientDni": "33629471",
-      "date": "2026-09-05",
+      "date": "2026-09-21",
       "time": "17:30",
       "status": "PENDING",
       "notes": "Derivada por cardiólogo, hipertensión.",
@@ -1115,7 +1134,7 @@
       "patientEmail": "nicoferrero01@gmail.com",
       "patientPhone": "1170392485",
       "patientDni": "43512087",
-      "date": "2026-09-06",
+      "date": "2026-09-22",
       "time": "10:00",
       "status": "PENDING",
       "notes": "Pidió turno por ansiedad ante exámenes.",
@@ -1131,7 +1150,7 @@
       "patientEmail": "marta.villalba@yahoo.com.ar",
       "patientPhone": "1149035782",
       "patientDni": "17203948",
-      "date": "2026-09-13",
+      "date": "2026-09-29",
       "time": "15:45",
       "status": "PENDING",
       "notes": "Control a 10 días del inicio del tratamiento.",
@@ -1147,7 +1166,7 @@
       "patientEmail": "hbenitez1958@hotmail.com",
       "patientPhone": "1144762903",
       "patientDni": "12958374",
-      "date": "2026-09-07",
+      "date": "2026-09-23",
       "time": "08:45",
       "status": "CONFIRMED",
       "notes": "Pieza 26, detectada en la limpieza.",
@@ -1163,7 +1182,7 @@
       "patientEmail": "pgiordano@outlook.com",
       "patientPhone": "1158741296",
       "patientDni": "29384756",
-      "date": "2026-09-08",
+      "date": "2026-09-24",
       "time": "18:15",
       "status": "CONFIRMED",
       "notes": "Control mensual, va bajando bien.",
@@ -1179,7 +1198,7 @@
       "patientEmail": "rominaferreyra84@gmail.com",
       "patientPhone": "1160254871",
       "patientDni": "31485296",
-      "date": "2026-09-08",
+      "date": "2026-09-24",
       "time": "15:00",
       "status": "CONFIRMED",
       "notes": "Sesión semanal.",
@@ -1195,7 +1214,7 @@
       "patientEmail": "silvia.caceres62@gmail.com",
       "patientPhone": "1141936758",
       "patientDni": "16849302",
-      "date": "2026-09-09",
+      "date": "2026-09-25",
       "time": "10:00",
       "status": "PENDING",
       "notes": "Hombro doloroso, trae resonancia.",
@@ -1211,7 +1230,7 @@
       "patientEmail": "cami.ortega@gmail.com",
       "patientPhone": "1163805247",
       "patientDni": "42058613",
-      "date": "2026-08-29",
+      "date": "2026-09-14",
       "time": "16:15",
       "status": "CANCELLED",
       "notes": "Canceló por trabajo, va a reprogramar.",
@@ -1227,7 +1246,7 @@
       "patientEmail": "oscarmedina55@yahoo.com.ar",
       "patientPhone": "1152309864",
       "patientDni": "20174958",
-      "date": "2026-09-12",
+      "date": "2026-09-28",
       "time": "09:15",
       "status": "PENDING",
       "notes": "Primera consulta.",
@@ -1244,7 +1263,7 @@
       "patientEmail": "fedeacosta92@gmail.com",
       "patientPhone": "1157983041",
       "patientDni": "36741852",
-      "date": "2026-09-12",
+      "date": "2026-09-28",
       "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Post-quirúrgico LCA, sesión 8 de 12. [Serie: sesión de 4]",
@@ -1261,7 +1280,7 @@
       "patientEmail": "fedeacosta92@gmail.com",
       "patientPhone": "1157983041",
       "patientDni": "36741852",
-      "date": "2026-09-19",
+      "date": "2026-10-05",
       "time": "09:00",
       "status": "PENDING",
       "notes": "Post-quirúrgico LCA, sesión 9 de 12. [Serie: sesión de 4]",
@@ -1277,7 +1296,7 @@
       "patientEmail": "sofialvarez.psi@gmail.com",
       "patientPhone": "1123456001",
       "patientDni": "30123456",
-      "date": "2026-08-30",
+      "date": "2026-09-15",
       "time": "10:00",
       "status": "CANCELLED",
       "notes": "Canceló por viaje.",
@@ -1293,7 +1312,7 @@
       "patientEmail": "diegotorres78@gmail.com",
       "patientPhone": "1123456002",
       "patientDni": "31123456",
-      "date": "2026-09-02",
+      "date": "2026-09-18",
       "time": "18:00",
       "status": "ATTENDED",
       "notes": "Sesión de seguimiento.",
@@ -1309,7 +1328,7 @@
       "patientEmail": "lu.benavidez@gmail.com",
       "patientPhone": "1123456003",
       "patientDni": "32123456",
-      "date": "2026-09-03",
+      "date": "2026-09-19",
       "time": "19:00",
       "status": "NO_SHOW",
       "notes": "Primera sesión conjunta.",
@@ -1325,7 +1344,7 @@
       "patientEmail": "martin.spin@gmail.com",
       "patientPhone": "1123456789",
       "patientDni": "38123456",
-      "date": "2026-09-04",
+      "date": "2026-09-20",
       "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Paciente indica que está con picos de estrés laboral elevados.",
@@ -1341,7 +1360,7 @@
       "patientEmail": "laurag@live.com.ar",
       "patientPhone": "1198765432",
       "patientDni": "35987654",
-      "date": "2026-09-05",
+      "date": "2026-09-21",
       "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Primera visita presencial.",
@@ -1357,7 +1376,7 @@
       "patientEmail": "andres.men@outlook.com",
       "patientPhone": "1133334444",
       "patientDni": "40111222",
-      "date": "2026-09-06",
+      "date": "2026-09-22",
       "time": "11:00",
       "status": "CONFIRMED",
       "notes": "Sesión online.",
@@ -1373,7 +1392,7 @@
       "patientEmail": "julian.castro@gmail.com",
       "patientPhone": "1123456011",
       "patientDni": "38123457",
-      "date": "2026-09-08",
+      "date": "2026-09-24",
       "time": "19:00",
       "status": "PENDING",
       "notes": "Consulta sobre estrés y ansiedad.",
@@ -1389,12 +1408,44 @@
       "patientEmail": "esteban.rey@gmail.com",
       "patientPhone": "1123456013",
       "patientDni": "40123456",
-      "date": "2026-09-11",
+      "date": "2026-09-27",
       "time": "18:00",
       "status": "CONFIRMED",
       "notes": "",
       "location": "Centro Médico Belgrano",
       "healthInsurance": "OSDE"
+    },
+    {
+      "id": "apt-csm-18",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-salas",
+      "serviceName": "Control Nutricional",
+      "patientName": "Pablo Giordano",
+      "patientEmail": "pgiordano@outlook.com",
+      "patientPhone": "1158741296",
+      "patientDni": "29384756",
+      "date": "2026-09-16",
+      "time": "17:30",
+      "status": "EXPIRED",
+      "notes": "Pidió turno online y nunca lo confirmó.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "Medifé"
+    },
+    {
+      "id": "apt-csm-19",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-funes",
+      "serviceName": "Consulta Psicológica",
+      "patientName": "Nicolás Ferrero",
+      "patientEmail": "nicoferrero01@gmail.com",
+      "patientPhone": "1170392485",
+      "patientDni": "43512087",
+      "date": "2026-09-20",
+      "time": "23:00",
+      "status": "EXPIRED",
+      "notes": "Reserva online de último momento, sin confirmar.",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "Particular (Sin cobertura)"
     }
   ],
   "patients": [
@@ -1406,7 +1457,7 @@
       "telefono": "1160254871",
       "dni": "31485296",
       "obraSocial": "OSECAC",
-      "fechaAlta": "2026-07-21"
+      "fechaAlta": "2026-08-06"
     },
     {
       "id": "pat-cta-consultorio-sm-12958374",
@@ -1416,7 +1467,7 @@
       "telefono": "1144762903",
       "dni": "12958374",
       "obraSocial": "PAMI",
-      "fechaAlta": "2026-07-23"
+      "fechaAlta": "2026-08-08"
     },
     {
       "id": "pat-cta-consultorio-sm-36741852",
@@ -1426,7 +1477,7 @@
       "telefono": "1157983041",
       "dni": "36741852",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-07-25"
+      "fechaAlta": "2026-08-10"
     },
     {
       "id": "pat-cta-consultorio-sm-17203948",
@@ -1436,7 +1487,7 @@
       "telefono": "1149035782",
       "dni": "17203948",
       "obraSocial": "IOMA",
-      "fechaAlta": "2026-07-27"
+      "fechaAlta": "2026-08-12"
     },
     {
       "id": "pat-cta-consultorio-sm-40185263",
@@ -1446,7 +1497,7 @@
       "telefono": "1132478569",
       "dni": "40185263",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-07-29"
+      "fechaAlta": "2026-08-14"
     },
     {
       "id": "pat-cta-consultorio-sm-33629471",
@@ -1456,7 +1507,7 @@
       "telefono": "1165042183",
       "dni": "33629471",
       "obraSocial": "Galeno",
-      "fechaAlta": "2026-08-02"
+      "fechaAlta": "2026-08-18"
     },
     {
       "id": "pat-cta-consultorio-sm-43512087",
@@ -1466,7 +1517,7 @@
       "telefono": "1170392485",
       "dni": "43512087",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-08-04"
+      "fechaAlta": "2026-08-20"
     },
     {
       "id": "pat-cta-consultorio-sm-29384756",
@@ -1476,7 +1527,7 @@
       "telefono": "1158741296",
       "dni": "29384756",
       "obraSocial": "Medifé",
-      "fechaAlta": "2026-08-10"
+      "fechaAlta": "2026-08-26"
     },
     {
       "id": "pat-cta-consultorio-sm-16849302",
@@ -1486,7 +1537,7 @@
       "telefono": "1141936758",
       "dni": "16849302",
       "obraSocial": "Unión Personal",
-      "fechaAlta": "2026-08-14"
+      "fechaAlta": "2026-08-30"
     },
     {
       "id": "pat-cta-consultorio-sm-42058613",
@@ -1496,7 +1547,7 @@
       "telefono": "1163805247",
       "dni": "42058613",
       "obraSocial": "Sancor Salud",
-      "fechaAlta": "2026-08-16"
+      "fechaAlta": "2026-09-01"
     },
     {
       "id": "pat-cta-consultorio-sm-20174958",
@@ -1506,7 +1557,7 @@
       "telefono": "1152309864",
       "dni": "20174958",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-08-18"
+      "fechaAlta": "2026-09-03"
     },
     {
       "id": "pat-cta-elena-ramos-30123456",
@@ -1516,7 +1567,7 @@
       "telefono": "1123456001",
       "dni": "30123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-08-24"
+      "fechaAlta": "2026-09-09"
     },
     {
       "id": "pat-cta-elena-ramos-31123456",
@@ -1526,7 +1577,7 @@
       "telefono": "1123456002",
       "dni": "31123456",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-08-26"
+      "fechaAlta": "2026-09-11"
     },
     {
       "id": "pat-cta-elena-ramos-32123456",
@@ -1536,7 +1587,7 @@
       "telefono": "1123456003",
       "dni": "32123456",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-08-28"
+      "fechaAlta": "2026-09-13"
     },
     {
       "id": "pat-cta-elena-ramos-38123456",
@@ -1546,7 +1597,7 @@
       "telefono": "1123456789",
       "dni": "38123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-08-30"
+      "fechaAlta": "2026-09-15"
     },
     {
       "id": "pat-cta-elena-ramos-35987654",
@@ -1556,7 +1607,7 @@
       "telefono": "1198765432",
       "dni": "35987654",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-09-01"
+      "fechaAlta": "2026-09-17"
     },
     {
       "id": "pat-cta-elena-ramos-40111222",
@@ -1566,7 +1617,7 @@
       "telefono": "1133334444",
       "dni": "40111222",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-09-03"
+      "fechaAlta": "2026-09-19"
     },
     {
       "id": "pat-cta-elena-ramos-38123457",
@@ -1576,7 +1627,7 @@
       "telefono": "1123456011",
       "dni": "38123457",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-09-05"
+      "fechaAlta": "2026-09-21"
     },
     {
       "id": "pat-cta-elena-ramos-40123456",
@@ -1586,16 +1637,61 @@
       "telefono": "1123456013",
       "dni": "40123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-09-07"
+      "fechaAlta": "2026-09-23"
     }
   ],
+  "historias": [
+    {
+      "id": "hc-1",
+      "cuentaId": "cta-consultorio-sm",
+      "pacienteId": "pat-cta-consultorio-sm-31485296",
+      "profesionalId": "prof-funes",
+      "fecha": "2026-08-27",
+      "motivo": "Primera entrevista: consulta por ansiedad generalizada",
+      "diagnostico": "Trastorno de ansiedad generalizada (F41.1), intensidad moderada",
+      "tratamiento": "TCC semanal. Psicoeducación sobre el ciclo de la ansiedad y registro de pensamientos automáticos."
+    },
+    {
+      "id": "hc-2",
+      "cuentaId": "cta-consultorio-sm",
+      "pacienteId": "pat-cta-consultorio-sm-31485296",
+      "profesionalId": "prof-funes",
+      "fecha": "2026-09-17",
+      "motivo": "Sesión de seguimiento nº 4",
+      "diagnostico": "Evolución favorable: disminución de la frecuencia de crisis",
+      "tratamiento": "Continúa TCC semanal. Se incorpora exposición gradual a situaciones sociales evitadas."
+    },
+    {
+      "id": "hc-3",
+      "cuentaId": "cta-consultorio-sm",
+      "pacienteId": "pat-cta-consultorio-sm-36741852",
+      "profesionalId": "prof-vega",
+      "turnoId": "apt-csm-3",
+      "fecha": "2026-09-19",
+      "motivo": "Sesión 6/12 post-quirúrgico LCA rodilla derecha",
+      "diagnostico": "Evolución acorde a protocolo: flexión 120°, sin derrame",
+      "tratamiento": "Fortalecimiento de cuádriceps e isquiotibiales en cadena cerrada. Continuar con bicicleta fija en casa."
+    },
+    {
+      "id": "hc-4",
+      "cuentaId": "cta-elena-ramos",
+      "pacienteId": "pat-cta-elena-ramos-31123456",
+      "profesionalId": "prof-elena",
+      "turnoId": "apt-ele-2",
+      "fecha": "2026-09-18",
+      "motivo": "Sesión de seguimiento",
+      "diagnostico": "Episodio depresivo leve en remisión",
+      "tratamiento": "Se sostiene frecuencia quincenal. Activación conductual: retomó natación dos veces por semana."
+    }
+  ],
+  "notificaciones": [],
   "blockedDates": [
     {
       "id": "blk-lema-1",
       "cuentaId": "cta-consultorio-sm",
       "profesionalId": "prof-lema",
-      "startDate": "2026-09-16",
-      "endDate": "2026-09-18",
+      "startDate": "2026-10-02",
+      "endDate": "2026-10-04",
       "reason": "Congreso Argentino de Psiquiatría"
     }
   ],
