@@ -9,6 +9,7 @@ import {
   Cuenta,
   DayAvailability,
   HealthInsurance,
+  Notificacion,
   ProfessionalAvailability,
   ProfessionalProfile,
   Service,
@@ -90,7 +91,7 @@ export class ClientService {
         const duracion = services.find(s => s.id === serviceId)?.durationMinutes ?? 60;
 
         const ocupados = new Set(
-          appts.filter(a => a.status !== 'CANCELLED').map(a => `${a.date}|${a.time}`)
+          appts.filter(a => a.status !== 'CANCELLED' && a.status !== 'EXPIRED').map(a => `${a.date}|${a.time}`)
         );
 
         const slots: TimeSlot[] = [];
@@ -184,7 +185,11 @@ export class ClientService {
       time: nuevaHora,
       status: 'PENDING',
       notes: nota
-    });
+    }).pipe(
+      switchMap(act => this.notificarProfesional(act, 'reprogramado',
+        `${act.patientName} (DNI ${act.patientDni}) reprogramó su turno de ${act.serviceName}: del ${turno.date} ${turno.time} hs al ${act.date} a las ${act.time} hs. Queda pendiente de confirmación.`
+      ).pipe(map(() => act)))
+    );
   }
 
   cancelarTurno(turno: Appointment): Observable<Appointment> {
@@ -193,7 +198,36 @@ export class ClientService {
     return this.http.patch<Appointment>(`${this.api}/appointments/${turno.id}`, {
       status: 'CANCELLED',
       notes: nota
-    });
+    }).pipe(
+      switchMap(act => this.notificarProfesional(act, 'cancelado',
+        `${act.patientName} (DNI ${act.patientDni}) canceló su turno de ${act.serviceName} del ${act.date} a las ${act.time} hs. El horario quedó libre.`
+      ).pipe(map(() => act)))
+    );
+  }
+
+  /**
+   * Registra el aviso de WhatsApp al PROFESIONAL cuando el paciente
+   * reprograma o cancela online (MOCK: el envío real lo hace el backend).
+   */
+  private notificarProfesional(turno: Appointment, evento: 'reprogramado' | 'cancelado', mensaje: string): Observable<unknown> {
+    return this.getProfessional(turno.profesionalId).pipe(
+      switchMap(prof => {
+        const aviso: Notificacion = {
+          id: 'ntf-' + Date.now().toString(36) + Math.floor(Math.random() * 1000),
+          cuentaId: turno.cuentaId,
+          turnoId: turno.id,
+          evento,
+          origen: 'paciente',
+          canal: 'whatsapp',
+          destinatario: prof.nombre,
+          telefono: prof.whatsapp || '',
+          mensaje,
+          fecha: new Date().toISOString(),
+          estado: 'simulada'
+        };
+        return this.http.post<Notificacion>(`${this.api}/notificaciones`, aviso);
+      })
+    );
   }
 
   /** Da de alta al paciente si su DNI no está registrado en la cuenta (padrón por cuenta). */

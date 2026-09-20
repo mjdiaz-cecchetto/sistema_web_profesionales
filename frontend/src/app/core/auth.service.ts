@@ -129,10 +129,35 @@ export class AuthService {
     this.restaurando.set(false);
   }
 
-  /** Inicia sesión (administrador, dueño de cuenta o usuario del equipo). Devuelve un mensaje de error o null. */
-  async login(email: string, password: string): Promise<string | null> {
-    const mail = email.trim().toLowerCase();
+  /**
+   * Inicia sesión. El identificador puede ser un EMAIL (admin de plataforma
+   * o dueño de cuenta) o un DNI (usuarios del equipo: secretaría/profesional,
+   * mínimo esfuerzo para el personal). Devuelve un mensaje de error o null.
+   */
+  async login(identificador: string, password: string): Promise<string | null> {
+    const mail = identificador.trim().toLowerCase();
     const ERROR_CONEXION = 'No se pudo conectar con el servidor. ¿Está corriendo la API local?';
+
+    // ¿Es un DNI? → cuentas con acceso por DNI (profesionales independientes
+    // y consultorios que lo eligieron) y usuarios del equipo.
+    if (/^[0-9]{7,9}$/.test(mail)) {
+      const cuentasDni = await this.get<Cuenta[]>(`${this.api}/cuentas?dni=${encodeURIComponent(mail)}`);
+      if (cuentasDni === null) return ERROR_CONEXION;
+      const cta = cuentasDni.find(c => c.dni === mail);
+      if (cta) {
+        if (cta.password !== password) return 'DNI o contraseña incorrectos.';
+        if (cta.estado === 'suspendida') return 'Esta cuenta está suspendida. Contactate con el administrador de la plataforma.';
+        this.setSesion({ cuenta: cta });
+        this.guardar({ tipo: 'cuenta', id: cta.id });
+        return null;
+      }
+
+      const porDni = await this.get<Usuario[]>(`${this.api}/usuarios?dni=${encodeURIComponent(mail)}`);
+      if (porDni === null) return ERROR_CONEXION;
+      const u = porDni.find(x => x.dni === mail);
+      if (!u || u.password !== password) return 'DNI o contraseña incorrectos.';
+      return this.entrarComoUsuario(u);
+    }
 
     // 1) Administradores de la plataforma
     const admins = await this.get<Administrador[]>(`${this.api}/administradores?email=${encodeURIComponent(mail)}`);
@@ -157,20 +182,57 @@ export class AuthService {
       return null;
     }
 
-    // 3) Usuarios del equipo (secretaría / profesional)
+    // 3) Usuarios del equipo por email (compatibilidad: la credencial oficial es el DNI)
     const usuarios = await this.get<Usuario[]>(`${this.api}/usuarios?email=${encodeURIComponent(mail)}`);
     if (usuarios === null) return ERROR_CONEXION;
     const usuario = usuarios.find(u => u.email.toLowerCase() === mail);
     if (!usuario || usuario.password !== password) return 'Email o contraseña incorrectos.';
+    return this.entrarComoUsuario(usuario);
+  }
+
+  /** Valida el estado del usuario y su cuenta, y abre la sesión de equipo. */
+  private async entrarComoUsuario(usuario: Usuario): Promise<string | null> {
     if (usuario.activo === false) return 'Tu usuario está desactivado. Hablá con el administrador del consultorio.';
 
     const cuentaUsuario = await this.get<Cuenta>(`${this.api}/cuentas/${usuario.cuentaId}`);
-    if (!cuentaUsuario) return ERROR_CONEXION;
+    if (!cuentaUsuario) return 'No se pudo conectar con el servidor. ¿Está corriendo la API local?';
     if (cuentaUsuario.estado === 'suspendida') return 'La cuenta del consultorio está suspendida. Contactate con el administrador de la plataforma.';
 
     this.setSesion({ cuenta: cuentaUsuario, usuario });
     this.guardar({ tipo: 'usuario', id: usuario.id });
     return null;
+  }
+
+  /**
+   * Recuperación de cuenta (MOCK): busca si el identificador existe y simula
+   * el envío de instrucciones. En el backend real: token de un solo uso por
+   * email/WhatsApp. Siempre responde neutro para no revelar si la cuenta existe.
+   */
+  async recuperarCuenta(identificador: string): Promise<{ ok: boolean; detalle: string }> {
+    const id = identificador.trim().toLowerCase();
+    if (!id) return { ok: false, detalle: 'Ingresá tu DNI o tu email.' };
+
+    let existe = false;
+    if (/^[0-9]{7,9}$/.test(id)) {
+      const [cs, us] = await Promise.all([
+        this.get<Cuenta[]>(`${this.api}/cuentas?dni=${encodeURIComponent(id)}`),
+        this.get<Usuario[]>(`${this.api}/usuarios?dni=${encodeURIComponent(id)}`)
+      ]);
+      existe = !!cs?.some(c => c.dni === id) || !!us?.some(u => u.dni === id);
+    } else {
+      const [cs, us, ads] = await Promise.all([
+        this.get<Cuenta[]>(`${this.api}/cuentas?email=${encodeURIComponent(id)}`),
+        this.get<Usuario[]>(`${this.api}/usuarios?email=${encodeURIComponent(id)}`),
+        this.get<Administrador[]>(`${this.api}/administradores?email=${encodeURIComponent(id)}`)
+      ]);
+      existe = !!(cs?.length || us?.length || ads?.length);
+    }
+    // Respuesta neutra a propósito (buena práctica de seguridad).
+    void existe;
+    return {
+      ok: true,
+      detalle: 'Si el DNI o email corresponde a una cuenta, vas a recibir un mensaje con los pasos para crear una contraseña nueva. (Simulado: el envío real por email/WhatsApp lo hace el backend.)'
+    };
   }
 
   private setSesion(s: { admin?: Administrador; cuenta?: Cuenta; usuario?: Usuario }): void {

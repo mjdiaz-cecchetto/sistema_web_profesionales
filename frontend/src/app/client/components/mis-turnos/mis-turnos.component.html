@@ -217,7 +217,7 @@
         <p class="field-label px-1">Turnos anteriores</p>
         <div class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
           <div *ngFor="let t of turnosPasados()" class="px-5 py-3 flex items-center justify-between gap-3 text-[11px]"
-               [class.opacity-60]="t.status === 'CANCELLED'">
+               [class.opacity-60]="t.status === 'CANCELLED' || t.status === 'EXPIRED'">
             <span class="font-bold text-stone-600">{{ formatFecha(t.date) }} · {{ t.time }} hs</span>
             <span class="text-stone-500 truncate flex-1 text-center">
               <span *ngIf="esConsultorio()" class="font-bold text-teal-700">{{ nombreProfesionalDe(t) }} · </span>{{ t.serviceName }}
@@ -226,8 +226,8 @@
                   [class.chip-confirmed]="t.status === 'CONFIRMED' || t.status === 'ATTENDED'"
                   [class.chip-pending]="t.status === 'PENDING'"
                   [class.chip-cancelled]="t.status === 'CANCELLED'"
-                  [ngClass]="{'bg-orange-100 text-orange-800 border-orange-200': t.status === 'NO_SHOW'}">
-              {{ t.status === 'ATTENDED' ? 'Asististe' : t.status === 'NO_SHOW' ? 'No asististe' : t.status === 'CONFIRMED' ? 'Realizado' : t.status === 'PENDING' ? 'Pendiente' : 'Cancelado' }}
+                  [ngClass]="{'bg-orange-100 text-orange-800 border-orange-200': t.status === 'NO_SHOW', 'bg-stone-100 text-stone-500 border-stone-200': t.status === 'EXPIRED'}">
+              {{ t.status === 'ATTENDED' ? 'Asististe' : t.status === 'NO_SHOW' ? 'No asististe' : t.status === 'CONFIRMED' ? 'Realizado' : t.status === 'PENDING' ? 'Pendiente' : t.status === 'EXPIRED' ? 'Vencido (sin confirmar)' : 'Cancelado' }}
             </span>
           </div>
         </div>

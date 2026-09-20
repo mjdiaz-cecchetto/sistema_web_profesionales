@@ -1,5 +1,5 @@
 <div *ngIf="adminService.esConsultorio()" class="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-0.5">
-  <button *ngFor="let p of adminService.profesionalesActivos()"
+  <button *ngFor="let p of adminService.profesionalesOperables()"
           (click)="adminService.seleccionId.set(p.id)"
           [ngClass]="adminService.focoId() === p.id
             ? 'bg-teal-100 text-teal-900 border-teal-300'

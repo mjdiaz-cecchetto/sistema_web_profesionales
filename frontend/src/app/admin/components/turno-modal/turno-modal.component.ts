@@ -65,7 +65,7 @@ export class TurnoModalComponent {
     this.servicioNombre.set(turno.serviceName);
     this.lugar.set(turno.location);
     this.notas.set(turno.notes || '');
-    this.estadoInicial.set(turno.status === 'CANCELLED' ? 'PENDING' : turno.status);
+    this.estadoInicial.set(turno.status === 'CANCELLED' || turno.status === 'EXPIRED' ? 'PENDING' : turno.status);
     this.repetir.set(false);
 
     const pac = this.adminService.patients().find(p => p.dni === turno.patientDni);
@@ -155,7 +155,7 @@ export class TurnoModalComponent {
     const editandoId = this.turnoOriginal()?.id;
     const prof = this.profId();
     return this.adminService.appointments()
-      .filter(a => a.status !== 'CANCELLED' && a.id !== editandoId && a.profesionalId === prof);
+      .filter(a => a.status !== 'CANCELLED' && a.status !== 'EXPIRED' && a.id !== editandoId && a.profesionalId === prof);
   });
 
   nombreMesMini = computed(() => {
@@ -536,6 +536,13 @@ export class TurnoModalComponent {
   formatFecha = formatDMY;
 
   statusLabel(status: string): string {
-    return status === 'CONFIRMED' ? 'Confirmado' : status === 'PENDING' ? 'Pendiente' : 'Cancelado';
+    switch (status) {
+      case 'CONFIRMED': return 'Confirmado';
+      case 'PENDING': return 'Pendiente';
+      case 'ATTENDED': return 'Asistió';
+      case 'NO_SHOW': return 'No asistió';
+      case 'EXPIRED': return 'Vencido';
+      default: return 'Cancelado';
+    }
   }
 }

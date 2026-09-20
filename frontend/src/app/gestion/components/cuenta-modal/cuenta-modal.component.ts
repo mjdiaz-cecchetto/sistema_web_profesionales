@@ -24,6 +24,9 @@ export class CuentaModalComponent implements OnInit {
   nombre = signal('');
   especialidad = signal('');
   email = signal('');
+  /** Credencial de acceso elegida (solo consultorios; los profesionales van siempre con DNI). */
+  credencial = signal<'email' | 'dni'>('email');
+  dni = signal('');
   /** Alta: contraseña inicial. Edición: dejar vacío = no cambiarla. */
   password = signal('');
   verPassword = signal(false);
@@ -44,6 +47,11 @@ export class CuentaModalComponent implements OnInit {
     return this.cuenta === null;
   }
 
+  /** true cuando esta cuenta accede con DNI (profesional siempre; consultorio si lo eligió). */
+  usaDni(): boolean {
+    return this.tipo() === 'profesional' || this.credencial() === 'dni';
+  }
+
   ngOnInit(): void {
     const c = this.cuenta;
     if (!c) this.plan.set(this.gestion.planesActivos()[0]?.id ?? '');
@@ -51,6 +59,8 @@ export class CuentaModalComponent implements OnInit {
       this.tipo.set(c.tipo);
       this.nombre.set(c.nombre);
       this.email.set(c.email);
+      this.dni.set(c.dni ?? '');
+      this.credencial.set(c.dni ? 'dni' : 'email');
       this.descripcion.set(c.descripcion);
       this.plan.set(c.plan);
       this.slug.set(c.slug);
@@ -75,10 +85,15 @@ export class CuentaModalComponent implements OnInit {
     return this.tipo() === 'consultorio' ? '/c/' : '/p/';
   }
 
-  private validar(): string | null {
+  private async validar(): Promise<string | null> {
     if (!this.nombre().trim()) return 'Ingresá el nombre de la cuenta.';
     const mail = this.email().trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return 'Ingresá un email válido.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return 'Ingresá un email válido (se usa para avisos y recuperación).';
+    if (this.usaDni()) {
+      const dni = this.dni().trim();
+      if (!/^[0-9]{7,9}$/.test(dni)) return 'Ingresá un DNI válido (entre 7 y 9 números, sin puntos).';
+      if (!(await this.gestion.dniDisponible(dni, this.cuenta?.id))) return 'Ese DNI ya se usa como credencial en la plataforma.';
+    }
     if (this.esNueva && this.password().length < 6) return 'La contraseña inicial debe tener al menos 6 caracteres.';
     if (!this.esNueva && this.password() && this.password().length < 6) return 'La nueva contraseña debe tener al menos 6 caracteres.';
     if (!this.plan()) return 'Elegí un plan de membresía.';
@@ -92,7 +107,7 @@ export class CuentaModalComponent implements OnInit {
 
   async guardar(): Promise<void> {
     if (this.gestion.saving()) return;
-    const err = this.validar();
+    const err = await this.validar();
     if (err) { this.error.set(err); return; }
     this.error.set(null);
 
@@ -101,6 +116,7 @@ export class CuentaModalComponent implements OnInit {
         tipo: this.tipo(),
         nombre: this.nombre(),
         email: this.email(),
+        dni: this.usaDni() ? this.dni().trim() : undefined,
         password: this.password(),
         descripcion: this.descripcion(),
         plan: this.plan(),
@@ -115,6 +131,7 @@ export class CuentaModalComponent implements OnInit {
     const cambios: Partial<Cuenta> = {
       nombre: this.nombre().trim(),
       email: this.email().trim().toLowerCase(),
+      dni: this.usaDni() ? this.dni().trim() : null,
       descripcion: this.descripcion().trim(),
       plan: this.plan(),
       slug: this.slug()

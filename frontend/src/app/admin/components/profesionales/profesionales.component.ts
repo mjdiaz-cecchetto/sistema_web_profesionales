@@ -34,6 +34,7 @@ export class ProfesionalesComponent {
   consNombre = signal('');
   consDescripcion = signal('');
   consHorasMinimas = signal(24);
+  consHorasVencimiento = signal(12);
   private consInicializado = false;
 
   // ---- Alta de profesional ----
@@ -50,14 +51,20 @@ export class ProfesionalesComponent {
   panelUsuarios = signal(false);
   usrNombre = signal('');
   usrEmail = signal('');
+  usrDni = signal('');
   usrPassword = signal('');
   usrRol = signal<'secretaria' | 'profesional'>('secretaria');
   usrProfesionalId = signal('');
+  /** Alta de secretaría: agendas asignadas (vacío = todo el centro). */
+  usrAsignados = signal<string[]>([]);
   usrError = signal('');
   usrGuardando = signal(false);
   /** Usuario al que se le está reseteando la contraseña. */
   resetUsuarioId = signal<string | null>(null);
   resetPassword = signal('');
+  /** Secretaría a la que se le están editando las agendas asignadas. */
+  asignarUsuarioId = signal<string | null>(null);
+  asignarSeleccion = signal<string[]>([]);
 
   // ---- Administración de especialidades ----
   panelEspecialidades = signal(false);
@@ -76,6 +83,7 @@ export class ProfesionalesComponent {
         this.consNombre.set(c.nombre);
         this.consDescripcion.set(c.descripcion);
         this.consHorasMinimas.set(c.horasMinimasCancelacion ?? 24);
+        this.consHorasVencimiento.set(c.horasVencimientoPendiente ?? 12);
       }
     });
   }
@@ -126,16 +134,19 @@ export class ProfesionalesComponent {
   turnosProximosDe(profId: string): number {
     const hoy = todayLocal();
     return this.adminService.appointments()
-      .filter(a => a.profesionalId === profId && a.status !== 'CANCELLED' && a.date >= hoy).length;
+      .filter(a => a.profesionalId === profId && a.status !== 'CANCELLED' && a.status !== 'EXPIRED' && a.date >= hoy).length;
   }
 
   async guardarConsultorio() {
     const horas = Math.max(0, Math.min(168, Number(this.consHorasMinimas()) || 0));
     this.consHorasMinimas.set(horas);
+    const horasVenc = Math.max(0, Math.min(168, Number(this.consHorasVencimiento()) || 0));
+    this.consHorasVencimiento.set(horasVenc);
     const ok = await this.adminService.updateCuenta({
       nombre: this.consNombre().trim() || 'Mi Consultorio',
       descripcion: this.consDescripcion().trim(),
-      horasMinimasCancelacion: horas
+      horasMinimasCancelacion: horas,
+      horasVencimientoPendiente: horasVenc
     });
     if (ok) this.mostrarToast('Datos del consultorio actualizados.');
   }
@@ -238,27 +249,63 @@ export class ProfesionalesComponent {
     }
   }
 
+  /** Marca/desmarca un profesional en una lista de asignación de agendas. */
+  toggleAsignado(lista: 'alta' | 'edicion', profId: string) {
+    const sig = lista === 'alta' ? this.usrAsignados : this.asignarSeleccion;
+    sig.set(sig().includes(profId) ? sig().filter(id => id !== profId) : [...sig(), profId]);
+  }
+
+  /** Texto de las agendas que gestiona una secretaría. */
+  agendasDe(u: Usuario): string {
+    if (u.rol !== 'secretaria') return '';
+    if (!u.profesionalesAsignados?.length) return 'Todo el centro';
+    return u.profesionalesAsignados
+      .map(id => this.adminService.nombreDe(id) || '(profesional eliminado)')
+      .join(' · ');
+  }
+
+  abrirAsignacion(u: Usuario) {
+    this.asignarUsuarioId.set(u.id);
+    this.asignarSeleccion.set([...(u.profesionalesAsignados ?? [])]);
+    this.resetUsuarioId.set(null);
+  }
+
+  async confirmarAsignacion() {
+    const id = this.asignarUsuarioId();
+    if (!id) return;
+    const ok = await this.adminService.updateUsuario(id, { profesionalesAsignados: this.asignarSeleccion() });
+    if (ok) {
+      this.asignarUsuarioId.set(null);
+      this.mostrarToast('Agendas asignadas actualizadas.');
+    }
+  }
+
   async crearUsuario() {
     if (this.usrGuardando()) return;
     this.usrError.set('');
     const nombre = this.usrNombre().trim();
     const email = this.usrEmail().trim().toLowerCase();
+    const dni = this.usrDni().trim();
     const password = this.usrPassword();
     const rol = this.usrRol();
     const profesionalId = rol === 'profesional' ? this.usrProfesionalId() : undefined;
+    const profesionalesAsignados = rol === 'secretaria' ? this.usrAsignados() : undefined;
 
-    if (!nombre || !email || !password) { this.usrError.set('Completá nombre, email y contraseña.'); return; }
+    if (!nombre || !email || !dni || !password) { this.usrError.set('Completá nombre, DNI, email y contraseña.'); return; }
+    if (!/^[0-9]{7,9}$/.test(dni)) { this.usrError.set('El DNI debe tener entre 7 y 9 números (es la credencial de ingreso).'); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { this.usrError.set('El email no es válido.'); return; }
     if (password.length < 6) { this.usrError.set('La contraseña debe tener al menos 6 caracteres.'); return; }
     if (rol === 'profesional' && !profesionalId) { this.usrError.set('Elegí a qué profesional corresponde este usuario.'); return; }
     if (this.adminService.emailUsuarioOcupado(email)) { this.usrError.set('Ya existe un usuario del equipo con ese email.'); return; }
+    if (this.adminService.dniUsuarioOcupado(dni)) { this.usrError.set('Ya existe un usuario del equipo con ese DNI.'); return; }
 
     this.usrGuardando.set(true);
-    const creado = await this.adminService.addUsuario({ nombre, email, password, rol, profesionalId });
+    const creado = await this.adminService.addUsuario({ nombre, email, dni, password, rol, profesionalId, profesionalesAsignados });
     this.usrGuardando.set(false);
     if (creado) {
-      this.usrNombre.set(''); this.usrEmail.set(''); this.usrPassword.set('');
-      this.mostrarToast(`Usuario de ${creado.rol === 'secretaria' ? 'secretaría' : 'profesional'} creado. Ya puede entrar por /login.`);
+      this.usrNombre.set(''); this.usrEmail.set(''); this.usrDni.set(''); this.usrPassword.set('');
+      this.usrAsignados.set([]);
+      this.mostrarToast(`Usuario de ${creado.rol === 'secretaria' ? 'secretaría' : 'profesional'} creado. Entra por /login con su DNI.`);
     } else {
       this.usrError.set('No se pudo crear el usuario.');
     }
@@ -272,6 +319,7 @@ export class ProfesionalesComponent {
   abrirReset(u: Usuario) {
     this.resetUsuarioId.set(u.id);
     this.resetPassword.set('');
+    this.asignarUsuarioId.set(null);
   }
 
   async confirmarReset() {

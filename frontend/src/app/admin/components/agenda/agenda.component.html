@@ -36,6 +36,7 @@
           <option value="PENDING">Pendiente</option>
           <option value="ATTENDED">Asistió</option>
           <option value="NO_SHOW">No asistió</option>
+          <option value="EXPIRED">Vencido</option>
           <option value="CANCELLED">Cancelado</option>
         </select>
         <svg class="w-4 h-4 text-stone-400 absolute right-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -149,7 +150,7 @@
       <div *ngIf="filteredAppointments().length > 0; else noResults" class="divide-y divide-stone-100">
         <div *ngFor="let appt of paginatedAppointments()"
              class="px-4 sm:px-6 py-3.5 hover:bg-teal-50/60 transition-colors flex flex-col lg:flex-row lg:items-center gap-3"
-             [class.opacity-60]="appt.status === 'CANCELLED'">
+             [class.opacity-60]="appt.status === 'CANCELLED' || appt.status === 'EXPIRED'">
 
           <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-800 font-extrabold text-sm items-center justify-center shrink-0 border border-teal-200 hidden lg:flex">
             {{ getInitials(appt.patientName) }}
@@ -164,7 +165,8 @@
                       [class.chip-confirmed]="appt.status === 'CONFIRMED'"
                       [class.chip-pending]="appt.status === 'PENDING'"
                       [class.chip-cancelled]="appt.status === 'CANCELLED'"
-                      [ngClass]="{'bg-sky-100 text-sky-800 border-sky-200': appt.status === 'ATTENDED', 'bg-orange-100 text-orange-800 border-orange-200': appt.status === 'NO_SHOW'}">
+                      [ngClass]="{'bg-sky-100 text-sky-800 border-sky-200': appt.status === 'ATTENDED', 'bg-orange-100 text-orange-800 border-orange-200': appt.status === 'NO_SHOW', 'bg-stone-100 text-stone-500 border-stone-200': appt.status === 'EXPIRED'}"
+                      [title]="appt.status === 'EXPIRED' ? 'Nadie confirmó este turno a tiempo: se liberó el lugar' : ''">
                   {{ statusLabel(appt.status) }}
                 </span>
                 <span *ngIf="appt.serieId" class="chip shrink-0 bg-violet-50 text-violet-800 border-violet-200 !text-[9px]"
@@ -225,6 +227,12 @@
                       class="bg-white hover:bg-rose-50 hover:text-rose-700 border border-stone-200 hover:border-rose-200 text-stone-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors flex-1 lg:flex-initial text-center">
                 Cancelar
               </button>
+              <button *ngIf="appt.serieId && !esPasado(appt) && (appt.status === 'PENDING' || appt.status === 'CONFIRMED') && serieCancelables(appt.serieId!) > 1 && (serieAMover() !== appt.serieId || moverAnclaId() !== appt.id)"
+                      (click)="abrirMoverSerie(appt)"
+                      title="Mover todos los turnos futuros de la serie a otro día y horario"
+                      class="bg-white hover:bg-teal-50 hover:text-teal-800 border border-stone-200 hover:border-teal-300 text-stone-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors flex-1 lg:flex-initial text-center whitespace-nowrap">
+                Mover serie
+              </button>
               <button *ngIf="appt.serieId && !esPasado(appt) && (appt.status === 'PENDING' || appt.status === 'CONFIRMED') && serieAConfirmar() !== appt.serieId && serieCancelables(appt.serieId!) > 1"
                       (click)="serieAConfirmar.set(appt.serieId!)"
                       title="Cancelar todos los turnos futuros de la serie"
@@ -236,6 +244,44 @@
                       class="bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-300 px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold transition-colors flex-1 lg:flex-initial text-center whitespace-nowrap animate-scale-in">
                 ¿Cancelar {{ serieCancelables(appt.serieId!) }} turnos?
               </button>
+            </div>
+
+            <!-- ===== Panel: mover la serie completa ===== -->
+            <div *ngIf="appt.serieId && serieAMover() === appt.serieId && moverAnclaId() === appt.id"
+                 class="lg:col-span-12 bg-violet-50/60 border border-violet-200 rounded-xl p-3.5 animate-scale-in space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-[11px] font-extrabold text-violet-900">
+                  Mover los {{ serieCancelables(appt.serieId!) }} turnos futuros de la serie a:
+                </p>
+                <button (click)="serieAMover.set(null)" class="text-[11px] font-bold text-stone-400 hover:text-stone-600 hover:underline shrink-0">Cancelar</button>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="relative">
+                  <select [ngModel]="moverDow()" (ngModelChange)="cambiarMoverDow($event)"
+                          class="input !text-xs !py-1.5 !pr-8 appearance-none cursor-pointer w-36">
+                    <option *ngFor="let d of diasDisponiblesSerie()" [ngValue]="d.dayIndex">{{ d.day }}</option>
+                  </select>
+                  <svg class="w-3.5 h-3.5 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div class="relative">
+                  <select [ngModel]="moverHora()" (ngModelChange)="moverHora.set($event)"
+                          class="input !text-xs !py-1.5 !pr-8 appearance-none cursor-pointer w-28">
+                    <option *ngFor="let hr of horasDisponiblesSerie()" [value]="hr">{{ hr }} hs</option>
+                  </select>
+                  <svg class="w-3.5 h-3.5 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <label class="flex items-center gap-1.5 text-[10px] font-bold text-stone-600 cursor-pointer select-none">
+                  <input type="checkbox" [ngModel]="moverOmitir()" (ngModelChange)="moverOmitir.set($event)"
+                         class="w-3.5 h-3.5 rounded border-stone-300 text-teal-600 focus:ring-teal-400">
+                  Omitir los que tengan conflicto
+                </label>
+                <button (click)="confirmarMoverSerie(appt.serieId!)" [disabled]="adminService.saving()"
+                        class="bg-violet-200 hover:bg-violet-300 text-violet-950 border border-violet-300 px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-colors ml-auto">
+                  {{ adminService.saving() ? 'Moviendo…' : 'Mover serie' }}
+                </button>
+              </div>
+              <p class="text-[10px] text-stone-500">Cada turno pasa al día elegido de su misma semana (se mantiene el espaciado semanal/quincenal).</p>
+              <p *ngIf="moverError()" class="text-[10px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-2.5 py-1.5 font-semibold">{{ moverError() }}</p>
             </div>
 
           </div>

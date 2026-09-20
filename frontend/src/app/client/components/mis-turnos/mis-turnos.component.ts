@@ -81,14 +81,14 @@ export class MisTurnosComponent implements OnInit {
   turnosFuturos = computed(() => {
     const hoy = todayLocal();
     return this.turnos()
-      .filter(t => t.status !== 'CANCELLED' && t.date >= hoy)
+      .filter(t => t.status !== 'CANCELLED' && t.status !== 'EXPIRED' && t.date >= hoy)
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
   });
 
   turnosPasados = computed(() => {
     const hoy = todayLocal();
     return this.turnos()
-      .filter(t => t.date < hoy || t.status === 'CANCELLED')
+      .filter(t => t.date < hoy || t.status === 'CANCELLED' || t.status === 'EXPIRED')
       .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
       .slice(0, 5);
   });

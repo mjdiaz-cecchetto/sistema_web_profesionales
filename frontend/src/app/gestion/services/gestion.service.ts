@@ -19,6 +19,8 @@ export interface AltaCuenta {
   tipo: 'consultorio' | 'profesional';
   nombre: string;
   email: string;
+  /** Credencial por DNI: obligatoria para profesionales; opcional (a elección) para consultorios. */
+  dni?: string;
   password: string;
   descripcion: string;
   plan: string;
@@ -146,6 +148,21 @@ export class GestionService {
   }
 
   /**
+   * true si el DNI está libre como credencial en TODA la plataforma:
+   * ni otra cuenta ni un usuario de equipo lo usan para loguearse.
+   */
+  dniDisponible(dni: string, ignorarCuentaId?: string): Promise<boolean> {
+    const limpio = dni.trim();
+    if (this.cuentas().some(c => c.dni === limpio && c.id !== ignorarCuentaId)) return Promise.resolve(false);
+    return new Promise(resolve => {
+      this.http.get<{ dni: string }[]>(`${this.api}/usuarios?dni=${encodeURIComponent(limpio)}`).subscribe({
+        next: us => resolve(!us.some(u => u.dni === limpio)),
+        error: () => resolve(true) // sin API igual falla el POST después
+      });
+    });
+  }
+
+  /**
    * Alta de cuenta. Para un profesional independiente crea además su perfil
    * profesional y su disponibilidad vacía (para que el panel y la página
    * pública funcionen desde el primer login).
@@ -156,6 +173,7 @@ export class GestionService {
       id: 'cta-' + Date.now().toString(36),
       tipo: datos.tipo,
       email: datos.email.trim().toLowerCase(),
+      dni: datos.dni?.trim() || null,
       password: datos.password,
       nombre: datos.nombre.trim(),
       slug: datos.slug,

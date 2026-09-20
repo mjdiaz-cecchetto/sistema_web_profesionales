@@ -169,7 +169,7 @@
               Todos los profesionales
             </button>
             <div class="border-t border-stone-100"></div>
-            <button *ngFor="let p of adminService.profesionalesActivos()"
+            <button *ngFor="let p of adminService.profesionalesOperables()"
                     (click)="elegir(p.id)"
                     [ngClass]="adminService.seleccionId() === p.id ? 'bg-teal-50 text-teal-900' : 'text-stone-600 hover:bg-stone-50'"
                     class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold transition-colors text-left">

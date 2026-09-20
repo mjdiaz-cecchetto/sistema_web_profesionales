@@ -47,7 +47,7 @@ export class DashboardComponent {
     return { asistidos, ausentes, porcentaje: total > 0 ? Math.round((asistidos / total) * 100) : null };
   });
   pendingCount = computed(() => this.adminService.turnosVisibles().filter(a => a.status === 'PENDING').length);
-  totalReservationsCount = computed(() => this.adminService.turnosVisibles().filter(a => a.status !== 'CANCELLED').length);
+  totalReservationsCount = computed(() => this.adminService.turnosVisibles().filter(a => a.status !== 'CANCELLED' && a.status !== 'EXPIRED').length);
   uniquePatientsCount = computed(() => this.adminService.pacientesVisibles().length);
 
   statCards = computed(() => [
@@ -80,12 +80,27 @@ export class DashboardComponent {
     }
   ]);
 
+  /** Últimos avisos de WhatsApp registrados sobre turnos visibles (mock: envío real en backend). */
+  avisosRecientes = computed(() => {
+    const idsVisibles = new Set(this.adminService.turnosVisibles().map(a => a.id));
+    return [...this.adminService.notificaciones()]
+      .filter(n => idsVisibles.has(n.turnoId))
+      .sort((a, b) => b.fecha.localeCompare(a.fecha))
+      .slice(0, 4);
+  });
+
+  fechaAviso(iso: string): string {
+    const d = new Date(iso);
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
   statusLabel(status: string): string {
     switch (status) {
       case 'CONFIRMED': return 'Confirmado';
       case 'PENDING': return 'Pendiente';
       case 'ATTENDED': return 'Asistió';
       case 'NO_SHOW': return 'No asistió';
+      case 'EXPIRED': return 'Vencido';
       default: return 'Cancelado';
     }
   }

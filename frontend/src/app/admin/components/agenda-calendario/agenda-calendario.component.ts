@@ -19,7 +19,7 @@ interface CeldaDia {
   total: number;
 }
 
-type FiltroEstado = 'ALL' | 'CONFIRMED' | 'PENDING' | 'ATTENDED' | 'NO_SHOW' | 'CANCELLED';
+type FiltroEstado = 'ALL' | 'CONFIRMED' | 'PENDING' | 'ATTENDED' | 'NO_SHOW' | 'EXPIRED' | 'CANCELLED';
 
 @Component({
   selector: 'app-agenda-calendario',
@@ -55,6 +55,7 @@ export class AgendaCalendarioComponent {
     { label: 'Pendientes', value: 'PENDING', dotClass: 'bg-amber-400', activeClass: 'bg-amber-100 text-amber-900 border-amber-200' },
     { label: 'Asistió', value: 'ATTENDED', dotClass: 'bg-sky-400', activeClass: 'bg-sky-100 text-sky-800 border-sky-200' },
     { label: 'No asistió', value: 'NO_SHOW', dotClass: 'bg-orange-400', activeClass: 'bg-orange-100 text-orange-800 border-orange-200' },
+    { label: 'Vencidos', value: 'EXPIRED', dotClass: 'bg-stone-300', activeClass: 'bg-stone-100 text-stone-600 border-stone-200' },
     { label: 'Cancelados', value: 'CANCELLED', dotClass: 'bg-rose-400', activeClass: 'bg-rose-100 text-rose-800 border-rose-200' }
   ];
 
@@ -82,6 +83,7 @@ export class AgendaCalendarioComponent {
       PENDING: list.filter(a => a.status === 'PENDING').length,
       ATTENDED: list.filter(a => a.status === 'ATTENDED').length,
       NO_SHOW: list.filter(a => a.status === 'NO_SHOW').length,
+      EXPIRED: list.filter(a => a.status === 'EXPIRED').length,
       CANCELLED: list.filter(a => a.status === 'CANCELLED').length
     };
   });
@@ -127,7 +129,7 @@ export class AgendaCalendarioComponent {
         confirmed: turnos.filter(t => t.status === 'CONFIRMED').length,
         pending: turnos.filter(t => t.status === 'PENDING').length,
         attended: turnos.filter(t => t.status === 'ATTENDED' || t.status === 'NO_SHOW').length,
-        cancelled: turnos.filter(t => t.status === 'CANCELLED').length,
+        cancelled: turnos.filter(t => t.status === 'CANCELLED' || t.status === 'EXPIRED').length,
         total: turnos.length
       });
     }
@@ -229,6 +231,7 @@ export class AgendaCalendarioComponent {
       case 'PENDING': return 'Pendiente';
       case 'ATTENDED': return 'Asistió';
       case 'NO_SHOW': return 'No asistió';
+      case 'EXPIRED': return 'Vencido';
       default: return 'Cancelado';
     }
   }

@@ -9,6 +9,8 @@ import {
   Cuenta,
   DayAvailability,
   Especialidad,
+  HistoriaClinicaEntry,
+  Notificacion,
   Patient,
   Plan,
   ProfessionalAvailability,
@@ -60,6 +62,10 @@ export class AdminService {
   plan = signal<Plan | null>(null);
   /** Usuarios del equipo (secretaría / profesionales con login). Solo los ve el dueño. */
   usuarios = signal<Usuario[]>([]);
+  /** Historias clínicas de la cuenta (se exponen filtradas por profesional tratante). */
+  private historias = signal<HistoriaClinicaEntry[]>([]);
+  /** Avisos de WhatsApp registrados (mock: el backend hará el envío real). */
+  notificaciones = signal<Notificacion[]>([]);
 
   /** Selector global del panel: 'ALL' (todos) o el id de un profesional. */
   seleccionId = signal<string>('ALL');
@@ -80,13 +86,35 @@ export class AdminService {
   /** true cuando la cuenta logueada es un consultorio. */
   esConsultorio = computed(() => this.cuenta()?.tipo === 'consultorio');
 
+  /**
+   * Alcance de una SECRETARÍA ASIGNADA: set de ids de profesionales cuyas
+   * agendas gestiona, o null si no hay restricción (dueño, secretaría
+   * general del centro, o rol profesional que ya tiene su propio scoping).
+   */
+  alcanceSecretaria = computed<Set<string> | null>(() => {
+    const u = this.auth.usuario();
+    if (!u || u.rol !== 'secretaria' || !u.profesionalesAsignados?.length) return null;
+    return new Set(u.profesionalesAsignados);
+  });
+
+  /** Profesionales que quien está logueado puede operar (selector, alta de turnos). */
+  profesionalesOperables = computed(() => {
+    const propio = this.auth.profesionalIdUsuario();
+    if (propio) return this.profesionalesActivos().filter(p => p.id === propio);
+    const alcance = this.alcanceSecretaria();
+    if (alcance) return this.profesionalesActivos().filter(p => alcance.has(p.id));
+    return this.profesionalesActivos();
+  });
+
   /** Profesional "en foco" para las vistas de configuración (si la selección es ALL, el primero activo).
    *  Un usuario con rol PROFESIONAL queda siempre clavado en su propio profesional. */
   focoId = computed(() => {
     const propio = this.auth.profesionalIdUsuario();
     if (propio) return propio;
+    const alcance = this.alcanceSecretaria();
     const sel = this.seleccionId();
-    if (sel !== 'ALL' && this.professionals().some(p => p.id === sel)) return sel;
+    if (sel !== 'ALL' && this.professionals().some(p => p.id === sel) && (!alcance || alcance.has(sel))) return sel;
+    if (alcance) return this.profesionalesOperables()[0]?.id ?? '';
     return this.profesionalesActivos()[0]?.id ?? this.professionals()[0]?.id ?? '';
   });
 
@@ -98,26 +126,85 @@ export class AdminService {
   /** Disponibilidad del profesional en foco. */
   availability = computed<DayAvailability[]>(() => this.disponibilidades()[this.focoId()] ?? []);
 
-  /** Turnos visibles según el selector global (o SOLO los propios para el rol profesional). */
-  turnosVisibles = computed(() => {
+  /** Turnos dentro del ALCANCE de quien está logueado (sin aplicar el selector):
+   *  propios para el rol profesional, los asignados para una secretaría asignada. */
+  turnosAlcance = computed(() => {
     const list = this.appointments();
     const propio = this.auth.profesionalIdUsuario();
     if (propio) return list.filter(a => a.profesionalId === propio);
+    const alcance = this.alcanceSecretaria();
+    if (alcance) return list.filter(a => alcance.has(a.profesionalId));
+    return list;
+  });
+
+  /** Turnos visibles: el alcance del rol + el selector global. */
+  turnosVisibles = computed(() => {
+    const list = this.turnosAlcance();
+    if (this.auth.profesionalIdUsuario()) return list;
     const sel = this.seleccionId();
     return sel === 'ALL' ? list : list.filter(a => a.profesionalId === sel);
   });
 
   /**
-   * Pacientes visibles según el rol: dueño y secretaría ven el padrón
-   * completo; el rol profesional solo a los pacientes que él atendió
-   * (algún turno suyo, en cualquier estado).
+   * Pacientes visibles según el rol: dueño y secretaría general ven el
+   * padrón completo; el rol profesional solo a los pacientes que él atendió;
+   * una secretaría asignada, a los pacientes de sus profesionales.
    */
   pacientesVisibles = computed(() => {
-    const propio = this.auth.profesionalIdUsuario();
-    if (!propio) return this.patients();
-    const dnis = new Set(this.appointments().filter(a => a.profesionalId === propio).map(a => a.patientDni));
+    if (!this.auth.profesionalIdUsuario() && !this.alcanceSecretaria()) return this.patients();
+    const dnis = new Set(this.turnosAlcance().map(a => a.patientDni));
     return this.patients().filter(p => dnis.has(p.dni));
   });
+
+  // ---- Historia clínica (dato sensible: SOLO el profesional tratante) ----
+
+  /**
+   * Profesional "clínico" de la sesión: el profesional logueado, o el
+   * titular de una cuenta independiente. null = sin acceso a historias
+   * (dueño de consultorio, secretarías, impersonación de soporte).
+   */
+  profesionalClinico = computed<string | null>(() => {
+    const propio = this.auth.profesionalIdUsuario();
+    if (propio) return propio;
+    if (this.cuenta()?.tipo === 'profesional' && this.auth.esDuenio() && !this.auth.esAdmin()) {
+      return this.professionals()[0]?.id ?? null;
+    }
+    return null;
+  });
+
+  puedeVerHistoria = computed(() => this.profesionalClinico() !== null);
+
+  /** Entradas de historia clínica de un paciente ESCRITAS por el profesional clínico. */
+  historiasDe(pacienteId: string): HistoriaClinicaEntry[] {
+    const prof = this.profesionalClinico();
+    if (!prof) return [];
+    return this.historias()
+      .filter(h => h.pacienteId === pacienteId && h.profesionalId === prof)
+      .sort((a, b) => b.fecha.localeCompare(a.fecha));
+  }
+
+  addHistoria(datos: Omit<HistoriaClinicaEntry, 'id' | 'cuentaId' | 'profesionalId'>): Promise<HistoriaClinicaEntry | null> {
+    const prof = this.profesionalClinico();
+    const cuentaId = this.cuenta()?.id ?? '';
+    if (!prof || !cuentaId) return Promise.resolve(null);
+    this.saving.set(true);
+    const nueva: HistoriaClinicaEntry = {
+      ...datos,
+      cuentaId,
+      profesionalId: prof,
+      id: 'hc-' + Date.now().toString(36) + Math.floor(Math.random() * 1000)
+    };
+    return new Promise(resolve => {
+      this.http.post<HistoriaClinicaEntry>(`${this.api}/historias`, nueva).subscribe({
+        next: creada => {
+          this.historias.set([...this.historias(), creada]);
+          this.saving.set(false);
+          resolve(creada);
+        },
+        error: () => { this.apiError.set(true); this.saving.set(false); resolve(null); }
+      });
+    });
+  }
 
   /** Servicios del profesional en foco. */
   serviciosDelFoco = computed(() => this.services().filter(s => s.profesionalId === this.focoId()));
@@ -190,7 +277,7 @@ export class AdminService {
     this.loading.set(true);
     this.apiError.set(false);
 
-    let pendientes = 10;
+    let pendientes = 12;
     const done = () => { if (--pendientes === 0) this.loading.set(false); };
     const fail = () => { this.apiError.set(true); done(); };
 
@@ -208,7 +295,15 @@ export class AdminService {
       error: fail
     });
     this.http.get<Appointment[]>(`${this.api}/appointments?${q}`).subscribe({
-      next: list => { this.appointments.set(list); done(); },
+      next: list => { this.appointments.set(this.aplicarVencimientos(list)); done(); },
+      error: fail
+    });
+    this.http.get<HistoriaClinicaEntry[]>(`${this.api}/historias?${q}`).subscribe({
+      next: list => { this.historias.set(list); done(); },
+      error: fail
+    });
+    this.http.get<Notificacion[]>(`${this.api}/notificaciones?${q}`).subscribe({
+      next: list => { this.notificaciones.set(list); done(); },
       error: fail
     });
     this.http.get<BlockedDateRange[]>(`${this.api}/blockedDates?${q}`).subscribe({
@@ -247,11 +342,71 @@ export class AdminService {
     }
   }
 
+  /**
+   * VENCIMIENTO de turnos pendientes: un turno PENDING que nadie confirmó
+   * hasta `horasVencimientoPendiente` horas antes del inicio pasa a EXPIRED
+   * y libera el lugar. Acá se aplica al cargar (mock); en el backend real
+   * lo hace un job programado. Los turnos pasados no se tocan (quedan para
+   * marcar asistencia). Devuelve la lista con los vencidos ya aplicados.
+   */
+  private aplicarVencimientos(list: Appointment[]): Appointment[] {
+    const horas = this.cuenta()?.horasVencimientoPendiente ?? 12;
+    if (horas <= 0) return list;
+    const ahora = Date.now();
+    return list.map(a => {
+      if (a.status !== 'PENDING') return a;
+      const [y, m, d] = a.date.split('-').map(Number);
+      const [hh, mm] = a.time.split(':').map(Number);
+      const inicio = new Date(y, m - 1, d, hh, mm).getTime();
+      if (inicio <= ahora) return a; // ya pasó: queda para asistencia
+      if (inicio - ahora >= horas * 3600_000) return a; // todavía tiene tiempo
+      // Venció: se persiste (fire-and-forget) y se refleja localmente.
+      this.http.patch<Appointment>(`${this.api}/appointments/${a.id}`, { status: 'EXPIRED' }).subscribe({
+        error: () => this.apiError.set(true)
+      });
+      return { ...a, status: 'EXPIRED' as const };
+    });
+  }
+
+  // ---- Avisos de WhatsApp (mock: se registran; el backend hará el envío) ----
+
+  /** Registra el aviso al PACIENTE cuando el panel reprograma o cancela su turno. */
+  private notificarPaciente(turno: Appointment, evento: 'reprogramado' | 'cancelado', detalle: string): void {
+    const cuentaId = this.cuenta()?.id ?? '';
+    if (!cuentaId || !turno.patientPhone) return;
+    const lugar = this.cuenta()?.nombre ?? 'el consultorio';
+    const mensaje = evento === 'cancelado'
+      ? `Hola ${turno.patientName}. Te avisamos desde ${lugar} que tu turno de ${turno.serviceName} del ${turno.date} a las ${turno.time} hs fue cancelado. ${detalle}`.trim()
+      : `Hola ${turno.patientName}. Te avisamos desde ${lugar} que tu turno de ${turno.serviceName} fue reprogramado: ${detalle}`.trim();
+    const aviso: Notificacion = {
+      id: 'ntf-' + Date.now().toString(36) + Math.floor(Math.random() * 1000),
+      cuentaId,
+      turnoId: turno.id,
+      evento,
+      origen: 'panel',
+      canal: 'whatsapp',
+      destinatario: turno.patientName,
+      telefono: turno.patientPhone,
+      mensaje,
+      fecha: new Date().toISOString(),
+      estado: 'simulada'
+    };
+    this.http.post<Notificacion>(`${this.api}/notificaciones`, aviso).subscribe({
+      next: creado => this.notificaciones.set([creado, ...this.notificaciones()]),
+      error: () => this.apiError.set(true)
+    });
+  }
+
   // ---- Usuarios del equipo (solo dueño) ----
 
   emailUsuarioOcupado(email: string, ignorarId?: string): boolean {
     const e = email.trim().toLowerCase();
     return this.usuarios().some(u => u.id !== ignorarId && u.email.toLowerCase() === e);
+  }
+
+  dniUsuarioOcupado(dni: string, ignorarId?: string): boolean {
+    const d = dni.trim();
+    return this.usuarios().some(u => u.id !== ignorarId && u.dni === d);
   }
 
   addUsuario(datos: Omit<Usuario, 'id' | 'cuentaId' | 'activo'>): Promise<Usuario | null> {
@@ -292,6 +447,99 @@ export class AdminService {
   }
 
   /**
+   * Mueve TODOS los turnos futuros activos de una serie a un nuevo día de
+   * semana y horario, conservando el espaciado (cada turno pasa al día
+   * elegido de su misma semana; si queda en el pasado, salta una semana).
+   * Valida disponibilidad, bloqueos, solapamientos y paciente-por-día.
+   * `omitirConflictos`: los turnos con conflicto quedan como estaban.
+   */
+  async reprogramarSerie(
+    serieId: string,
+    nuevoDow: number,
+    nuevaHora: string,
+    omitirConflictos: boolean
+  ): Promise<{ ok: boolean; movidos: number; omitidos: number; motivo?: string }> {
+    const hoy = new Date();
+    const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+
+    const serie = this.appointments()
+      .filter(a => a.serieId === serieId && (a.status === 'PENDING' || a.status === 'CONFIRMED') && a.date >= hoyStr)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    if (serie.length === 0) return { ok: false, movidos: 0, omitidos: 0, motivo: 'La serie no tiene turnos futuros activos.' };
+
+    const profId = serie[0].profesionalId;
+    const dni = serie[0].patientDni;
+
+    // El nuevo día/hora tiene que existir en la disponibilidad del profesional.
+    const config = this.availabilityDe(profId).find(c => c.dayIndex === nuevoDow);
+    if (!config || !config.active || !config.slots.includes(nuevaHora)) {
+      return { ok: false, movidos: 0, omitidos: 0, motivo: 'El profesional no atiende ese día a esa hora.' };
+    }
+
+    const idsSerie = new Set(serie.map(a => a.id));
+    const bloqueos = this.bloqueosDe(profId);
+    // Turnos activos del profesional y del paciente FUERA de la serie (la serie entera se mueve).
+    const activosProf = this.appointments().filter(a =>
+      a.profesionalId === profId && (a.status === 'PENDING' || a.status === 'CONFIRMED') && !idsSerie.has(a.id));
+
+    const aDia = (fecha: string) => {
+      const [y, m, d] = fecha.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
+    const aStr = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    // Nueva fecha por turno + detección de conflictos.
+    const plan: { turno: Appointment; nuevaFecha: string; conflicto: boolean }[] = [];
+    for (const turno of serie) {
+      const d = aDia(turno.date);
+      d.setDate(d.getDate() + (nuevoDow - d.getDay()));
+      if (aStr(d) <= hoyStr) d.setDate(d.getDate() + 7); // no mover al pasado ni a hoy
+      const nuevaFecha = aStr(d);
+
+      const bloqueado = bloqueos.some(b => b.startDate <= nuevaFecha && nuevaFecha <= b.endDate);
+      const ocupado = activosProf.some(a => a.date === nuevaFecha && a.time === nuevaHora);
+      const pacienteEseDia = activosProf.some(a => a.patientDni === dni && a.date === nuevaFecha);
+      plan.push({ turno, nuevaFecha, conflicto: bloqueado || ocupado || pacienteEseDia });
+    }
+
+    const conflictivos = plan.filter(x => x.conflicto).length;
+    if (conflictivos > 0 && !omitirConflictos) {
+      return {
+        ok: false, movidos: 0, omitidos: conflictivos,
+        motivo: `${conflictivos} ${conflictivos === 1 ? 'turno tiene' : 'turnos tienen'} conflicto en el nuevo horario. Activá "omitir los que tengan conflicto" para mover el resto.`
+      };
+    }
+
+    this.saving.set(true);
+    let movidos = 0;
+    for (const x of plan) {
+      if (x.conflicto) continue;
+      const notaBase = (x.turno.notes || '').replace(/\s*\[Serie movida[^\]]*\]/g, '').trim();
+      const ok = await new Promise<boolean>(resolve => {
+        this.http.patch<Appointment>(`${this.api}/appointments/${x.turno.id}`, {
+          date: x.nuevaFecha,
+          time: nuevaHora,
+          notes: `${notaBase} [Serie movida: antes ${x.turno.date} ${x.turno.time} hs]`.trim()
+        }).subscribe({
+          next: act => {
+            this.appointments.set(this.appointments().map(a => (a.id === x.turno.id ? act : a)));
+            resolve(true);
+          },
+          error: () => { this.apiError.set(true); resolve(false); }
+        });
+      });
+      if (ok) {
+        movidos++;
+        this.notificarPaciente(x.turno, 'reprogramado',
+          `del ${x.turno.date} ${x.turno.time} hs al ${x.nuevaFecha} a las ${nuevaHora} hs (se movió la serie completa).`);
+      }
+    }
+    this.saving.set(false);
+    return { ok: true, movidos, omitidos: conflictivos };
+  }
+
+  /**
    * Cancela TODOS los turnos activos y futuros de una serie.
    * Devuelve cuántos canceló (los pasados o ya cancelados no se tocan).
    */
@@ -310,6 +558,7 @@ export class AdminService {
       this.http.patch<Appointment>(`${this.api}/appointments/${a.id}`, { status: 'CANCELLED' }).subscribe({
         next: act => {
           this.appointments.set(this.appointments().map(x => (x.id === a.id ? act : x)));
+          this.notificarPaciente(a, 'cancelado', 'Se canceló la serie completa de turnos.');
           resolve(true);
         },
         error: () => { this.apiError.set(true); resolve(false); }
@@ -427,7 +676,7 @@ export class AdminService {
   }
 
   // ---- Datos de la cuenta (nombre público, descripción) ----
-  updateCuenta(datos: Partial<Pick<Cuenta, 'nombre' | 'descripcion' | 'bannerUrl' | 'horasMinimasCancelacion'>>): Promise<boolean> {
+  updateCuenta(datos: Partial<Pick<Cuenta, 'nombre' | 'descripcion' | 'bannerUrl' | 'horasMinimasCancelacion' | 'horasVencimientoPendiente'>>): Promise<boolean> {
     const id = this.cuenta()?.id;
     if (!id) return Promise.resolve(false);
     this.saving.set(true);
@@ -545,12 +794,19 @@ export class AdminService {
   }
 
   updateAppointment(id: string, datos: Partial<Appointment>): Promise<boolean> {
+    const anterior = this.appointments().find(a => a.id === id);
     this.saving.set(true);
     return new Promise(resolve => {
       this.http.patch<Appointment>(`${this.api}/appointments/${id}`, datos).subscribe({
         next: actualizado => {
           this.appointments.set(this.appointments().map(a => (a.id === id ? actualizado : a)));
           this.saving.set(false);
+          // Cambió la fecha u hora de un turno activo → aviso al paciente.
+          if (anterior && (anterior.status === 'PENDING' || anterior.status === 'CONFIRMED') &&
+              ((datos.date && datos.date !== anterior.date) || (datos.time && datos.time !== anterior.time))) {
+            this.notificarPaciente(anterior, 'reprogramado',
+              `del ${anterior.date} ${anterior.time} hs al ${actualizado.date} a las ${actualizado.time} hs.`);
+          }
           resolve(true);
         },
         error: () => {
@@ -564,9 +820,16 @@ export class AdminService {
 
   updateAppointmentStatus(id: string, status: AppointmentStatus): void {
     const previo = this.appointments();
+    const turno = previo.find(a => a.id === id);
     this.appointments.set(previo.map(a => (a.id === id ? { ...a, status } : a)));
 
     this.http.patch<Appointment>(`${this.api}/appointments/${id}`, { status }).subscribe({
+      next: () => {
+        // Cancelación de un turno que estaba activo → aviso al paciente.
+        if (status === 'CANCELLED' && turno && (turno.status === 'PENDING' || turno.status === 'CONFIRMED')) {
+          this.notificarPaciente(turno, 'cancelado', 'Podés sacar un turno nuevo desde nuestra página.');
+        }
+      },
       error: () => { this.appointments.set(previo); this.apiError.set(true); }
     });
   }

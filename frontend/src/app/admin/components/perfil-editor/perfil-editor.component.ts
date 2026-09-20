@@ -1,19 +1,47 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, FormArray, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, FormArray, Validators } from '@angular/forms';
 import { AdminService, AdminProfile } from '../../services/admin.service';
+import { AuthService } from '../../../core/auth.service';
 import { ProfesionalPickerComponent } from '../profesional-picker/profesional-picker.component';
 
 @Component({
   selector: 'app-perfil-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ProfesionalPickerComponent, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ProfesionalPickerComponent, RouterModule],
   templateUrl: './perfil-editor.component.html',
   styleUrl: './perfil-editor.component.scss'
 })
 export class PerfilEditorComponent {
   adminService = inject(AdminService);
+  auth = inject(AuthService);
+
+  // ---- Configuración de la cuenta (solo cuentas individuales, rol dueño) ----
+  horasMinimas = signal(24);
+  horasVencimiento = signal(12);
+  private horasInicializadas = false;
+  horasGuardadas = signal(false);
+
+  /** true si corresponde mostrar la config de la cuenta en esta vista. */
+  mostrarConfigCuenta(): boolean {
+    return this.adminService.cuenta()?.tipo === 'profesional' && this.auth.esDuenio();
+  }
+
+  async guardarHorasMinimas() {
+    const horas = Math.max(0, Math.min(168, Number(this.horasMinimas()) || 0));
+    this.horasMinimas.set(horas);
+    const horasVenc = Math.max(0, Math.min(168, Number(this.horasVencimiento()) || 0));
+    this.horasVencimiento.set(horasVenc);
+    const ok = await this.adminService.updateCuenta({
+      horasMinimasCancelacion: horas,
+      horasVencimientoPendiente: horasVenc
+    });
+    if (ok) {
+      this.horasGuardadas.set(true);
+      setTimeout(() => this.horasGuardadas.set(false), 4000);
+    }
+  }
 
   /** Página pública donde el paciente ve este perfil. */
   linkPublico(): (string | undefined)[] {
@@ -54,6 +82,12 @@ export class PerfilEditorComponent {
       if (prof && prof.id !== idAnterior) {
         idAnterior = prof.id;
         this.buildForm(prof);
+      }
+      const c = this.adminService.cuenta();
+      if (c && !this.horasInicializadas) {
+        this.horasInicializadas = true;
+        this.horasMinimas.set(c.horasMinimasCancelacion ?? 24);
+        this.horasVencimiento.set(c.horasVencimientoPendiente ?? 12);
       }
     });
   }

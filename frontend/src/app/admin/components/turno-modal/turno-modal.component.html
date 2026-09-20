@@ -31,7 +31,7 @@
       <div *ngIf="adminService.esConsultorio() && !adminService.esProfesionalRol()" class="space-y-2">
         <label class="field-label">Profesional</label>
         <div class="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-0.5">
-          <button *ngFor="let p of adminService.profesionalesActivos()"
+          <button *ngFor="let p of adminService.profesionalesOperables()"
                   (click)="cambiarProfesional(p.id)"
                   [ngClass]="profId() === p.id
                     ? 'bg-teal-100 text-teal-900 border-teal-300'
