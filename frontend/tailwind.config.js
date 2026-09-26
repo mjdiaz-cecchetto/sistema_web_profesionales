@@ -8,20 +8,36 @@ module.exports = {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
-      // Paleta de la marca: verde pastel fijo (sin degradés).
+      // Paleta de la marca (rediseño 2026): azul petróleo + verde menta, sin degradés.
+      // OJO: la escala `teal` se REDEFINE como azul petróleo para retematizar
+      // todo el sistema sin tocar cada clase (teal-700 = #25496d, el azul del flyer).
       colors: {
         teal: {
-          50:  '#f2faf6',
-          100: '#e4f4eb',
-          200: '#c9e9d8',
-          300: '#a9dabf',
-          400: '#83c7a4',
-          500: '#62b28b',
-          600: '#4a9974',
-          700: '#3b7d5f',
-          800: '#315f4b',
-          900: '#2a4d3e',
-          950: '#1b3229',
+          50:  '#f0f5fa',
+          100: '#dfe9f3',
+          200: '#c4d6e4',
+          300: '#9bb8d0',
+          400: '#6c92b4',
+          500: '#47709a',
+          600: '#345c86',
+          700: '#25496d',
+          800: '#1e3c5a',
+          900: '#172e46',
+          950: '#0e1e30',
+        },
+        // Acento de acción: verde menta vivo (#1ee5a3 = menta-500).
+        menta: {
+          50:  '#e8fdf4',
+          100: '#ccfae6',
+          200: '#9df3cf',
+          300: '#66ecb9',
+          400: '#3ce6a9',
+          500: '#1ee5a3',
+          600: '#10c489',
+          700: '#0d9c6e',
+          800: '#0f7a58',
+          900: '#0f6249',
+          950: '#073d2d',
         },
       },
       boxShadow: {

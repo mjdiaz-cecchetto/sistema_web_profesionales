@@ -1,13 +1,16 @@
 /**
  * Genera db.json con DOS CUENTAS independientes (multi-tenant):
  *
- *   1. Consultorio "Centro Médico San Martín" (5 profesionales, varias especialidades)
- *      Login: admin@centrosanmartin.com.ar / consultorio123
+ *   1. Consultorio "Centro Médico San Martín" (6 profesionales, varias especialidades)
  *      Página pública: /c/centro-san-martin
  *
  *   2. Profesional independiente "Dra. Elena Ramos" (Psicología)
- *      Login: elena.ramos@gmail.com / elena123
  *      Página pública: /p/dra-elena-ramos
+ *
+ * Quienes entran al panel son PERSONAS (`usuarios`, login DNI o email) con
+ * una o más MEMBRESÍAS (`miembros`: cuenta + rol + profesional que atiende).
+ * Elena es administradora de su cuenta Y profesional en San Martín (elige
+ * centro al entrar). El listado de credenciales se imprime al final.
  *
  * Las fechas de los turnos son relativas al día en que se corre el seed.
  * Uso:  npm run seed   (pisa el db.json existente)
@@ -95,9 +98,7 @@ const db = {
     {
       id: CSM,
       tipo: 'consultorio',
-      email: 'admin@centrosanmartin.com.ar',
-      dni: null, // este consultorio eligió acceder con email
-      password: 'consultorio123',
+      email: 'contacto@centrosanmartin.com.ar', // contacto de la organización (no es login)
       nombre: 'Centro Médico San Martín',
       slug: 'centro-san-martin',
       descripcion: 'Centro de salud interdisciplinario en el corazón de San Martín. Psicología, psiquiatría, odontología, nutrición y kinesiología en un mismo lugar, con turnos online y atención con las principales obras sociales.',
@@ -111,9 +112,7 @@ const db = {
     {
       id: ELE,
       tipo: 'profesional',
-      email: 'elena.ramos@gmail.com',
-      dni: '24853917', // los profesionales independientes acceden con DNI
-      password: 'elena123',
+      email: 'elena.ramos@gmail.com', // contacto de la organización (no es login)
       nombre: 'Dra. Elena Ramos',
       slug: 'dra-elena-ramos',
       descripcion: 'Psicóloga clínica de adultos. Atención presencial en Palermo y Belgrano, y consultas online.',
@@ -126,43 +125,34 @@ const db = {
     }
   ],
 
-  // ===== Usuarios del equipo (logins con rol, creados por el dueño) =====
-  // El login del equipo es por DNI + contraseña (el email queda para avisos
-  // y recuperación de cuenta). profesionalesAsignados (solo secretarias):
-  // ausente/vacío = gestiona todo el centro; con ids = solo esas agendas.
+  // ===== PERSONAS con acceso al panel (login con DNI o email) =====
+  // DNI y email son únicos en toda la plataforma: una persona = un login,
+  // aunque trabaje en varias cuentas (ver `miembros`).
   usuarios: [
-    {
-      id: 'usr-secretaria-csm',
-      cuentaId: CSM,
-      nombre: 'Rocío Méndez',
-      email: 'secretaria@centrosanmartin.com.ar',
-      dni: '28456123',
-      password: 'secretaria123',
-      rol: 'secretaria',
-      activo: true // sin profesionalesAsignados → todo el centro
-    },
-    {
-      id: 'usr-secretaria-odonto',
-      cuentaId: CSM,
-      nombre: 'Valeria Suárez',
-      email: 'valeria.suarez@centrosanmartin.com.ar',
-      dni: '33780415',
-      password: 'valeria123',
-      rol: 'secretaria',
-      profesionalesAsignados: ['prof-rios'],
-      activo: true // secretaria personal de la Od. Ríos
-    },
-    {
-      id: 'usr-funes',
-      cuentaId: CSM,
-      nombre: 'Carolina Funes',
-      email: 'carolina.funes@centrosanmartin.com.ar',
-      dni: '27912384',
-      password: 'carolina123',
-      rol: 'profesional',
-      profesionalId: 'prof-funes',
-      activo: true
-    }
+    { id: 'usr-lema', nombre: 'Dr. Gustavo Lema', email: 'glema@centrosanmartin.com.ar', dni: '20345678', password: 'lema1234', activo: true },
+    { id: 'usr-benitez', nombre: 'Laura Benítez', email: 'admin@centrosanmartin.com.ar', dni: '30112233', password: 'consultorio123', activo: true },
+    { id: 'usr-secretaria-csm', nombre: 'Rocío Méndez', email: 'secretaria@centrosanmartin.com.ar', dni: '28456123', password: 'secretaria123', activo: true },
+    { id: 'usr-secretaria-odonto', nombre: 'Valeria Suárez', email: 'valeria.suarez@centrosanmartin.com.ar', dni: '33780415', password: 'valeria123', activo: true },
+    { id: 'usr-funes', nombre: 'Carolina Funes', email: 'carolina.funes@centrosanmartin.com.ar', dni: '27912384', password: 'carolina123', activo: true },
+    { id: 'usr-elena', nombre: 'Elena Ramos', email: 'elena.ramos@gmail.com', dni: '24853917', password: 'elena123', activo: true },
+    { id: 'usr-julieta', nombre: 'Julieta Paz', email: 'julieta.paz@gmail.com', dni: '36544210', password: 'julieta123', activo: true }
+  ],
+
+  // ===== MEMBRESÍAS: persona + cuenta + rol (+ profesional que atiende) =====
+  // administrador: todo · secretaria: agendas (profesionalesAsignados vacío =
+  // todo el centro) · profesional: solo lo suyo. Un administrador con
+  // profesionalId "atiende": además ve SUS historias clínicas.
+  miembros: [
+    // Centro Médico San Martín
+    { id: 'mbr-csm-lema', cuentaId: CSM, usuarioId: 'usr-lema', rol: 'administrador', profesionalId: 'prof-lema', activo: true }, // director que atiende
+    { id: 'mbr-csm-benitez', cuentaId: CSM, usuarioId: 'usr-benitez', rol: 'administrador', profesionalId: null, activo: true }, // administración, no atiende
+    { id: 'mbr-csm-rocio', cuentaId: CSM, usuarioId: 'usr-secretaria-csm', rol: 'secretaria', profesionalesAsignados: [], activo: true },
+    { id: 'mbr-csm-valeria', cuentaId: CSM, usuarioId: 'usr-secretaria-odonto', rol: 'secretaria', profesionalesAsignados: ['prof-rios'], activo: true },
+    { id: 'mbr-csm-funes', cuentaId: CSM, usuarioId: 'usr-funes', rol: 'profesional', profesionalId: 'prof-funes', activo: true },
+    { id: 'mbr-csm-elena', cuentaId: CSM, usuarioId: 'usr-elena', rol: 'profesional', profesionalId: 'prof-ramos-csm', activo: true }, // multi-centro
+    // Dra. Elena Ramos (independiente)
+    { id: 'mbr-ele-elena', cuentaId: ELE, usuarioId: 'usr-elena', rol: 'administrador', profesionalId: 'prof-elena', activo: true },
+    { id: 'mbr-ele-julieta', cuentaId: ELE, usuarioId: 'usr-julieta', rol: 'secretaria', profesionalesAsignados: [], activo: true }
   ],
 
   // ===== Especialidades (catálogo por cuenta, administrable en Mi Equipo) =====
@@ -467,6 +457,34 @@ const db = {
   notificaciones: []
 };
 
+// ===== Multi-centro: la Dra. Elena Ramos también atiende los jueves en San Martín =====
+// (misma PERSONA `usr-elena`, otra membresía y otro perfil profesional en esa cuenta)
+{
+  const base = db.professionals.find(p => p.id === 'prof-elena');
+  db.professionals.push({
+    ...base,
+    id: 'prof-ramos-csm',
+    cuentaId: CSM,
+    titulo: 'Psicología Clínica · Adultos · M.N. 41.207',
+    modalidad: 'Atención presencial los jueves en el Centro Médico San Martín.',
+    direcciones: [SEDE_CSM]
+  });
+  db.availabilities.push({
+    id: 'prof-ramos-csm',
+    cuentaId: CSM,
+    days: [1, 2, 3, 4, 5, 6, 0].map(idx => ({
+      day: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][idx],
+      dayIndex: idx,
+      active: idx === 4,
+      slots: idx === 4 ? ['09:00', '10:00', '11:00', '12:00'] : []
+    }))
+  });
+  db.services.push({
+    id: 'srv-csm-12', cuentaId: CSM, profesionalId: 'prof-ramos-csm', name: 'Consulta Psicológica',
+    description: 'Sesión individual de psicoterapia para adultos en el centro.', durationMinutes: 50, price: 32000
+  });
+}
+
 // Pacientes únicos por cuenta a partir de los turnos (padrón POR CUENTA)
 const vistos = new Map();
 db.appointments.forEach((appt, i) => {
@@ -516,12 +534,16 @@ fs.writeFileSync(destino, JSON.stringify(db, null, 2), 'utf8');
 console.log(`✔ db.json generado en ${destino} (hoy: ${fechaLocal(0)})`);
 console.log(`  · Administrador de la plataforma → admin@plataforma.com / admin123 · /gestion`);
 for (const u of db.usuarios) {
-  console.log(`  · Usuario equipo [${u.rol}] ${u.nombre} → DNI ${u.dni} / ${u.password}`);
+  const roles = db.miembros
+    .filter(m => m.usuarioId === u.id)
+    .map(m => `${m.rol}${m.profesionalId && m.rol === 'administrador' ? '+atiende' : ''} en ${db.cuentas.find(c => c.id === m.cuentaId)?.nombre}`)
+    .join(' · ');
+  console.log(`  · ${u.nombre} → DNI ${u.dni} (o ${u.email}) / ${u.password} · ${roles}`);
 }
 for (const c of db.cuentas) {
   const profs = db.professionals.filter(p => p.cuentaId === c.id).length;
   const turnos = db.appointments.filter(a => a.cuentaId === c.id).length;
   const pacientes = db.patients.filter(p => p.cuentaId === c.id).length;
   const url = c.tipo === 'consultorio' ? `/c/${c.slug}` : `/p/${c.slug}`;
-  console.log(`  · ${c.nombre} [${c.tipo}] → ${c.email} / ${c.password} · ${profs} prof · ${turnos} turnos · ${pacientes} pacientes · ${url}`);
+  console.log(`  · ${c.nombre} [${c.tipo}] · ${profs} prof · ${turnos} turnos · ${pacientes} pacientes · ${url}`);
 }

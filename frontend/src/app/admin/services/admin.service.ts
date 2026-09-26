@@ -14,7 +14,6 @@ import {
   Patient,
   Plan,
   ProfessionalAvailability,
-  Usuario,
   ProfessionalProfile,
   Service,
   HealthInsurance
@@ -60,8 +59,6 @@ export class AdminService {
   especialidades = signal<Especialidad[]>([]);
   /** Plan de membresía de la cuenta (para aplicar sus límites). */
   plan = signal<Plan | null>(null);
-  /** Usuarios del equipo (secretaría / profesionales con login). Solo los ve el dueño. */
-  usuarios = signal<Usuario[]>([]);
   /** Historias clínicas de la cuenta (se exponen filtradas por profesional tratante). */
   private historias = signal<HistoriaClinicaEntry[]>([]);
   /** Avisos de WhatsApp registrados (mock: el backend hará el envío real). */
@@ -76,7 +73,7 @@ export class AdminService {
 
   // ---- Rol de quien está logueado ----
   rol = this.auth.rol;
-  esDuenio = this.auth.esDuenio;
+  esAdministrador = this.auth.esAdministrador;
   esSecretaria = this.auth.esSecretaria;
   esProfesionalRol = this.auth.esProfesionalRol;
 
@@ -88,18 +85,18 @@ export class AdminService {
 
   /**
    * Alcance de una SECRETARÍA ASIGNADA: set de ids de profesionales cuyas
-   * agendas gestiona, o null si no hay restricción (dueño, secretaría
+   * agendas gestiona, o null si no hay restricción (administrador, secretaría
    * general del centro, o rol profesional que ya tiene su propio scoping).
    */
   alcanceSecretaria = computed<Set<string> | null>(() => {
-    const u = this.auth.usuario();
-    if (!u || u.rol !== 'secretaria' || !u.profesionalesAsignados?.length) return null;
-    return new Set(u.profesionalesAsignados);
+    const m = this.auth.miembro();
+    if (!m || m.rol !== 'secretaria' || !m.profesionalesAsignados?.length) return null;
+    return new Set(m.profesionalesAsignados);
   });
 
   /** Profesionales que quien está logueado puede operar (selector, alta de turnos). */
   profesionalesOperables = computed(() => {
-    const propio = this.auth.profesionalIdUsuario();
+    const propio = this.auth.profesionalAtado();
     if (propio) return this.profesionalesActivos().filter(p => p.id === propio);
     const alcance = this.alcanceSecretaria();
     if (alcance) return this.profesionalesActivos().filter(p => alcance.has(p.id));
@@ -109,7 +106,7 @@ export class AdminService {
   /** Profesional "en foco" para las vistas de configuración (si la selección es ALL, el primero activo).
    *  Un usuario con rol PROFESIONAL queda siempre clavado en su propio profesional. */
   focoId = computed(() => {
-    const propio = this.auth.profesionalIdUsuario();
+    const propio = this.auth.profesionalAtado();
     if (propio) return propio;
     const alcance = this.alcanceSecretaria();
     const sel = this.seleccionId();
@@ -130,7 +127,7 @@ export class AdminService {
    *  propios para el rol profesional, los asignados para una secretaría asignada. */
   turnosAlcance = computed(() => {
     const list = this.appointments();
-    const propio = this.auth.profesionalIdUsuario();
+    const propio = this.auth.profesionalAtado();
     if (propio) return list.filter(a => a.profesionalId === propio);
     const alcance = this.alcanceSecretaria();
     if (alcance) return list.filter(a => alcance.has(a.profesionalId));
@@ -140,18 +137,18 @@ export class AdminService {
   /** Turnos visibles: el alcance del rol + el selector global. */
   turnosVisibles = computed(() => {
     const list = this.turnosAlcance();
-    if (this.auth.profesionalIdUsuario()) return list;
+    if (this.auth.profesionalAtado()) return list;
     const sel = this.seleccionId();
     return sel === 'ALL' ? list : list.filter(a => a.profesionalId === sel);
   });
 
   /**
-   * Pacientes visibles según el rol: dueño y secretaría general ven el
+   * Pacientes visibles según el rol: administrador y secretaría general ven el
    * padrón completo; el rol profesional solo a los pacientes que él atendió;
    * una secretaría asignada, a los pacientes de sus profesionales.
    */
   pacientesVisibles = computed(() => {
-    if (!this.auth.profesionalIdUsuario() && !this.alcanceSecretaria()) return this.patients();
+    if (!this.auth.profesionalAtado() && !this.alcanceSecretaria()) return this.patients();
     const dnis = new Set(this.turnosAlcance().map(a => a.patientDni));
     return this.patients().filter(p => dnis.has(p.dni));
   });
@@ -159,17 +156,14 @@ export class AdminService {
   // ---- Historia clínica (dato sensible: SOLO el profesional tratante) ----
 
   /**
-   * Profesional "clínico" de la sesión: el profesional logueado, o el
-   * titular de una cuenta independiente. null = sin acceso a historias
-   * (dueño de consultorio, secretarías, impersonación de soporte).
+   * Profesional "clínico" de la sesión: el profesional que ES la persona
+   * logueada (rol profesional, o administrador que atiende — incluye al
+   * titular de una cuenta independiente). null = sin acceso a historias
+   * (administrador que no atiende, secretarías, impersonación de soporte).
    */
   profesionalClinico = computed<string | null>(() => {
-    const propio = this.auth.profesionalIdUsuario();
-    if (propio) return propio;
-    if (this.cuenta()?.tipo === 'profesional' && this.auth.esDuenio() && !this.auth.esAdmin()) {
-      return this.professionals()[0]?.id ?? null;
-    }
-    return null;
+    const propio = this.auth.profesionalPropio();
+    return propio && this.professionals().some(p => p.id === propio) ? propio : null;
   });
 
   puedeVerHistoria = computed(() => this.profesionalClinico() !== null);
@@ -277,7 +271,7 @@ export class AdminService {
     this.loading.set(true);
     this.apiError.set(false);
 
-    let pendientes = 12;
+    let pendientes = 11;
     const done = () => { if (--pendientes === 0) this.loading.set(false); };
     const fail = () => { this.apiError.set(true); done(); };
 
@@ -324,10 +318,6 @@ export class AdminService {
     });
     this.http.get<Especialidad[]>(`${this.api}/especialidades?${q}`).subscribe({
       next: list => { this.especialidades.set(list); done(); },
-      error: fail
-    });
-    this.http.get<Usuario[]>(`${this.api}/usuarios?${q}`).subscribe({
-      next: list => { this.usuarios.set(list); done(); },
       error: fail
     });
     const planId = this.cuenta()?.plan;
@@ -394,55 +384,6 @@ export class AdminService {
     this.http.post<Notificacion>(`${this.api}/notificaciones`, aviso).subscribe({
       next: creado => this.notificaciones.set([creado, ...this.notificaciones()]),
       error: () => this.apiError.set(true)
-    });
-  }
-
-  // ---- Usuarios del equipo (solo dueño) ----
-
-  emailUsuarioOcupado(email: string, ignorarId?: string): boolean {
-    const e = email.trim().toLowerCase();
-    return this.usuarios().some(u => u.id !== ignorarId && u.email.toLowerCase() === e);
-  }
-
-  dniUsuarioOcupado(dni: string, ignorarId?: string): boolean {
-    const d = dni.trim();
-    return this.usuarios().some(u => u.id !== ignorarId && u.dni === d);
-  }
-
-  addUsuario(datos: Omit<Usuario, 'id' | 'cuentaId' | 'activo'>): Promise<Usuario | null> {
-    const cuentaId = this.cuenta()?.id ?? '';
-    if (this.emailUsuarioOcupado(datos.email)) return Promise.resolve(null);
-    this.saving.set(true);
-    const nuevo: Usuario = {
-      ...datos,
-      email: datos.email.trim().toLowerCase(),
-      cuentaId,
-      activo: true,
-      id: 'usr-' + Date.now().toString(36) + Math.floor(Math.random() * 1000)
-    };
-    return new Promise(resolve => {
-      this.http.post<Usuario>(`${this.api}/usuarios`, nuevo).subscribe({
-        next: creado => {
-          this.usuarios.set([...this.usuarios(), creado]);
-          this.saving.set(false);
-          resolve(creado);
-        },
-        error: () => { this.apiError.set(true); this.saving.set(false); resolve(null); }
-      });
-    });
-  }
-
-  updateUsuario(id: string, datos: Partial<Usuario>): Promise<boolean> {
-    this.saving.set(true);
-    return new Promise(resolve => {
-      this.http.patch<Usuario>(`${this.api}/usuarios/${id}`, datos).subscribe({
-        next: act => {
-          this.usuarios.set(this.usuarios().map(u => (u.id === id ? act : u)));
-          this.saving.set(false);
-          resolve(true);
-        },
-        error: () => { this.apiError.set(true); this.saving.set(false); resolve(false); }
-      });
     });
   }
 

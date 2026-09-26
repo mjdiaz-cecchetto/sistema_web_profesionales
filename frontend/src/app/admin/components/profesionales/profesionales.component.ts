@@ -1,9 +1,8 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AdminService, AdminProfile, Especialidad } from '../../services/admin.service';
-import { Usuario } from '../../../core/models';
 import { todayLocal } from '../../../core/date-utils';
 
 /** Grupo del equipo: una especialidad con sus profesionales. */
@@ -22,7 +21,7 @@ interface GrupoEquipo {
 @Component({
   selector: 'app-profesionales',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   host: { class: 'block xl:h-full' },
   templateUrl: './profesionales.component.html',
   styleUrl: './profesionales.component.scss'
@@ -46,25 +45,6 @@ export class ProfesionalesComponent {
   mostrarErrores = signal(false);
   guardando = signal(false);
   toastMensaje = signal('');
-
-  // ---- Usuarios del equipo (logins de secretaría / profesionales) ----
-  panelUsuarios = signal(false);
-  usrNombre = signal('');
-  usrEmail = signal('');
-  usrDni = signal('');
-  usrPassword = signal('');
-  usrRol = signal<'secretaria' | 'profesional'>('secretaria');
-  usrProfesionalId = signal('');
-  /** Alta de secretaría: agendas asignadas (vacío = todo el centro). */
-  usrAsignados = signal<string[]>([]);
-  usrError = signal('');
-  usrGuardando = signal(false);
-  /** Usuario al que se le está reseteando la contraseña. */
-  resetUsuarioId = signal<string | null>(null);
-  resetPassword = signal('');
-  /** Secretaría a la que se le están editando las agendas asignadas. */
-  asignarUsuarioId = signal<string | null>(null);
-  asignarSeleccion = signal<string[]>([]);
 
   // ---- Administración de especialidades ----
   panelEspecialidades = signal(false);
@@ -218,119 +198,6 @@ export class ProfesionalesComponent {
 
   usoDe(e: Especialidad): number {
     return this.adminService.usoEspecialidad(e.nombre);
-  }
-
-  // ===== Usuarios del equipo =====
-
-  usuariosOrdenados(): Usuario[] {
-    return [...this.adminService.usuarios()].sort((a, b) =>
-      a.rol.localeCompare(b.rol) || a.nombre.localeCompare(b.nombre, 'es'));
-  }
-
-  /** Profesionales activos que todavía no tienen usuario propio. */
-  profesionalesSinUsuario(): AdminProfile[] {
-    const usados = new Set(this.adminService.usuarios().filter(u => u.rol === 'profesional').map(u => u.profesionalId));
-    return this.adminService.profesionalesActivos().filter(p => !usados.has(p.id));
-  }
-
-  nombreProfesionalDeUsuario(u: Usuario): string {
-    return u.profesionalId ? (this.adminService.nombreDe(u.profesionalId) || '(profesional eliminado)') : '';
-  }
-
-  elegirRolUsuario(rol: 'secretaria' | 'profesional') {
-    this.usrRol.set(rol);
-    this.usrError.set('');
-    if (rol === 'profesional') {
-      const prof = this.profesionalesSinUsuario()[0];
-      this.usrProfesionalId.set(prof?.id ?? '');
-      if (prof && !this.usrNombre().trim()) this.usrNombre.set(prof.nombre);
-    } else {
-      this.usrProfesionalId.set('');
-    }
-  }
-
-  /** Marca/desmarca un profesional en una lista de asignación de agendas. */
-  toggleAsignado(lista: 'alta' | 'edicion', profId: string) {
-    const sig = lista === 'alta' ? this.usrAsignados : this.asignarSeleccion;
-    sig.set(sig().includes(profId) ? sig().filter(id => id !== profId) : [...sig(), profId]);
-  }
-
-  /** Texto de las agendas que gestiona una secretaría. */
-  agendasDe(u: Usuario): string {
-    if (u.rol !== 'secretaria') return '';
-    if (!u.profesionalesAsignados?.length) return 'Todo el centro';
-    return u.profesionalesAsignados
-      .map(id => this.adminService.nombreDe(id) || '(profesional eliminado)')
-      .join(' · ');
-  }
-
-  abrirAsignacion(u: Usuario) {
-    this.asignarUsuarioId.set(u.id);
-    this.asignarSeleccion.set([...(u.profesionalesAsignados ?? [])]);
-    this.resetUsuarioId.set(null);
-  }
-
-  async confirmarAsignacion() {
-    const id = this.asignarUsuarioId();
-    if (!id) return;
-    const ok = await this.adminService.updateUsuario(id, { profesionalesAsignados: this.asignarSeleccion() });
-    if (ok) {
-      this.asignarUsuarioId.set(null);
-      this.mostrarToast('Agendas asignadas actualizadas.');
-    }
-  }
-
-  async crearUsuario() {
-    if (this.usrGuardando()) return;
-    this.usrError.set('');
-    const nombre = this.usrNombre().trim();
-    const email = this.usrEmail().trim().toLowerCase();
-    const dni = this.usrDni().trim();
-    const password = this.usrPassword();
-    const rol = this.usrRol();
-    const profesionalId = rol === 'profesional' ? this.usrProfesionalId() : undefined;
-    const profesionalesAsignados = rol === 'secretaria' ? this.usrAsignados() : undefined;
-
-    if (!nombre || !email || !dni || !password) { this.usrError.set('Completá nombre, DNI, email y contraseña.'); return; }
-    if (!/^[0-9]{7,9}$/.test(dni)) { this.usrError.set('El DNI debe tener entre 7 y 9 números (es la credencial de ingreso).'); return; }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { this.usrError.set('El email no es válido.'); return; }
-    if (password.length < 6) { this.usrError.set('La contraseña debe tener al menos 6 caracteres.'); return; }
-    if (rol === 'profesional' && !profesionalId) { this.usrError.set('Elegí a qué profesional corresponde este usuario.'); return; }
-    if (this.adminService.emailUsuarioOcupado(email)) { this.usrError.set('Ya existe un usuario del equipo con ese email.'); return; }
-    if (this.adminService.dniUsuarioOcupado(dni)) { this.usrError.set('Ya existe un usuario del equipo con ese DNI.'); return; }
-
-    this.usrGuardando.set(true);
-    const creado = await this.adminService.addUsuario({ nombre, email, dni, password, rol, profesionalId, profesionalesAsignados });
-    this.usrGuardando.set(false);
-    if (creado) {
-      this.usrNombre.set(''); this.usrEmail.set(''); this.usrDni.set(''); this.usrPassword.set('');
-      this.usrAsignados.set([]);
-      this.mostrarToast(`Usuario de ${creado.rol === 'secretaria' ? 'secretaría' : 'profesional'} creado. Entra por /login con su DNI.`);
-    } else {
-      this.usrError.set('No se pudo crear el usuario.');
-    }
-  }
-
-  async toggleUsuario(u: Usuario) {
-    const ok = await this.adminService.updateUsuario(u.id, { activo: !(u.activo !== false) });
-    if (ok) this.mostrarToast(u.activo !== false ? `${u.nombre} ya no puede iniciar sesión.` : `${u.nombre} puede iniciar sesión nuevamente.`);
-  }
-
-  abrirReset(u: Usuario) {
-    this.resetUsuarioId.set(u.id);
-    this.resetPassword.set('');
-    this.asignarUsuarioId.set(null);
-  }
-
-  async confirmarReset() {
-    const id = this.resetUsuarioId();
-    if (!id || this.resetPassword().length < 6) { this.usrError.set('La contraseña nueva debe tener al menos 6 caracteres.'); return; }
-    const ok = await this.adminService.updateUsuario(id, { password: this.resetPassword() });
-    if (ok) {
-      this.resetUsuarioId.set(null);
-      this.resetPassword.set('');
-      this.mostrarToast('Contraseña actualizada.');
-    }
   }
 
   // ===== Alta de profesional =====

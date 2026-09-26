@@ -51,7 +51,7 @@
         </nav>
 
         <a [routerLink]="linkTurnos()"
-           class="hidden sm:inline-flex bg-teal-200 text-teal-900 border border-teal-300 px-5 py-2 rounded-full text-xs font-extrabold hover:bg-teal-300 hover:scale-[1.03] active:scale-100 transition-all">
+           class="hidden sm:inline-flex bg-menta-400 text-teal-950 border border-menta-500 px-5 py-2 rounded-full text-xs font-extrabold hover:bg-menta-500 hover:scale-[1.03] active:scale-100 transition-all">
           Agendar Turno
         </a>
       </div>
@@ -70,7 +70,7 @@
     <!-- ===== HERO ===== -->
     <section class="relative">
       <!-- Banner con zoom sutil -->
-      <div class="relative h-60 sm:h-72 lg:h-[340px] overflow-hidden">
+      <div class="relative h-72 lg:h-[340px] overflow-hidden">
         <div class="absolute inset-0 bg-teal-200"></div>
         <img *ngIf="prof.bannerUrl" [src]="prof.bannerUrl" alt="Banner del consultorio"
              class="absolute inset-0 w-full h-full object-cover anim-banner-zoom">
@@ -90,7 +90,12 @@
             <!-- Avatar -->
             <div class="-mt-20 sm:-mt-24 shrink-0 anim-entrada" style="animation-delay: 0.1s">
               <div class="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl overflow-hidden ring-4 ring-white border border-stone-200 bg-stone-100">
-                <img [src]="prof.avatarUrl || 'dra-elena.jpg'" [alt]="prof.nombre" class="w-full h-full object-cover">
+                <img *ngIf="prof.avatarUrl; else avatarIniciales" [src]="prof.avatarUrl" [alt]="prof.nombre" class="w-full h-full object-cover">
+                <ng-template #avatarIniciales>
+                  <div class="w-full h-full bg-teal-100 text-teal-800 flex items-center justify-center text-3xl sm:text-4xl font-extrabold" [attr.aria-label]="prof.nombre">
+                    {{ getInitials(prof.nombre) }}
+                  </div>
+                </ng-template>
               </div>
             </div>
 
@@ -108,9 +113,9 @@
             </div>
 
             <!-- CTA -->
-            <div class="shrink-0 w-full sm:w-auto anim-entrada flex flex-col gap-2" style="animation-delay: 0.3s">
+            <div #ctaHero class="shrink-0 w-full sm:w-auto anim-entrada flex flex-col gap-2" style="animation-delay: 0.3s">
               <a [routerLink]="linkTurnos()"
-                 class="anim-halo w-full inline-flex items-center justify-center gap-2 bg-teal-200 text-teal-900 border border-teal-300 px-7 py-4 rounded-2xl text-sm font-extrabold hover:bg-teal-300 hover:scale-[1.03] active:scale-100 transition-all">
+                 class="anim-halo w-full inline-flex items-center justify-center gap-2 bg-menta-400 text-teal-950 border border-menta-500 px-7 py-4 rounded-2xl text-sm font-extrabold hover:bg-menta-500 hover:scale-[1.03] active:scale-100 transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 Agendar Turno
               </a>
@@ -317,7 +322,7 @@
           </div>
 
           <a [routerLink]="linkTurnos()"
-             class="mt-5 w-full inline-flex items-center justify-center gap-2 bg-teal-200 text-teal-900 border border-teal-300 px-5 py-3 rounded-xl text-xs font-extrabold hover:bg-teal-300 transition-colors">
+             class="mt-5 w-full inline-flex items-center justify-center gap-2 bg-menta-400 text-teal-950 border border-menta-500 px-5 py-3 rounded-xl text-xs font-extrabold hover:bg-menta-500 transition-colors">
             Ver turnos disponibles
           </a>
         </div>
@@ -346,21 +351,24 @@
 
     <!-- Botón volver arriba -->
     <button *ngIf="scrolleado()" (click)="volverArriba()"
-            class="fixed bottom-24 sm:bottom-8 right-4 sm:right-6 z-40 w-11 h-11 rounded-2xl bg-white border border-stone-200 text-stone-500 hover:text-teal-800 hover:border-teal-300 flex items-center justify-center transition-colors animate-scale-in"
+            [ngClass]="mostrarCtaFijo() ? 'bottom-24' : 'bottom-6'"
+            class="fixed sm:bottom-8 right-4 sm:right-6 z-40 w-11 h-11 rounded-2xl bg-white border border-stone-200 text-stone-500 hover:text-teal-800 hover:border-teal-300 flex items-center justify-center transition-colors animate-scale-in"
             title="Volver arriba">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg>
     </button>
 
     <!-- CTA fijo en móvil -->
-    <div class="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 backdrop-blur-xl border-t border-stone-200/70 p-4"
-         style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))">
+    <div class="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-stone-200/70 px-4 pt-3 transition-transform duration-300"
+         [ngClass]="mostrarCtaFijo() ? 'translate-y-0' : 'translate-y-full pointer-events-none'"
+         [attr.aria-hidden]="!mostrarCtaFijo()"
+         style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom))">
       <div class="flex gap-2">
         <a [routerLink]="linkTurnos()"
-           class="anim-halo flex-[1.5] inline-flex items-center justify-center gap-2 bg-teal-200 text-teal-900 border border-teal-300 px-4 py-3.5 rounded-2xl text-sm font-extrabold active:scale-[0.98] transition-transform">
+           class="flex-[1.5] inline-flex items-center justify-center gap-2 bg-menta-400 text-teal-950 border border-menta-500 px-4 py-3 rounded-2xl text-sm font-extrabold active:scale-[0.98] transition-transform">
           Agendar Turno
         </a>
         <a [routerLink]="linkMisTurnos()"
-           class="flex-1 inline-flex items-center justify-center bg-white text-stone-600 border border-stone-200 px-3 py-3.5 rounded-2xl text-xs font-extrabold active:scale-[0.98] transition-transform">
+           class="flex-1 inline-flex items-center justify-center bg-white text-stone-600 border border-stone-200 px-3 py-3 rounded-2xl text-xs font-extrabold active:scale-[0.98] transition-transform">
           Mi turno
         </a>
       </div>
