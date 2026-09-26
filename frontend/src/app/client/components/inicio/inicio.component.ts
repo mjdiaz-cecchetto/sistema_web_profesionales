@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { forkJoin, switchMap } from 'rxjs';
@@ -52,6 +52,9 @@ export class InicioComponent implements OnInit {
   /** Estado de scroll para la navbar, la barra de progreso y el back-to-top. */
   scrolleado = signal(false);
   progresoScroll = signal(0);
+  /** CTA fijo de mobile: solo cuando los botones del hero ya salieron de pantalla (evita CTAs duplicados). */
+  mostrarCtaFijo = signal(false);
+  private readonly ctaHero = viewChild<ElementRef<HTMLElement>>('ctaHero');
 
   /** Nombre del día de hoy (para resaltarlo en Horarios). */
   readonly diaHoy = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][new Date().getDay()];
@@ -62,6 +65,8 @@ export class InicioComponent implements OnInit {
     this.scrolleado.set(y > 24);
     const total = document.documentElement.scrollHeight - window.innerHeight;
     this.progresoScroll.set(total > 0 ? Math.min(100, (y / total) * 100) : 0);
+    const cta = this.ctaHero()?.nativeElement;
+    this.mostrarCtaFijo.set(!!cta && cta.getBoundingClientRect().bottom < 0);
   }
 
   volverArriba(): void {
@@ -157,9 +162,12 @@ export class InicioComponent implements OnInit {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  /** Iniciales del nombre, ignorando títulos abreviados ("Lic.", "Dra.", "Od."…): "Lic. Martín Vega" → "MV". */
   getInitials(nombre: string): string {
-    const parts = nombre.split(' ').filter(Boolean);
+    const todas = nombre.split(' ').filter(Boolean);
+    const sinTitulo = todas.filter(p => !p.endsWith('.'));
+    const parts = sinTitulo.length ? sinTitulo : todas;
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return nombre.slice(0, 2).toUpperCase();
+    return (parts[0] ?? '').slice(0, 2).toUpperCase();
   }
 }
