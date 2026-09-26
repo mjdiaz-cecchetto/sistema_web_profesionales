@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { MiembroConCuenta } from '../../core/models';
 import { environment } from '../../../environments/environment';
 
 interface CuentaDemo {
   etiqueta: string;
   detalle: string;
-  /** Credencial de acceso: email (dueños/admin) o DNI (usuarios del equipo). */
+  /** Credencial de acceso: DNI (o email) de la persona; email para el admin de plataforma. */
   email: string;
   password: string;
   icono: 'consultorio' | 'profesional' | 'admin';
@@ -41,12 +42,21 @@ export class LoginComponent {
   /** Accesos de demostración (coinciden con el seed de la API local). */
   readonly demos: CuentaDemo[] = [
     {
-      etiqueta: 'Centro Médico San Martín',
-      detalle: 'Consultorio · 5 profesionales · varias especialidades',
-      email: 'admin@centrosanmartin.com.ar',
+      etiqueta: 'Laura Benítez · administración San Martín',
+      detalle: 'Administra el centro · no atiende pacientes',
+      email: '30112233',
       password: 'consultorio123',
       icono: 'consultorio',
-      rol: 'Dueño',
+      rol: 'Administrador',
+      rolClase: 'bg-teal-100 text-teal-900 border-teal-200'
+    },
+    {
+      etiqueta: 'Dr. Gustavo Lema · director',
+      detalle: 'Administra San Martín y además atiende (psiquiatría)',
+      email: '20345678',
+      password: 'lema1234',
+      icono: 'consultorio',
+      rol: 'Admin + atiende',
       rolClase: 'bg-teal-100 text-teal-900 border-teal-200'
     },
     {
@@ -78,12 +88,21 @@ export class LoginComponent {
     },
     {
       etiqueta: 'Dra. Elena Ramos',
-      detalle: 'Entra con DNI · profesional independiente · Psicología',
+      detalle: 'Su cuenta independiente + profesional en San Martín (elige centro)',
       email: '24853917',
       password: 'elena123',
       icono: 'profesional',
-      rol: 'Independiente',
+      rol: 'Multi-centro',
       rolClase: 'bg-amber-50 text-amber-800 border-amber-200'
+    },
+    {
+      etiqueta: 'Julieta Paz · secretaria de la Dra. Ramos',
+      detalle: 'Secretaría de una cuenta independiente',
+      email: '36544210',
+      password: 'julieta123',
+      icono: 'profesional',
+      rol: 'Secretaría',
+      rolClase: 'bg-violet-50 text-violet-800 border-violet-200'
     },
     {
       etiqueta: 'Administrador de la Plataforma',
@@ -123,6 +142,27 @@ export class LoginComponent {
     this.recuperarMsg.set(r.detalle);
   }
 
+  // ---- Paso 2: selector de centro (personas con varias membresías) ----
+  centros = signal<MiembroConCuenta[] | null>(null);
+
+  etiquetaRol(m: MiembroConCuenta): string {
+    switch (m.rol) {
+      case 'secretaria': return 'Secretaría';
+      case 'profesional': return 'Profesional';
+      default: return m.profesionalId ? 'Administrador · atiende' : 'Administrador';
+    }
+  }
+
+  elegirCentro(miembroId: string): void {
+    if (this.auth.entrarEn(miembroId)) this.router.navigateByUrl(this.auth.destino());
+  }
+
+  volverAlLogin(): void {
+    this.auth.logout();
+    this.centros.set(null);
+    this.password.set('');
+  }
+
   async ingresar(): Promise<void> {
     if (this.enviando()) return;
     if (!this.email().trim() || !this.password()) {
@@ -131,10 +171,14 @@ export class LoginComponent {
     }
     this.enviando.set(true);
     this.error.set(null);
-    const err = await this.auth.login(this.email(), this.password());
+    const r = await this.auth.login(this.email(), this.password());
     this.enviando.set(false);
-    if (err) {
-      this.error.set(err);
+    if (r.error) {
+      this.error.set(r.error);
+      return;
+    }
+    if (r.elegir) {
+      this.centros.set(r.elegir);
       return;
     }
     this.router.navigateByUrl(this.auth.destino());

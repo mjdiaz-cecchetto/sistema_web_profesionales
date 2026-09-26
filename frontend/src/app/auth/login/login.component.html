@@ -20,7 +20,27 @@
 
     <!-- Card de login -->
     <div class="card p-6 sm:p-8">
-      <form *ngIf="!modoRecuperar()" (ngSubmit)="ingresar()" autocomplete="on">
+      <!-- Paso 2: la persona trabaja en varias cuentas → elige centro -->
+      <div *ngIf="centros() as lista">
+        <h2 class="text-base font-bold text-gray-800">¿En qué centro vas a trabajar?</h2>
+        <p class="text-xs text-gray-500 mt-1 mb-4">Tu usuario tiene acceso a {{ lista.length }} cuentas. Podés cambiar después desde el panel.</p>
+        <div class="space-y-2">
+          <button type="button" *ngFor="let m of lista" (click)="elegirCentro(m.id)"
+                  class="w-full flex items-center gap-3 text-left bg-white hover:bg-teal-50 border border-stone-200 hover:border-teal-300 rounded-xl px-3.5 py-3 transition-colors">
+            <span class="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-semibold text-gray-800 truncate">{{ m.cuenta.nombre }}</span>
+              <span class="block text-xs text-gray-500">{{ etiquetaRol(m) }}</span>
+            </span>
+            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+        </div>
+        <button type="button" class="btn-secondary w-full justify-center mt-4" (click)="volverAlLogin()">Usar otro usuario</button>
+      </div>
+
+      <form *ngIf="!modoRecuperar() && !centros()" (ngSubmit)="ingresar()" autocomplete="on">
         <label class="field-label" for="login-email">Email o DNI</label>
         <input
           id="login-email"
@@ -31,7 +51,7 @@
           [ngModel]="email()"
           (ngModelChange)="email.set($event)"
           name="email" />
-        <p class="text-[11px] text-gray-400 mb-3">El personal del consultorio ingresa con su DNI.</p>
+        <p class="text-[11px] text-gray-400 mb-3">Cada persona entra con su DNI o su email.</p>
 
         <label class="field-label" for="login-pass">Contraseña</label>
         <div class="relative mb-1">
@@ -78,7 +98,7 @@
       <!-- Recuperación de cuenta (simulada: el envío real lo hace el backend) -->
       <form *ngIf="modoRecuperar()" (ngSubmit)="recuperar()">
         <h2 class="text-base font-bold text-gray-800 mb-1">Recuperar el acceso</h2>
-        <p class="text-xs text-gray-500 mb-4">Ingresá tu email (dueños de cuenta) o tu DNI (personal del consultorio) y te enviamos los pasos para crear una contraseña nueva.</p>
+        <p class="text-xs text-gray-500 mb-4">Ingresá tu DNI o tu email y te enviamos los pasos para crear una contraseña nueva.</p>
 
         <label class="field-label" for="rec-id">Email o DNI</label>
         <input
@@ -112,7 +132,7 @@
           *ngFor="let demo of demos"
           type="button"
           (click)="usarDemo(demo)"
-          class="card px-4 py-3 flex items-center gap-3.5 text-left hover:border-teal-300 hover:bg-teal-50/60 transition-colors">
+          class="card w-full min-w-0 px-4 py-3 flex items-center gap-3.5 text-left hover:border-teal-300 hover:bg-teal-50/60 transition-colors">
           <span class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                 [ngClass]="demo.icono === 'consultorio' ? 'bg-teal-100 text-teal-800' : demo.icono === 'profesional' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-stone-800 text-stone-100'">
             <!-- consultorio: edificio -->
@@ -127,7 +147,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
             </svg>
           </span>
-          <span class="min-w-0">
+          <span class="block min-w-0 flex-1">
             <span class="flex items-center gap-2 min-w-0">
               <span class="block text-sm font-semibold text-gray-800 truncate">{{ demo.etiqueta }}</span>
               <span class="shrink-0 text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full border" [ngClass]="demo.rolClase">{{ demo.rol }}</span>

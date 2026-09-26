@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Cuenta, Plan } from '../../../core/models';
+import { Cuenta, Plan, Usuario } from '../../../core/models';
 import { GestionService } from '../../services/gestion.service';
 
 /** Modal de alta/edición de una cuenta (tenant) desde el back-office. */
@@ -23,13 +23,18 @@ export class CuentaModalComponent implements OnInit {
   tipo = signal<'consultorio' | 'profesional'>('consultorio');
   nombre = signal('');
   especialidad = signal('');
+  /** Email de CONTACTO de la organización (no es credencial). */
   email = signal('');
-  /** Credencial de acceso elegida (solo consultorios; los profesionales van siempre con DNI). */
-  credencial = signal<'email' | 'dni'>('email');
-  dni = signal('');
-  /** Alta: contraseña inicial. Edición: dejar vacío = no cambiarla. */
+
+  // ---- Alta: persona que administrará la cuenta ----
+  respDni = signal('');
+  respNombre = signal('');
+  respEmail = signal('');
   password = signal('');
   verPassword = signal(false);
+  /** Persona encontrada por DNI (se vincula en vez de crearla). */
+  respExistente = signal<Usuario | null>(null);
+  buscandoResp = signal(false);
   descripcion = signal('');
   plan = signal('');
   slug = signal('');
@@ -47,9 +52,20 @@ export class CuentaModalComponent implements OnInit {
     return this.cuenta === null;
   }
 
-  /** true cuando esta cuenta accede con DNI (profesional siempre; consultorio si lo eligió). */
-  usaDni(): boolean {
-    return this.tipo() === 'profesional' || this.credencial() === 'dni';
+  /** Al salir del DNI del administrador: ¿ya tiene usuario en la plataforma? */
+  async buscarResponsable(): Promise<void> {
+    const dni = this.respDni().trim();
+    this.respExistente.set(null);
+    if (!/^[0-9]{7,9}$/.test(dni)) return;
+    this.buscandoResp.set(true);
+    const p = await this.gestion.personaPorDni(dni);
+    this.buscandoResp.set(false);
+    this.respExistente.set(p ?? null);
+  }
+
+  onRespDni(valor: string): void {
+    this.respDni.set(valor.replace(/\D/g, '').slice(0, 9));
+    this.respExistente.set(null);
   }
 
   ngOnInit(): void {
@@ -59,8 +75,6 @@ export class CuentaModalComponent implements OnInit {
       this.tipo.set(c.tipo);
       this.nombre.set(c.nombre);
       this.email.set(c.email);
-      this.dni.set(c.dni ?? '');
-      this.credencial.set(c.dni ? 'dni' : 'email');
       this.descripcion.set(c.descripcion);
       this.plan.set(c.plan);
       this.slug.set(c.slug);
@@ -88,20 +102,33 @@ export class CuentaModalComponent implements OnInit {
   private async validar(): Promise<string | null> {
     if (!this.nombre().trim()) return 'Ingresá el nombre de la cuenta.';
     const mail = this.email().trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return 'Ingresá un email válido (se usa para avisos y recuperación).';
-    if (this.usaDni()) {
-      const dni = this.dni().trim();
-      if (!/^[0-9]{7,9}$/.test(dni)) return 'Ingresá un DNI válido (entre 7 y 9 números, sin puntos).';
-      if (!(await this.gestion.dniDisponible(dni, this.cuenta?.id))) return 'Ese DNI ya se usa como credencial en la plataforma.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return 'Ingresá un email de contacto válido.';
+    if (this.esNueva) {
+      const err = await this.validarResponsable();
+      if (err) return err;
     }
-    if (this.esNueva && this.password().length < 6) return 'La contraseña inicial debe tener al menos 6 caracteres.';
-    if (!this.esNueva && this.password() && this.password().length < 6) return 'La nueva contraseña debe tener al menos 6 caracteres.';
     if (!this.plan()) return 'Elegí un plan de membresía.';
     if (!this.slug().trim()) return 'Ingresá el slug de la página pública.';
     if (!this.gestion.slugDisponible(this.slug(), this.cuenta?.id)) return 'Ese slug ya está en uso por otra cuenta.';
     const emailUsado = this.gestion.cuentas().some(c =>
       c.email.toLowerCase() === mail.toLowerCase() && c.id !== this.cuenta?.id);
     if (emailUsado) return 'Ya existe una cuenta con ese email.';
+    return null;
+  }
+
+  /** Alta: valida la persona administradora (nueva o existente). */
+  private async validarResponsable(): Promise<string | null> {
+    const dni = this.respDni().trim();
+    if (!/^[0-9]{7,9}$/.test(dni)) return 'Ingresá el DNI del administrador (entre 7 y 9 números, sin puntos).';
+    const existente = await this.gestion.personaPorDni(dni);
+    if (existente === undefined) return 'No se pudo conectar con el servidor. ¿Está corriendo la API local?';
+    this.respExistente.set(existente);
+    if (existente) return null; // se vincula: conserva su nombre, email y contraseña
+    if (!this.respNombre().trim()) return 'Ingresá el nombre del administrador.';
+    const mail = this.respEmail().trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return 'Ingresá un email válido para el administrador.';
+    if (!(await this.gestion.emailPersonaDisponible(mail))) return 'Ese email ya pertenece a otra persona de la plataforma.';
+    if (this.password().length < 6) return 'La contraseña inicial debe tener al menos 6 caracteres.';
     return null;
   }
 
@@ -116,8 +143,13 @@ export class CuentaModalComponent implements OnInit {
         tipo: this.tipo(),
         nombre: this.nombre(),
         email: this.email(),
-        dni: this.usaDni() ? this.dni().trim() : undefined,
-        password: this.password(),
+        responsable: {
+          dni: this.respDni().trim(),
+          usuarioExistenteId: this.respExistente()?.id,
+          nombre: this.respNombre(),
+          email: this.respEmail(),
+          password: this.password()
+        },
         descripcion: this.descripcion(),
         plan: this.plan(),
         slug: this.slug(),
@@ -131,12 +163,10 @@ export class CuentaModalComponent implements OnInit {
     const cambios: Partial<Cuenta> = {
       nombre: this.nombre().trim(),
       email: this.email().trim().toLowerCase(),
-      dni: this.usaDni() ? this.dni().trim() : null,
       descripcion: this.descripcion().trim(),
       plan: this.plan(),
       slug: this.slug()
     };
-    if (this.password()) cambios.password = this.password();
     const ok = await this.gestion.actualizarCuenta(this.cuenta!.id, cambios);
     if (!ok) { this.error.set('No se pudo guardar. ¿Está corriendo la API local?'); return; }
     this.guardada.emit({ cuenta: { ...this.cuenta!, ...cambios } as Cuenta, esNueva: false });
