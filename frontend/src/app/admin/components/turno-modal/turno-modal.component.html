@@ -34,7 +34,7 @@
           <button *ngFor="let p of adminService.profesionalesOperables()"
                   (click)="cambiarProfesional(p.id)"
                   [ngClass]="profId() === p.id
-                    ? 'bg-teal-100 text-teal-900 border-teal-300'
+                    ? 'bg-teal-600 text-white border-teal-600'
                     : 'bg-white text-stone-500 border-stone-200 hover:border-teal-300 hover:text-teal-800'"
                   class="snap-start shrink-0 flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 rounded-full border text-[11px] font-bold transition-colors">
             <span class="w-6 h-6 rounded-full overflow-hidden bg-teal-200 border border-teal-300 flex items-center justify-center text-[8px] font-extrabold text-teal-900 shrink-0">
@@ -61,6 +61,10 @@
           </div>
           <button (click)="quitarPaciente()" class="text-xs font-bold text-teal-800 hover:underline shrink-0">Cambiar</button>
         </div>
+        <p *ngIf="pacienteSeleccionado() && avisoCobertura()"
+           class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-2">
+          {{ avisoCobertura() }}
+        </p>
 
         <ng-template #buscador>
 
@@ -144,7 +148,7 @@
               <div class="relative flex-1">
                 <select [ngModel]="npObraSocial()" (ngModelChange)="npObraSocial.set($event)"
                         class="input !text-xs !bg-white appearance-none cursor-pointer !pr-8">
-                  <option *ngFor="let o of adminService.healthInsurances()" [value]="o">{{ o }}</option>
+                  <option *ngFor="let o of obrasSociales.opcionesCuenta()" [value]="o">{{ o }}</option>
                 </select>
                 <svg class="w-4 h-4 text-stone-400 absolute right-3 top-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
               </div>
@@ -184,7 +188,7 @@
                    (click)="c.date && !c.deshabilitado && elegirFecha(c.date)"
                    [class.pointer-events-none]="!c.date || c.deshabilitado"
                    [ngClass]="!c.date ? '' :
-                     c.isSelected ? 'bg-teal-200 border-teal-400 font-extrabold text-teal-950' :
+                     c.isSelected ? 'bg-teal-600 border-teal-600 font-extrabold text-white' :
                      c.deshabilitado ? 'opacity-30' :
                      c.estado === 'BLOQUEADO' ? 'bg-rose-50 text-rose-400 line-through border-transparent' :
                      c.estado === 'COMPLETO' ? 'bg-rose-50/70 text-rose-500 border-transparent hover:border-rose-200' :
@@ -220,7 +224,7 @@
                         [ngClass]="slot.ocupado
                           ? 'bg-rose-50 text-rose-400 border-rose-200 line-through cursor-not-allowed'
                           : hora() === slot.time
-                            ? 'bg-teal-200 text-teal-900 border-teal-400'
+                            ? 'bg-teal-600 text-white border-teal-600'
                             : 'bg-white text-stone-600 border-stone-200 hover:border-teal-300 hover:bg-teal-50'"
                         class="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-colors">
                   {{ slot.time }}
@@ -320,7 +324,7 @@
               <div class="flex gap-1.5">
                 <button *ngFor="let f of frecuencias"
                         (click)="frecuencia.set(f.value)"
-                        [ngClass]="frecuencia() === f.value ? 'bg-teal-200 text-teal-900 border-teal-300' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'"
+                        [ngClass]="frecuencia() === f.value ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'"
                         class="flex-1 px-2 py-2 rounded-lg text-[10px] font-bold border transition-colors">
                   {{ f.label }}
                 </button>

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   Appointment,
@@ -8,12 +8,14 @@ import {
   BookingRequest,
   Cuenta,
   DayAvailability,
-  HealthInsurance,
+  Miembro,
+  ObraSocial,
   Notificacion,
   ProfessionalAvailability,
   ProfessionalProfile,
   Service,
-  TimeSlot
+  TimeSlot,
+  Usuario
 } from '../../core/models';
 import { addDaysLocal, addMinutes, parseLocalDate } from '../../core/date-utils';
 
@@ -66,9 +68,15 @@ export class ClientService {
     );
   }
 
-  getHealthInsurances(): Observable<string[]> {
-    return this.http.get<HealthInsurance[]>(`${this.api}/healthInsurances`).pipe(
-      map(list => list.map(h => h.name))
+  /**
+   * Obras sociales ACTIVAS con las que trabaja una cuenta. Si no se pueden
+   * leer, devuelve una lista vacía para que la página siga funcionando
+   * (el paciente igual puede reservar como particular).
+   */
+  getObrasSociales(cuentaId: string): Observable<ObraSocial[]> {
+    return this.http.get<ObraSocial[]>(`${this.api}/obrasSociales?cuentaId=${encodeURIComponent(cuentaId)}`).pipe(
+      map(list => list.filter(o => o.activo !== false).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))),
+      catchError(() => of([] as ObraSocial[]))
     );
   }
 
@@ -162,7 +170,8 @@ export class ClientService {
         };
 
         return this.http.post<Appointment>(`${this.api}/appointments`, nuevoTurno).pipe(
-          switchMap(creado => this.ensurePatient(creado).pipe(map(() => creado)))
+          switchMap(creado => this.ensurePatient(creado).pipe(map(() => creado))),
+          switchMap(creado => this.avisarSolicitudNueva(creado, profesional).pipe(map(() => creado)))
         );
       })
     );
@@ -219,6 +228,7 @@ export class ClientService {
           evento,
           origen: 'paciente',
           canal: 'whatsapp',
+          destinatarioTipo: 'profesional',
           destinatario: prof.nombre,
           telefono: prof.whatsapp || '',
           mensaje,
@@ -227,6 +237,53 @@ export class ClientService {
         };
         return this.http.post<Notificacion>(`${this.api}/notificaciones`, aviso);
       })
+    );
+  }
+
+  /**
+   * SOLICITUD NUEVA: registra el aviso al PROFESIONAL (WhatsApp) y a cada
+   * SECRETARÍA activa que gestiona su agenda (email; una secretaría sin
+   * agendas asignadas gestiona todo el centro).
+   * MOCK: el cliente público lee miembros/usuarios solo para simular el
+   * envío; en Laravel lo resuelve el backend al crear el turno y la página
+   * pública nunca ve datos del equipo. Si el aviso falla, la reserva sigue.
+   */
+  private avisarSolicitudNueva(turno: Appointment, prof: ProfessionalProfile): Observable<unknown> {
+    const detalle = `${turno.patientName} (DNI ${turno.patientDni}) pidió un turno de ${turno.serviceName} con ${prof.nombre} para el ${turno.date} a las ${turno.time} hs. Está pendiente de confirmación.`;
+    const base = {
+      cuentaId: turno.cuentaId,
+      turnoId: turno.id,
+      evento: 'solicitud_nueva' as const,
+      origen: 'paciente' as const,
+      fecha: new Date().toISOString(),
+      estado: 'simulada' as const
+    };
+    const id = (i: number) => 'ntf-' + Date.now().toString(36) + i + Math.floor(Math.random() * 1000);
+
+    return this.http.get<Miembro[]>(`${this.api}/miembros?cuentaId=${encodeURIComponent(turno.cuentaId)}&rol=secretaria`).pipe(
+      map(miembros => miembros.filter(m =>
+        m.activo !== false && (!m.profesionalesAsignados?.length || m.profesionalesAsignados.includes(turno.profesionalId)))),
+      switchMap(secretarias => {
+        if (!secretarias.length) return of([] as Usuario[]);
+        const q = secretarias.map(m => `id=${encodeURIComponent(m.usuarioId)}`).join('&');
+        return this.http.get<Usuario[]>(`${this.api}/usuarios?${q}`);
+      }),
+      switchMap(personas => {
+        const avisos: Notificacion[] = [
+          {
+            ...base, id: id(0), canal: 'whatsapp', destinatarioTipo: 'profesional',
+            destinatario: prof.nombre, telefono: prof.whatsapp || '',
+            mensaje: `Nueva solicitud de turno: ${detalle} Confirmalo desde tu panel.`
+          },
+          ...personas.filter(u => u.activo !== false).map((u, i): Notificacion => ({
+            ...base, id: id(i + 1), canal: 'email', destinatarioTipo: 'secretaria', usuarioId: u.id,
+            destinatario: u.nombre, telefono: '', email: u.email,
+            mensaje: `Nueva solicitud de turno en la agenda de ${prof.nombre}: ${detalle}`
+          }))
+        ];
+        return forkJoin(avisos.map(a => this.http.post<Notificacion>(`${this.api}/notificaciones`, a)));
+      }),
+      catchError(() => of(null))
     );
   }
 

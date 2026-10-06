@@ -15,7 +15,7 @@ interface CuentaDemo {
   icono: 'consultorio' | 'profesional' | 'admin';
   /** Chip de rol que se muestra en la card. */
   rol: string;
-  /** Clases del chip (fondo/texto/borde pastel). */
+  /** Clases del chip de rol (fondo/texto/borde). */
   rolClase: string;
 }
 
@@ -111,7 +111,7 @@ export class LoginComponent {
       password: 'admin123',
       icono: 'admin',
       rol: 'Plataforma',
-      rolClase: 'bg-stone-800 text-white border-stone-700'
+      rolClase: 'bg-teal-900 text-white border-teal-800'
     }
   ];
 

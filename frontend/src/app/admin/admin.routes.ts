@@ -38,6 +38,12 @@ export const adminRoutes: Routes = [
         title: 'Admin - Mi Equipo'
       },
       {
+        path: 'obras-sociales',
+        canActivate: [rolGuard(['administrador', 'profesional'])],
+        loadComponent: () => import('./components/obras-sociales/obras-sociales.component').then(m => m.ObrasSocialesComponent),
+        title: 'Admin - Obras Sociales'
+      },
+      {
         path: 'usuarios',
         canActivate: [rolGuard(['administrador'])],
         loadComponent: () => import('./components/usuarios/usuarios.component').then(m => m.UsuariosComponent),

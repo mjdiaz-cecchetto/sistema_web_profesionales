@@ -134,7 +134,7 @@
           (click)="usarDemo(demo)"
           class="card w-full min-w-0 px-4 py-3 flex items-center gap-3.5 text-left hover:border-teal-300 hover:bg-teal-50/60 transition-colors">
           <span class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                [ngClass]="demo.icono === 'consultorio' ? 'bg-teal-100 text-teal-800' : demo.icono === 'profesional' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-stone-800 text-stone-100'">
+                [ngClass]="demo.icono === 'consultorio' ? 'bg-teal-100 text-teal-800' : demo.icono === 'profesional' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-teal-900 text-menta-300'">
             <!-- consultorio: edificio -->
             <svg *ngIf="demo.icono === 'consultorio'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />

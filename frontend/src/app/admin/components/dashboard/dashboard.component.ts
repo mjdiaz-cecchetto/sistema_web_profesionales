@@ -80,14 +80,27 @@ export class DashboardComponent {
     }
   ]);
 
-  /** Últimos avisos de WhatsApp registrados sobre turnos visibles (mock: envío real en backend). */
+  /** Últimos avisos sobre turnos visibles (mock: el envío real lo hace el backend). */
   avisosRecientes = computed(() => {
     const idsVisibles = new Set(this.adminService.turnosVisibles().map(a => a.id));
-    return [...this.adminService.notificaciones()]
-      .filter(n => idsVisibles.has(n.turnoId))
-      .sort((a, b) => b.fecha.localeCompare(a.fecha))
-      .slice(0, 4);
+    return this.adminService.avisosVisibles().filter(n => idsVisibles.has(n.turnoId)).slice(0, 5);
   });
+
+  /** Solicitudes nuevas de las últimas 24 h (un aviso por turno, aunque haya ido a varias personas). */
+  solicitudesHoy = computed(() => {
+    const desde = Date.now() - 24 * 3600_000;
+    return new Set(this.adminService.avisosVisibles()
+      .filter(n => n.evento === 'solicitud_nueva' && new Date(n.fecha).getTime() >= desde)
+      .map(n => n.turnoId)).size;
+  });
+
+  etiquetaEvento(evento: string): string {
+    switch (evento) {
+      case 'solicitud_nueva': return 'Solicitud nueva';
+      case 'cancelado': return 'Cancelación';
+      default: return 'Reprogramación';
+    }
+  }
 
   fechaAviso(iso: string): string {
     const d = new Date(iso);

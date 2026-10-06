@@ -61,7 +61,7 @@ body {
   .reveal, .title-bar { opacity: 1 !important; transform: none !important; transition: none !important; }
 }
 
-/* ---- Componentes reutilizables (estilo flat: blanco, gris y verde pastel) ---- */
+/* ---- Componentes reutilizables (marca: azul petróleo + verde menta, sin degradés) ---- */
 @layer components {
   /* Tarjeta estándar */
   .card {
@@ -111,7 +111,7 @@ body {
     @apply text-[11px] font-bold text-stone-500 uppercase tracking-wider;
   }
 
-  /* Chip de estado (pasteles fijos) */
+  /* Chip de estado (semáforo fijo: no cambia con la marca) */
   .chip {
     @apply inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full border whitespace-nowrap;
   }

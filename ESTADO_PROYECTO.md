@@ -1,11 +1,10 @@
 # Sistema Web para Profesionales — Estado del Proyecto
 
-Registro vivo del estado del proyecto. Última actualización: 26/09/2026 (modelo de usuarios: personas + membresías + roles combinables, multi-centro, independientes con secretaría; paleta petróleo + menta; fix mobile del perfil público). FRONTEND CERRADO: lo que sigue es el backend Laravel.
+Registro vivo del estado del proyecto. Última actualización: 06/10/2026 (aviso de solicitud nueva al profesional y a su secretaría; paleta petróleo + menta aplicada en todas las vistas). Antes: 26/09 modelo de usuarios (personas + membresías + roles combinables, multi-centro). FRONTEND CERRADO.
 
 ## 🛠️ Stack
 - **Frontend:** Angular 21 (standalone, signals) + TailwindCSS 3 · diseño flat azul petróleo + verde menta (escalas `teal` y `menta` en `tailwind.config.js`)
 - **Base de datos simulada:** json-server sobre `frontend/db.json` en `localhost:3000`
-- **Backend definitivo (próximo paso):** Laravel + MySQL · multi-tenant (SaaS) · tablas y atributos en español · auth con Sanctum
 
 ## ▶️ Cómo correr (desde `frontend/`)
 ```bash
@@ -28,7 +27,7 @@ El sistema separa la **organización** de las **personas**:
 
 - **Multi-centro:** una misma persona puede tener membresías en varias cuentas (p. ej. un profesional que atiende en dos centros). Al entrar **elige el centro**, y en el panel tiene **"Cambiar de centro"**.
 - **Independientes con equipo:** una cuenta de profesional independiente también puede sumar secretarías (su administradora es la profesional, que atiende).
-- **Reglas** (en `EquipoUsuariosService`; en Laravel irán en Policies): siempre queda ≥1 administrador activo (incluso frente a soporte), nadie cambia su propio rol ni se quita su acceso, un profesional se vincula a una sola persona, y la contraseña de una persona multi-centro no la resetea un centro (la gestiona ella).
+- **Reglas** (en `EquipoUsuariosService`): siempre queda ≥1 administrador activo (incluso frente a soporte), nadie cambia su propio rol ni se quita su acceso, un profesional se vincula a una sola persona, y la contraseña de una persona multi-centro no la resetea un centro (la gestiona ella).
 
 | Persona (login DNI o email) | Contraseña | Acceso |
 |---|---|---|
@@ -66,11 +65,27 @@ Páginas públicas: `/c/centro-san-martin` (consultorio) y `/p/dra-elena-ramos` 
 
 ### Vencimiento de turnos sin confirmar (estado `EXPIRED`)
 - Un turno **PENDIENTE** que nadie confirmó hasta `Cuenta.horasVencimientoPendiente` horas antes del inicio (default 12; 0 = nunca) pasa a **Vencido** y **libera el lugar** (el turnero público y los chequeos de solapamiento lo ignoran, igual que un cancelado). Los pendientes ya pasados no se tocan (quedan para marcar asistencia).
-- En el mock se aplica al cargar el panel (con PATCH persistido); **en Laravel será un job programado**. Configurable en Mi Equipo → Datos del Centro y en Configuración de la Cuenta (individuales). Chip gris "Vencido" + filtro propio en Agenda Lista y Calendario; el paciente lo ve como "Vencido (sin confirmar)".
+- En el mock se aplica al cargar el panel (con PATCH persistido). Configurable en Mi Equipo → Datos del Centro y en Configuración de la Cuenta (individuales). Chip gris "Vencido" + filtro propio en Agenda Lista y Calendario; el paciente lo ve como "Vencido (sin confirmar)".
 
-### Avisos de WhatsApp (colección `notificaciones`) — simulados
-- Cada **reprogramación o cancelación** registra el aviso correspondiente: los cambios hechos **desde el panel** avisan al **paciente** (incluye cancelar/mover series, con un aviso por turno) y los cambios hechos **por el paciente online** avisan al **profesional**.
-- El dashboard muestra los últimos avisos con badge **"Simulado"**: en el mock solo se registran (mensaje, teléfono, evento, origen, fecha) — **el envío real lo hará el backend vía WhatsApp Business API**, que tiene costo por conversación.
+### Avisos (colección `notificaciones`) — simulados
+- **Solicitud nueva (06/10):** cuando un paciente reserva online se registra un aviso por **WhatsApp al profesional** y un **email a cada secretaría activa que gestiona esa agenda** (sin agendas asignadas = todo el centro; con asignación, solo si incluye a ese profesional). Verificado: una reserva con la Od. Ríos avisa a Ríos, a Rocío (todo el centro) y a Valeria (asignada a Ríos); las de otros profesionales no le llegan a Valeria.
+- Cada **reprogramación o cancelación** registra el aviso correspondiente: los cambios hechos **desde el panel** avisan al **paciente** y los hechos **por el paciente online** avisan al **profesional**.
+- El dashboard muestra los últimos avisos (evento, destinatario, canal) con badge **"Simulado"** y un contador de **solicitudes nuevas de las últimas 24 h**. Cada persona ve los de su alcance (`AdminService.avisosVisibles`); los emails a una secretaría solo los ve ella y los administradores.
+- En el mock el cliente público lee `miembros`/`usuarios` para simular el reparto. El envío real será por WhatsApp Business API y email.
+
+### Obras sociales (colección `obrasSociales` por cuenta) — 06/10
+- **El centro arma su lista** en **Obras Sociales** (`/admin/obras-sociales`): desde el catálogo sugerido de la plataforma (`healthInsurances`) o agregando propias (p. ej. IOSEP). Activar/desactivar (inactiva = no se ofrece a pacientes) y eliminar solo si ningún profesional la atiende.
+- **Cada profesional marca cuáles atiende** y si **acepta particulares** (`ProfessionalProfile.obrasSociales` + `aceptaParticular`, por defecto sí) en una grilla obra social × profesional. El rol profesional solo ve y edita su propia columna.
+- **Turnero:** el paciente solo ve las coberturas del profesional elegido + "Particular" si lo acepta. **Página del centro:** filtro "¿Con qué obra social te atendés?" que deja solo a quienes la atienden y pasa la elección al turnero (`?os=`). **Perfil del profesional:** chips "Obras sociales que atiendo".
+- **Panel:** el alta de pacientes ofrece las obras sociales de la cuenta; al dar un turno, si el profesional no atiende la del paciente, avisa y el turno queda como particular.
+- Lógica compartida en `core/coberturas.ts`; servicio del panel `ObrasSocialesService`. Turnos y pacientes guardan el nombre.
+
+### Paleta y marca (06/10)
+- **Azul petróleo + verde menta, sin negro puro.** En `tailwind.config.js` la escala `teal` es el petróleo y `menta` el acento.
+- **Acción principal = menta** (`.btn-primary` o `bg-menta-400 text-teal-950 border-menta-500`): turnero, página del consultorio, Disponibilidad, Mi Equipo y botones de `/gestion`.
+- **Seleccionado = petróleo sólido** (`bg-teal-600 text-white`): día y horario elegidos, chips de profesional, filtros, frecuencia de series, rol.
+- **Secundario = petróleo muy claro** (`bg-teal-100 text-teal-900`) · avatares e iniciales en `teal-200`.
+- Sidebar, toasts y fondos de modal de `/gestion` pasaron de casi negro a petróleo (`teal-900`/`teal-950`). Los chips de estado (confirmado/pendiente/cancelado) mantienen su semáforo.
 
 ### Panel (`/admin`, según la cuenta y el rol logueados)
 - **Cuenta consultorio:** selector global en el header ("Todos los profesionales" o uno), vista **Mi Equipo** con **catálogo de especialidades administrable** (colección `especialidades` por cuenta: alta, renombrar con actualización en cascada de sus profesionales, activar/desactivar — inactiva no se ofrece en altas nuevas —, eliminar solo si no tiene profesionales), **alta de profesionales eligiendo una especialidad ya cargada** (select; "+ Agregar acá" desde cada grupo la preselecciona) y **equipo agrupado por especialidad** (secciones con contador de activos y grupo "Sin especialidad" para huérfanos). Chips de profesional en Perfil/Servicios/Disponibilidad, y el modal de turnos permite elegir profesional (reglas de solapamiento **por profesional**).
@@ -108,20 +123,12 @@ Páginas públicas: `/c/centro-san-martin` (consultorio) y `/p/dra-elena-ramos` 
 
 ## 🚧 Lo que falta
 
-### Etapa Backend (siguiente)
-1. **Laravel + MySQL** multi-tenant, tablas en español (`cuentas` — organización, sin credenciales —, `usuarios` — personas, `dni` y `email` únicos —, `miembros` — cuenta + persona + rol + `profesional_id` + agendas asignadas —, `perfiles`/`profesionales`, `especialidades`, `pacientes`, `turnos` — con `serie_id` y 6 estados incl. `vencido` —, `servicios`, `disponibilidades`, `bloqueos_fechas`, `obras_sociales`, `lugares_atencion`, `historias_clinicas`, `notificaciones`, `planes`, `pagos`, `administradores`).
-2. **Auth real** (Sanctum): registro de cuentas, hash de contraseñas, tokens, **recuperación de cuenta real** con token de un solo uso por email/WhatsApp (hoy simulada) (hoy el login es mock contra json-server y la contraseña viaja en texto plano — solo para desarrollo).
-3. **Validaciones server-side** de todas las reglas de negocio (solapamientos, límite del plan, horas mínimas, alcance de secretarías, reglas de membresías (≥1 administrador, auto-edición, reset multi-centro), **acceso a historias clínicas SOLO del profesional tratante** — hoy la regla vive en la UI).
-4. **Notificaciones automáticas**: WhatsApp (Business API, costo por conversación) y email al confirmar/reprogramar/cancelar — el mock ya registra qué aviso corresponde a cada evento en `notificaciones`.
-5. **Job programado de vencimiento** de turnos pendientes (hoy se aplica al cargar el panel).
-6. Subida real de imágenes a storage (hoy base64 en db.json).
-7. Solicitud de alta desde la landing (formulario de contacto): el alta de cuentas es manual y curada desde `/gestion`, por decisión de producto.
-
 ### Funcional pendiente (frontend)
 - (Ninguno bloqueante: la maqueta está completa, incluidas las definiciones del 20/09: secretarías por profesional, DNI + recuperación, vencimiento, avisos de WhatsApp simulados e historia clínica.)
-- Invitaciones por email para usuarios del equipo (hoy el administrador define la contraseña inicial) — llega con el backend.
+- Invitaciones por email para usuarios del equipo (hoy el administrador define la contraseña inicial).
+- `environment.prod.ts` y `demoCredenciales=false` antes de mostrar el sistema.
 - Roles del back-office (soporte / facturación) y registro de impersonaciones y de accesos a historias clínicas — recomendados, pendientes.
-- "Gestionar mi turno" del paciente solo con DNI: sumar código de un solo uso o link único cuando exista el backend.
+- "Gestionar mi turno" del paciente solo con DNI: sumar código de un solo uso o link único.
 
 ### Limpieza
 - Borrar carpetas `client/components/booking-wizard` y `landing-home` (stubs vacíos).

@@ -15,8 +15,7 @@ import {
   Plan,
   ProfessionalAvailability,
   ProfessionalProfile,
-  Service,
-  HealthInsurance
+  Service
 } from '../../core/models';
 
 // Re-export para mantener compatibilidad con los imports existentes de los componentes.
@@ -54,7 +53,6 @@ export class AdminService {
   blockedDates = signal<BlockedDateRange[]>([]);
   patients = signal<Patient[]>([]);
   services = signal<Service[]>([]);
-  healthInsurances = signal<string[]>([]);
   /** Catálogo de especialidades de la cuenta (administrable en Mi Equipo). */
   especialidades = signal<Especialidad[]>([]);
   /** Plan de membresía de la cuenta (para aplicar sus límites). */
@@ -271,7 +269,7 @@ export class AdminService {
     this.loading.set(true);
     this.apiError.set(false);
 
-    let pendientes = 11;
+    let pendientes = 10;
     const done = () => { if (--pendientes === 0) this.loading.set(false); };
     const fail = () => { this.apiError.set(true); done(); };
 
@@ -310,10 +308,6 @@ export class AdminService {
     });
     this.http.get<Service[]>(`${this.api}/services?${q}`).subscribe({
       next: list => { this.services.set(list); done(); },
-      error: fail
-    });
-    this.http.get<HealthInsurance[]>(`${this.api}/healthInsurances`).subscribe({
-      next: list => { this.healthInsurances.set(list.map(h => h.name)); done(); },
       error: fail
     });
     this.http.get<Especialidad[]>(`${this.api}/especialidades?${q}`).subscribe({
@@ -358,7 +352,22 @@ export class AdminService {
     });
   }
 
-  // ---- Avisos de WhatsApp (mock: se registran; el backend hará el envío) ----
+  // ---- Avisos (mock: se registran; el backend hará el envío real) ----
+
+  /**
+   * Avisos que corresponde mostrarle a quien está logueado: los de turnos
+   * dentro de su alcance. Los emails dirigidos a una secretaría solo los ve
+   * esa persona (y los administradores).
+   */
+  avisosVisibles = computed(() => {
+    const ids = new Set(this.turnosAlcance().map(a => a.id));
+    const yo = this.auth.usuario()?.id;
+    const admin = this.auth.esAdministrador();
+    return this.notificaciones()
+      .filter(n => ids.has(n.turnoId))
+      .filter(n => n.destinatarioTipo !== 'secretaria' || admin || n.usuarioId === yo)
+      .sort((a, b) => b.fecha.localeCompare(a.fecha));
+  });
 
   /** Registra el aviso al PACIENTE cuando el panel reprograma o cancela su turno. */
   private notificarPaciente(turno: Appointment, evento: 'reprogramado' | 'cancelado', detalle: string): void {
@@ -375,6 +384,7 @@ export class AdminService {
       evento,
       origen: 'panel',
       canal: 'whatsapp',
+      destinatarioTipo: 'paciente',
       destinatario: turno.patientName,
       telefono: turno.patientPhone,
       mensaje,

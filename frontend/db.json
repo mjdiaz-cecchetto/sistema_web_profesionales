@@ -277,7 +277,14 @@
           "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
           "detalle": "Un espacio para ordenar lo que pasa y decidir con más claridad."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-2",
+        "os-csm-3",
+        "os-csm-5"
+      ],
+      "aceptaParticular": true
     },
     {
       "id": "prof-lema",
@@ -321,7 +328,12 @@
           "icono": "M13 10V3L4 14h7v7l9-11h-7z",
           "detalle": "Controles cada 4 a 6 semanas, con recetas digitales para tu obra social."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-2"
+      ],
+      "aceptaParticular": true
     },
     {
       "id": "prof-rios",
@@ -364,7 +376,16 @@
           "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
           "detalle": "Presupuesto por escrito y sin compromiso en la primera consulta."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-2",
+        "os-csm-4",
+        "os-csm-6",
+        "os-csm-8",
+        "os-csm-9"
+      ],
+      "aceptaParticular": true
     },
     {
       "id": "prof-salas",
@@ -408,7 +429,14 @@
           "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
           "detalle": "Trabajo coordinado con tu médico de cabecera y tus análisis de laboratorio."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-3",
+        "os-csm-4",
+        "os-csm-5"
+      ],
+      "aceptaParticular": true
     },
     {
       "id": "prof-vega",
@@ -445,7 +473,15 @@
           "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
           "detalle": "Trabajo de fuerza y retorno progresivo a la actividad."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-6",
+        "os-csm-7",
+        "os-csm-8",
+        "os-csm-9"
+      ],
+      "aceptaParticular": false
     },
     {
       "id": "prof-elena",
@@ -502,7 +538,14 @@
           "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
           "detalle": "Brindo un espacio neutral de escucha activa para identificar patrones destructivos y mejorar la empatía."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-ele-1",
+        "os-ele-2",
+        "os-ele-3",
+        "os-ele-4"
+      ],
+      "aceptaParticular": true
     },
     {
       "id": "prof-ramos-csm",
@@ -545,7 +588,12 @@
           "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
           "detalle": "Brindo un espacio neutral de escucha activa para identificar patrones destructivos y mejorar la empatía."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-2"
+      ],
+      "aceptaParticular": true
     }
   ],
   "availabilities": [
@@ -1200,6 +1248,18 @@
     {
       "id": "hi-10",
       "name": "Unión Personal"
+    },
+    {
+      "id": "hi-11",
+      "name": "OSPRERA"
+    },
+    {
+      "id": "hi-12",
+      "name": "OSPE"
+    },
+    {
+      "id": "hi-13",
+      "name": "Avalian"
     }
   ],
   "appointments": [
@@ -1602,7 +1662,7 @@
       "patientDni": "40123456",
       "date": "2026-10-03",
       "time": "18:00",
-      "status": "CONFIRMED",
+      "status": "ATTENDED",
       "notes": "",
       "location": "Centro Médico Belgrano",
       "healthInsurance": "OSDE"
@@ -1638,6 +1698,38 @@
       "notes": "Reserva online de último momento, sin confirmar.",
       "location": "Centro Médico San Martín",
       "healthInsurance": "Particular (Sin cobertura)"
+    },
+    {
+      "id": "apt-mux4y4y1581",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-ramos-csm",
+      "serviceName": "Consulta Psicológica",
+      "patientName": "Matias Diaz",
+      "patientEmail": "matidiaz10.md@gmail.com",
+      "patientPhone": "3853115268",
+      "patientDni": "39583171",
+      "date": "2026-10-08",
+      "time": "11:00",
+      "status": "PENDING",
+      "notes": "",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "OSDE"
+    },
+    {
+      "id": "apt-mux537bc735",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
+      "serviceName": "Consulta",
+      "patientName": "Matias Diaz",
+      "patientEmail": "matidiaz10.md@gmail.com",
+      "patientPhone": "3853115268",
+      "patientDni": "39583171",
+      "date": "2026-10-07",
+      "time": "08:00",
+      "status": "CONFIRMED",
+      "notes": "",
+      "location": "Consultorio Palermo",
+      "healthInsurance": "OSDE"
     }
   ],
   "patients": [
@@ -1830,6 +1922,26 @@
       "dni": "40123456",
       "obraSocial": "OSDE",
       "fechaAlta": "2026-09-29"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-39583171",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Matias Diaz",
+      "email": "matidiaz10.md@gmail.com",
+      "telefono": "3853115268",
+      "dni": "39583171",
+      "obraSocial": "OSDE",
+      "fechaAlta": "2026-10-08"
+    },
+    {
+      "id": "pat-cta-elena-ramos-39583171",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Matias Diaz",
+      "email": "matidiaz10.md@gmail.com",
+      "telefono": "3853115268",
+      "dni": "39583171",
+      "obraSocial": "OSDE",
+      "fechaAlta": "2026-10-07"
     }
   ],
   "historias": [
@@ -1928,6 +2040,86 @@
       "fecha": "2026-08-09",
       "monto": 15000,
       "medio": "transferencia"
+    }
+  ],
+  "obrasSociales": [
+    {
+      "id": "os-csm-1",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "OSDE",
+      "activo": true
+    },
+    {
+      "id": "os-csm-2",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Swiss Medical",
+      "activo": true
+    },
+    {
+      "id": "os-csm-3",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Galeno",
+      "activo": true
+    },
+    {
+      "id": "os-csm-4",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Sancor Salud",
+      "activo": true
+    },
+    {
+      "id": "os-csm-5",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Medifé",
+      "activo": true
+    },
+    {
+      "id": "os-csm-6",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "IOMA",
+      "activo": true
+    },
+    {
+      "id": "os-csm-7",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "PAMI",
+      "activo": true
+    },
+    {
+      "id": "os-csm-8",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "OSECAC",
+      "activo": true
+    },
+    {
+      "id": "os-csm-9",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Unión Personal",
+      "activo": true
+    },
+    {
+      "id": "os-ele-1",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "OSDE",
+      "activo": true
+    },
+    {
+      "id": "os-ele-2",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Swiss Medical",
+      "activo": true
+    },
+    {
+      "id": "os-ele-3",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Galeno",
+      "activo": true
+    },
+    {
+      "id": "os-ele-4",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Medifé",
+      "activo": true
     }
   ]
 }

@@ -21,7 +21,7 @@
   <ng-container *ngIf="profesional() as prof">
 
     <!-- Barra de progreso de lectura -->
-    <div class="fixed top-0 left-0 h-1 bg-teal-400 z-[60] transition-[width] duration-150 rounded-r-full"
+    <div class="fixed top-0 left-0 h-1 bg-menta-400 z-[60] transition-[width] duration-150 rounded-r-full"
          [style.width.%]="progresoScroll()"></div>
 
     <!-- Navbar flotante con anclas -->
@@ -296,6 +296,23 @@
               </div>
             </div>
           </div>
+
+          <!-- Obras sociales -->
+          <div id="obras-sociales" reveal class="bg-white rounded-3xl border border-stone-200 p-6 scroll-mt-24">
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-teal-700">Coberturas</p>
+            <h2 class="text-xl font-extrabold text-stone-900 tracking-tight mt-1.5">Obras sociales que atiendo</h2>
+            <div *ngIf="obrasSociales().length" class="flex flex-wrap gap-2 mt-4">
+              <span *ngFor="let os of obrasSociales()"
+                    class="inline-flex items-center gap-1.5 text-xs font-bold bg-teal-50 text-teal-900 border border-teal-200 px-3 py-1.5 rounded-full">
+                <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                {{ os }}
+              </span>
+            </div>
+            <p class="text-xs text-stone-500 mt-3">
+              <ng-container *ngIf="obrasSociales().length">{{ atiendeParticulares() ? 'También atiende pacientes particulares.' : 'No atiende pacientes particulares.' }}</ng-container>
+              <ng-container *ngIf="!obrasSociales().length">{{ atiendeParticulares() ? 'Por el momento atiende solo de forma particular.' : 'Consultá las coberturas con el consultorio.' }}</ng-container>
+            </p>
+          </div>
         </div>
 
         <!-- Horarios de atención -->
@@ -308,7 +325,7 @@
                  [ngClass]="h.dia === diaHoy ? 'bg-teal-50 -mx-2.5 px-2.5 border border-teal-200' : ''">
               <span class="text-xs font-bold w-24 shrink-0 pt-0.5 flex items-center gap-1.5" [ngClass]="h.activo ? 'text-stone-700' : 'text-stone-300'">
                 {{ h.dia }}
-                <span *ngIf="h.dia === diaHoy" class="text-[8px] font-extrabold uppercase bg-teal-200 text-teal-900 px-1.5 py-0.5 rounded-full">Hoy</span>
+                <span *ngIf="h.dia === diaHoy" class="text-[8px] font-extrabold uppercase bg-menta-300 text-teal-950 px-1.5 py-0.5 rounded-full">Hoy</span>
               </span>
               <div class="text-right">
                 <ng-container *ngIf="h.activo; else cerrado">

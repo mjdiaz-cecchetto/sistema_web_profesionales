@@ -34,7 +34,7 @@
       <div *ngFor="let day of calendarDays()" class="aspect-square flex items-center justify-center">
         <button type="button" *ngIf="day" 
                 (click)="selectDate(day); $event.stopPropagation()"
-                [class.bg-teal-500]="isSelected(day)"
+                [class.bg-teal-600]="isSelected(day)"
                 [class.text-white]="isSelected(day)"
                 [class.font-bold]="isSelected(day)"
                 [class.shadow-md]="isSelected(day)"

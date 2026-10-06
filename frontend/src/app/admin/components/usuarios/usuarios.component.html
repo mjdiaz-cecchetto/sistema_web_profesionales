@@ -177,7 +177,7 @@
       <div *ngIf="editandoId() === m.id" class="mt-3 pt-3 border-t border-stone-100 space-y-3">
         <div class="flex flex-wrap gap-1.5" [class.opacity-50]="equipo.esYo(m)">
           <button type="button" *ngFor="let r of roles" (click)="elegirRolEdicion(r.valor, m)" [disabled]="equipo.esYo(m)"
-                  [ngClass]="edRol() === r.valor ? 'bg-teal-200 text-teal-900 border-teal-300' : 'bg-white text-stone-500 border-stone-200 hover:border-teal-300'"
+                  [ngClass]="edRol() === r.valor ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-stone-500 border-stone-200 hover:border-teal-300'"
                   class="px-3 py-1.5 rounded-full text-[10px] font-extrabold border transition-colors disabled:pointer-events-none">{{ r.etiqueta }}</button>
           <span *ngIf="equipo.esYo(m)" class="text-[10px] text-stone-400 self-center">Tu rol lo cambia otro administrador.</span>
         </div>

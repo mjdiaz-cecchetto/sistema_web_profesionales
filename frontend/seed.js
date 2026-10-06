@@ -393,6 +393,8 @@ const db = {
     { id: 'srv-ele-2', cuentaId: ELE, profesionalId: 'prof-elena', name: 'Terapia de Pareja', description: 'Sesión conjunta orientada a la resolución de conflictos del vínculo.', durationMinutes: 60, price: 75000 }
   ],
 
+  // Catálogo SUGERIDO de la plataforma: cada cuenta arma su propia lista
+  // (colección obrasSociales) eligiendo de acá o agregando otras.
   healthInsurances: [
     { id: 'hi-1', name: 'Particular (Sin cobertura)' },
     { id: 'hi-2', name: 'OSDE' },
@@ -403,7 +405,10 @@ const db = {
     { id: 'hi-7', name: 'IOMA' },
     { id: 'hi-8', name: 'PAMI' },
     { id: 'hi-9', name: 'OSECAC' },
-    { id: 'hi-10', name: 'Unión Personal' }
+    { id: 'hi-10', name: 'Unión Personal' },
+    { id: 'hi-11', name: 'OSPRERA' },
+    { id: 'hi-12', name: 'OSPE' },
+    { id: 'hi-13', name: 'Avalian' }
   ],
 
   appointments: [
@@ -528,6 +533,56 @@ db.pagos = [
   { id: 'pago-4', cuentaId: CSM, periodo: periodo(0), fecha: fechaEnPeriodo(0, 3), monto: 40000, medio: 'mercadopago' },
   { id: 'pago-5', cuentaId: ELE, periodo: periodo(1), fecha: fechaEnPeriodo(1, 9), monto: 15000, medio: 'transferencia' }
 ];
+
+// ===== Obras sociales de cada cuenta y cuáles atiende cada profesional =====
+{
+  const lista = (cuentaId, prefijo, nombres) => nombres.map((nombre, i) => ({ id: `os-${prefijo}-${i + 1}`, cuentaId, nombre, activo: true }));
+  const csm = lista(CSM, 'csm', ['OSDE', 'Swiss Medical', 'Galeno', 'Sancor Salud', 'Medifé', 'IOMA', 'PAMI', 'OSECAC', 'Unión Personal']);
+  const ele = lista(ELE, 'ele', ['OSDE', 'Swiss Medical', 'Galeno', 'Medifé']);
+  db.obrasSociales = [...csm, ...ele];
+  const ids = (cuenta, nombres) => cuenta.filter(o => nombres.includes(o.nombre)).map(o => o.id);
+  const asignar = {
+    'prof-funes':     { obras: ids(csm, ['OSDE', 'Swiss Medical', 'Galeno', 'Medifé']) },
+    'prof-lema':      { obras: ids(csm, ['OSDE', 'Swiss Medical']) },
+    'prof-rios':      { obras: ids(csm, ['OSDE', 'Swiss Medical', 'Sancor Salud', 'OSECAC', 'Unión Personal', 'IOMA']) },
+    'prof-salas':     { obras: ids(csm, ['OSDE', 'Galeno', 'Medifé', 'Sancor Salud']) },
+    'prof-vega':      { obras: ids(csm, ['PAMI', 'IOMA', 'OSDE', 'OSECAC', 'Unión Personal']), particular: false }, // solo con obra social
+    'prof-ramos-csm': { obras: ids(csm, ['OSDE', 'Swiss Medical']) },
+    'prof-elena':     { obras: ids(ele, ['OSDE', 'Swiss Medical', 'Galeno', 'Medifé']) }
+  };
+  for (const p of db.professionals) {
+    const a = asignar[p.id];
+    p.obrasSociales = a ? a.obras : [];
+    p.aceptaParticular = a?.particular !== false;
+  }
+}
+
+// ===== Avisos de SOLICITUD NUEVA para los turnos pendientes futuros =====
+// Misma regla que la reserva online: WhatsApp al profesional + email a cada
+// secretaría activa que gestiona esa agenda (sin asignación = todo el centro).
+{
+  const hoy = fechaLocal(0);
+  let n = 0;
+  const pendientes = db.appointments.filter(a => a.status === 'PENDING' && a.date >= hoy);
+  pendientes.forEach((a, i) => {
+    const prof = db.professionals.find(p => p.id === a.profesionalId);
+    if (!prof) return;
+    const cuando = new Date(Date.now() - (i + 1) * 47 * 60000).toISOString(); // escalonados en las últimas horas
+    const detalle = `${a.patientName} (DNI ${a.patientDni}) pidió un turno de ${a.serviceName} con ${prof.nombre} para el ${a.date} a las ${a.time} hs. Está pendiente de confirmación.`;
+    const base = { cuentaId: a.cuentaId, turnoId: a.id, evento: 'solicitud_nueva', origen: 'paciente', fecha: cuando, estado: 'simulada' };
+    db.notificaciones.push({ ...base, id: `ntf-seed-${++n}`, canal: 'whatsapp', destinatarioTipo: 'profesional',
+      destinatario: prof.nombre, telefono: prof.whatsapp || '', mensaje: `Nueva solicitud de turno: ${detalle} Confirmalo desde tu panel.` });
+    db.miembros
+      .filter(m => m.cuentaId === a.cuentaId && m.rol === 'secretaria' && m.activo !== false &&
+        (!m.profesionalesAsignados?.length || m.profesionalesAsignados.includes(a.profesionalId)))
+      .forEach(m => {
+        const u = db.usuarios.find(x => x.id === m.usuarioId);
+        if (!u) return;
+        db.notificaciones.push({ ...base, id: `ntf-seed-${++n}`, canal: 'email', destinatarioTipo: 'secretaria', usuarioId: u.id,
+          destinatario: u.nombre, telefono: '', email: u.email, mensaje: `Nueva solicitud de turno en la agenda de ${prof.nombre}: ${detalle}` });
+      });
+  });
+}
 
 const destino = path.join(__dirname, 'db.json');
 fs.writeFileSync(destino, JSON.stringify(db, null, 2), 'utf8');

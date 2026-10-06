@@ -193,6 +193,27 @@ export interface ProfessionalProfile {
   modalidad: string;
   direcciones: LocationConfig[];
   areas: SpecialtyConfig[];
+  /** Ids de las obras sociales DE LA CUENTA que atiende este profesional. */
+  obrasSociales?: string[];
+  /** true (o ausente) = también atiende pacientes particulares, sin obra social. */
+  aceptaParticular?: boolean;
+}
+
+/** Valor que se guarda en turnos y pacientes cuando no usan obra social. */
+export const PARTICULAR = 'Particular (Sin cobertura)';
+
+/**
+ * Obra social con la que trabaja una cuenta (colección `obrasSociales`).
+ * El centro arma su lista (desde el catálogo sugerido de la plataforma o
+ * agregando propias, p. ej. una obra social provincial) y cada profesional
+ * marca cuáles atiende (ProfessionalProfile.obrasSociales).
+ */
+export interface ObraSocial {
+  id: string;
+  cuentaId: string;
+  nombre: string;
+  /** false = la cuenta dejó de trabajar con ella: no se ofrece a pacientes ni en altas nuevas. */
+  activo: boolean;
 }
 
 export interface Patient {
@@ -291,26 +312,41 @@ export interface HistoriaClinicaEntry {
   tratamiento: string;
 }
 
+/** Evento que dispara un aviso. */
+export type EventoNotificacion = 'solicitud_nueva' | 'reprogramado' | 'cancelado';
+
+/** A quién va dirigido el aviso. */
+export type DestinatarioNotificacion = 'paciente' | 'profesional' | 'secretaria';
+
 /**
- * Aviso de WhatsApp registrado por el sistema (colección `notificaciones`).
- * MOCK: acá solo se registra; el envío real lo hará el backend vía
- * WhatsApp Business API cuando se reprograme o cancele un turno.
+ * Aviso registrado por el sistema (colección `notificaciones`).
+ * MOCK: acá solo se registra; el envío real lo hará el backend
+ * (WhatsApp Business API y email). Eventos:
+ *  - solicitud_nueva: un paciente reservó online → WhatsApp al profesional
+ *    y email a cada secretaría activa que gestiona esa agenda.
+ *  - reprogramado / cancelado: cambios del panel avisan al paciente y
+ *    los del paciente avisan al profesional.
  */
 export interface Notificacion {
   id: string;
   cuentaId: string;
   turnoId: string;
-  evento: 'reprogramado' | 'cancelado';
-  /** Quién dispara el aviso: cambios del panel avisan al paciente y viceversa. */
+  evento: EventoNotificacion;
+  /** Quién dispara el aviso. */
   origen: 'panel' | 'paciente';
-  canal: 'whatsapp';
+  canal: 'whatsapp' | 'email';
+  destinatarioTipo?: DestinatarioNotificacion;
+  /** Persona destinataria cuando es una secretaría (usuarios.id). */
+  usuarioId?: string;
   destinatario: string; // nombre de quien recibe
-  telefono: string;
+  telefono: string;     // vacío si el canal es email
+  email?: string;       // solo canal email
   mensaje: string;
   fecha: string; // ISO
   estado: 'simulada';
 }
 
+/** Catálogo SUGERIDO de obras sociales de la plataforma (colección `healthInsurances`). */
 export interface HealthInsurance {
   id: string;
   name: string;

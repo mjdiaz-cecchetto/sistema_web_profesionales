@@ -135,7 +135,7 @@
                          (click)="c.date && c.disponible && elegirNuevaFecha(c.date)"
                          [class.pointer-events-none]="!c.date || !c.disponible"
                          [ngClass]="!c.date ? 'border-transparent' :
-                           c.isSelected ? 'bg-teal-200 border-teal-400 font-extrabold text-teal-950' :
+                           c.isSelected ? 'bg-teal-600 border-teal-600 font-extrabold text-white' :
                            c.disponible ? 'bg-white text-stone-700 border-stone-200 hover:border-teal-400 hover:bg-teal-50 cursor-pointer' :
                            'text-stone-300 border-transparent'"
                          class="h-8 rounded-lg border text-[10px] font-semibold transition-colors flex flex-col items-center justify-center select-none">
@@ -161,7 +161,7 @@
                   <div *ngIf="nuevaFecha()" class="flex flex-wrap gap-1.5 content-start">
                     <button *ngFor="let slot of horariosDeNuevaFecha()"
                             (click)="nuevaHora.set(slot.startTime)"
-                            [ngClass]="nuevaHora() === slot.startTime ? 'bg-teal-200 text-teal-900 border-teal-400' : 'bg-white text-stone-600 border-stone-200 hover:border-teal-300 hover:bg-teal-50'"
+                            [ngClass]="nuevaHora() === slot.startTime ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-stone-600 border-stone-200 hover:border-teal-300 hover:bg-teal-50'"
                             class="px-3.5 py-2 rounded-lg text-xs font-bold border transition-colors">
                       {{ slot.startTime }}
                     </button>
