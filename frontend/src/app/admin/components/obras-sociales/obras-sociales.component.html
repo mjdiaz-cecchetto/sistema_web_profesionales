@@ -1,0 +1,123 @@
+<div class="flex flex-col gap-3 animate-fade-in max-w-5xl">
+
+  <!-- Toast -->
+  <div *ngIf="toast()"
+       class="fixed top-24 left-1/2 -translate-x-1/2 z-[60] bg-emerald-100 border border-emerald-300 text-emerald-900 px-5 py-3 rounded-2xl text-sm font-bold flex items-center gap-2.5 animate-scale-in max-w-[calc(100vw-2rem)]">
+    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <span>{{ toast() }}</span>
+  </div>
+
+  <!-- Encabezado -->
+  <div class="flex items-center gap-2">
+    <h1 class="text-lg font-extrabold text-stone-800 tracking-tight">Obras Sociales</h1>
+    <span class="chip !text-[10px] bg-teal-100 text-teal-900 border-teal-200">{{ os.activas().length }}</span>
+  </div>
+  <p class="text-xs text-stone-500 -mt-1 leading-relaxed max-w-3xl">
+    <ng-container *ngIf="esAdministrador()">Armá la lista de obras sociales con las que trabaja {{ etiquetaCuenta() }} y marcá cuáles atiende cada profesional. </ng-container>
+    Al pedir turno, el paciente solo ve las obras sociales del profesional elegido y, si las acepta, la opción <span class="font-bold">Particular</span>.
+  </p>
+
+  <p *ngIf="error()" class="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 flex items-start justify-between gap-2">
+    <span>{{ error() }}</span>
+    <button (click)="error.set('')" class="text-rose-400 hover:text-rose-700 font-black leading-none">×</button>
+  </p>
+
+  <!-- ===== Lista de la cuenta (solo administrador) ===== -->
+  <section *ngIf="esAdministrador()" class="card p-5 space-y-4">
+    <h3 class="card-title !text-sm">Con qué obras sociales trabaja {{ etiquetaCuenta() }}</h3>
+
+    <form class="flex gap-2 max-w-md" (submit)="$event.preventDefault(); agregar()">
+      <input id="os-nueva" type="text" [ngModel]="nueva()" (ngModelChange)="nueva.set($event)" name="nueva"
+             list="os-sugeridas" placeholder="Ej. IOSEP, OSDE…" class="input !text-xs flex-1" autocomplete="off">
+      <datalist id="os-sugeridas">
+        <option *ngFor="let s of os.sugerencias()" [value]="s"></option>
+      </datalist>
+      <button type="submit" [disabled]="os.guardando() || !nueva().trim()" class="btn-primary !text-xs !py-2">Agregar</button>
+    </form>
+
+    <div *ngIf="os.sugerencias().length" class="space-y-1.5">
+      <p class="field-label">Sugeridas</p>
+      <div class="flex flex-wrap gap-1.5">
+        <button type="button" *ngFor="let s of os.sugerencias()" (click)="agregar(s)" [disabled]="os.guardando()"
+                class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-dashed border-stone-300 text-stone-500 hover:border-teal-400 hover:text-teal-800 hover:bg-teal-50 transition-colors">
+          + {{ s }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="os.ordenadas().length" class="space-y-1.5">
+      <p class="field-label">Tu lista</p>
+      <div class="flex flex-wrap gap-2">
+        <div *ngFor="let o of os.ordenadas()"
+             class="flex items-center gap-2 pl-3 pr-1.5 py-1 rounded-full border text-[11px] font-bold"
+             [ngClass]="o.activo !== false ? 'bg-white border-stone-200 text-stone-700' : 'bg-stone-50 border-stone-200 text-stone-400'">
+          <span>{{ o.nombre }}</span>
+          <span class="text-[10px] font-semibold text-stone-400">{{ os.usoEn(o.id) }} prof.</span>
+          <button type="button" (click)="alternarActiva(o)"
+                  class="px-2 py-0.5 rounded-full text-[10px] border transition-colors"
+                  [ngClass]="o.activo !== false ? 'border-stone-200 text-stone-500 hover:bg-stone-100' : 'border-teal-300 text-teal-800 hover:bg-teal-50'"
+                  [title]="o.activo !== false ? 'Dejar de ofrecerla a los pacientes' : 'Volver a ofrecerla'">
+            {{ o.activo !== false ? 'Desactivar' : 'Activar' }}
+          </button>
+          <button type="button" (click)="eliminar(o)" title="Eliminar de la lista"
+                  class="w-5 h-5 rounded-full text-stone-400 hover:text-rose-700 hover:bg-rose-50 flex items-center justify-center">×</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Quién atiende cada una ===== -->
+  <section class="card p-5 space-y-3">
+    <h3 class="card-title !text-sm">{{ columnas().length > 1 ? 'Quién atiende cada una' : 'Qué obras sociales atendés' }}</h3>
+
+    <p *ngIf="!os.ordenadas().length" class="text-xs text-stone-400">
+      Todavía no hay obras sociales cargadas.{{ esAdministrador() ? ' Agregalas arriba.' : ' Pedile al administrador que las cargue.' }}
+    </p>
+
+    <div *ngIf="columnas().length" class="overflow-x-auto -mx-5 px-5">
+      <table class="text-xs border-separate border-spacing-0 min-w-full">
+        <thead>
+          <tr>
+            <th class="text-left font-bold text-stone-400 uppercase tracking-wider text-[10px] py-2 pr-4 sticky left-0 bg-white z-10">Cobertura</th>
+            <th *ngFor="let p of columnas()" class="px-2 py-2 text-center align-bottom min-w-[84px]">
+              <span class="inline-flex flex-col items-center gap-1">
+                <span class="w-7 h-7 rounded-full bg-teal-200 border border-teal-300 text-teal-900 text-[9px] font-extrabold flex items-center justify-center">{{ iniciales(p.nombre) }}</span>
+                <span class="text-[10px] font-bold text-stone-600 leading-tight max-w-[96px]">{{ p.nombre }}</span>
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Particular -->
+          <tr>
+            <td class="py-2 pr-4 font-bold text-stone-700 border-t border-stone-100 sticky left-0 bg-white z-10 whitespace-nowrap">
+              Particular <span class="font-normal text-stone-400">(sin obra social)</span>
+            </td>
+            <td *ngFor="let p of columnas()" class="text-center border-t border-stone-100 py-1.5">
+              <button type="button" (click)="alternarParticular(p)" [attr.aria-pressed]="os.aceptaParticular(p)"
+                      [title]="(os.aceptaParticular(p) ? 'Atiende particulares' : 'No atiende particulares') + ' — ' + p.nombre"
+                      class="w-7 h-7 rounded-lg border inline-flex items-center justify-center transition-colors"
+                      [ngClass]="os.aceptaParticular(p) ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-stone-300 text-transparent hover:border-teal-400'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+              </button>
+            </td>
+          </tr>
+          <tr *ngFor="let o of filas()" [class.opacity-50]="o.activo === false">
+            <td class="py-2 pr-4 font-bold text-stone-700 border-t border-stone-100 sticky left-0 bg-white z-10 whitespace-nowrap">
+              {{ o.nombre }} <span *ngIf="o.activo === false" class="chip !text-[9px] bg-stone-100 text-stone-500 border-stone-200 ml-1">Inactiva</span>
+            </td>
+            <td *ngFor="let p of columnas()" class="text-center border-t border-stone-100 py-1.5">
+              <button type="button" (click)="alternar(p, o)" [attr.aria-pressed]="os.atiende(p, o.id)"
+                      [title]="(os.atiende(p, o.id) ? 'Atiende ' : 'No atiende ') + o.nombre + ' — ' + p.nombre"
+                      class="w-7 h-7 rounded-lg border inline-flex items-center justify-center transition-colors"
+                      [ngClass]="os.atiende(p, o.id) ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-stone-300 text-transparent hover:border-teal-400'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-[10px] text-stone-400">Los cambios se guardan al tocar cada casilla. Una obra social inactiva no se ofrece a los pacientes aunque esté marcada.</p>
+  </section>
+</div>

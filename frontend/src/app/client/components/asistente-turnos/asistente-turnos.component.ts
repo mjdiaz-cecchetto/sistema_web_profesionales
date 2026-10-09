@@ -5,7 +5,8 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
 import { ClientService } from '../../services/client.service';
 import { Service, TimeSlot, BookingRequest, ProfessionalProfile } from '../../interfaces/client.models';
-import { Cuenta } from '../../../core/models';
+import { Cuenta, PARTICULAR } from '../../../core/models';
+import { aceptaParticular, coberturasDeProfesional } from '../../../core/coberturas';
 import { linkWhatsapp } from '../../../core/whatsapp';
 import { formatDMY, parseLocalDate } from '../../../core/date-utils';
 
@@ -71,7 +72,12 @@ export class AsistenteTurnosComponent implements OnInit {
   servicios = signal<Service[]>([]);
   turnos = signal<TimeSlot[]>([]);
   diasOcupados = signal<string[]>([]);
+  /** Coberturas que puede elegir el paciente con ESTE profesional (particular + sus obras sociales). */
   obrasSociales = signal<string[]>([]);
+  /** true si el profesional atiende particulares (para el texto de ayuda). */
+  atiendeParticulares = signal<boolean>(true);
+  /** Obra social elegida en la página del centro (?os=), para precargarla. */
+  private obraSocialPedida = '';
   nombreProfesional = signal<string>('');
   whatsappProfesional = signal<string>('');
 
@@ -157,6 +163,7 @@ export class AsistenteTurnosComponent implements OnInit {
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug') ?? '';
     const idRuta = this.route.snapshot.paramMap.get('profId');
+    this.obraSocialPedida = this.route.snapshot.queryParamMap.get('os') ?? '';
     this.slug.set(slug);
 
     this.clientService.getCuentaPorSlug(slug).subscribe({
@@ -266,16 +273,23 @@ export class AsistenteTurnosComponent implements OnInit {
     this.cargando.set(true);
     this.errorCarga.set(false);
 
-    this.clientService.getServices(this.profId()).subscribe({
-      next: (datos) => {
-        this.servicios.set(datos);
-        this.clientService.getHealthInsurances().subscribe({
-          next: obras => {
-            this.obrasSociales.set(obras);
-            this.cargando.set(false);
-          },
-          error: () => { this.errorCarga.set(true); this.cargando.set(false); }
-        });
+    forkJoin({
+      servicios: this.clientService.getServices(this.profId()),
+      obras: this.clientService.getObrasSociales(this.cuenta()?.id ?? '')
+    }).subscribe({
+      next: ({ servicios, obras }) => {
+        this.servicios.set(servicios);
+        const prof = this.profesionalesDisponibles().find(p => p.id === this.profId());
+        const opciones = prof ? coberturasDeProfesional(prof, obras) : [PARTICULAR];
+        this.obrasSociales.set(opciones);
+        this.atiendeParticulares.set(prof ? aceptaParticular(prof) : true);
+        // Precarga la obra social elegida en el centro (si este profesional la atiende)
+        // y descarta una elección previa que no aplique a este profesional.
+        const control = this.formularioPaciente.get('healthInsurance');
+        const actual = control?.value as string;
+        if (this.obraSocialPedida && opciones.includes(this.obraSocialPedida)) control?.setValue(this.obraSocialPedida);
+        else if (actual && !opciones.includes(actual)) control?.setValue('');
+        this.cargando.set(false);
       },
       error: () => { this.errorCarga.set(true); this.cargando.set(false); }
     });

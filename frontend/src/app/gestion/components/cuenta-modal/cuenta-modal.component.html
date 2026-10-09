@@ -1,5 +1,5 @@
 <!-- Backdrop -->
-<div class="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-[2px] flex items-center justify-center p-4" (click)="cerrar.emit()">
+<div class="fixed inset-0 z-50 bg-teal-950/40 backdrop-blur-[2px] flex items-center justify-center p-4" (click)="cerrar.emit()">
 
   <!-- Panel -->
   <div class="bg-white rounded-3xl border border-stone-200 shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto"
@@ -60,60 +60,58 @@
                class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
       </div>
 
-      <!-- Credencial de acceso: los profesionales van con DNI; los consultorios eligen -->
-      <div *ngIf="tipo() === 'consultorio'">
-        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-2">Credencial de acceso</label>
-        <div class="flex gap-2">
-          <button type="button" (click)="credencial.set('email')"
-                  class="px-4 py-2 rounded-xl border text-sm font-bold transition-colors"
-                  [ngClass]="credencial() === 'email' ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-stone-200 text-stone-500 hover:border-stone-300'">
-            Con email
-          </button>
-          <button type="button" (click)="credencial.set('dni')"
-                  class="px-4 py-2 rounded-xl border text-sm font-bold transition-colors"
-                  [ngClass]="credencial() === 'dni' ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-stone-200 text-stone-500 hover:border-stone-300'">
-            Con DNI
-          </button>
-        </div>
-      </div>
-      <p *ngIf="tipo() === 'profesional'" class="text-[11px] text-stone-400 -mt-1">
-        Los profesionales independientes acceden con su <span class="font-bold">DNI</span>; el email queda para avisos y recuperación.
-      </p>
-
-      <!-- DNI de acceso -->
-      <div *ngIf="usaDni()">
-        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">DNI de acceso</label>
-        <input type="text" [ngModel]="dni()" (ngModelChange)="dni.set($event)" placeholder="Sin puntos, ej. 24853917"
+      <!-- Email de contacto de la organización -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Email de contacto de la cuenta</label>
+        <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" placeholder="contacto@consultorio.com"
                class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+        <p class="text-[11px] text-stone-400 mt-1">Para avisos de la plataforma. No es un login: quienes entran al panel son personas con su DNI.</p>
       </div>
 
-      <!-- Email + contraseña -->
-      <div class="grid sm:grid-cols-2 gap-4">
+      <!-- Alta: persona que administra la cuenta -->
+      <div *ngIf="esNueva" class="rounded-2xl border border-teal-200 bg-teal-50/50 p-4 space-y-3">
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">
-            {{ usaDni() ? 'Email (avisos y recuperación)' : 'Email de acceso' }}
-          </label>
-          <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" placeholder="cuenta@email.com"
-                 class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
+          <p class="text-sm font-bold text-stone-800">Administrador de la cuenta</p>
+          <p class="text-[11px] text-stone-500">Persona que entra al panel con su DNI o email. Después puede sumar más usuarios desde Usuarios y Accesos.</p>
         </div>
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">
-            {{ esNueva ? 'Contraseña inicial' : 'Nueva contraseña' }}
-          </label>
-          <div class="relative">
-            <input [type]="verPassword() ? 'text' : 'password'" [ngModel]="password()" (ngModelChange)="password.set($event)"
-                   [placeholder]="esNueva ? 'Mínimo 6 caracteres' : 'Vacío = no cambiar'"
-                   class="w-full rounded-xl border border-stone-200 px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500">
-            <button type="button" (click)="verPassword.set(!verPassword())"
-                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-              <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-              </svg>
-            </button>
+          <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">DNI *</label>
+          <input type="text" inputmode="numeric" [ngModel]="respDni()" (ngModelChange)="onRespDni($event)" (blur)="buscarResponsable()"
+                 placeholder="Sin puntos, ej. 24853917" class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 bg-white">
+          <p *ngIf="buscandoResp()" class="text-[11px] text-stone-400 mt-1">Buscando…</p>
+        </div>
+        <div *ngIf="respExistente() as p" class="text-[11px] text-sky-900 bg-sky-50 border border-sky-200 rounded-xl px-3 py-2">
+          <span class="font-bold">{{ p.nombre }}</span> ya tiene usuario ({{ p.email }}): se le da acceso como administrador y conserva su contraseña.
+        </div>
+        <div *ngIf="!respExistente()" class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Nombre y apellido *</label>
+            <input type="text" [ngModel]="respNombre()" (ngModelChange)="respNombre.set($event)" placeholder="Ej. Laura Benítez" class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Email *</label>
+            <input type="email" [ngModel]="respEmail()" (ngModelChange)="respEmail.set($event)" placeholder="persona@mail.com" class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 bg-white">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1.5">Contraseña inicial *</label>
+            <div class="relative">
+              <input [type]="verPassword() ? 'text' : 'password'" [ngModel]="password()" (ngModelChange)="password.set($event)"
+                     placeholder="Mínimo 6 caracteres" class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 pr-10 bg-white">
+              <button type="button" (click)="verPassword.set(!verPassword())"
+                      class="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
+        <p *ngIf="tipo() === 'profesional'" class="text-[11px] text-stone-500">En una cuenta independiente, el administrador queda como el profesional que atiende.</p>
       </div>
+      <p *ngIf="!esNueva" class="text-[11px] text-stone-500 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2">
+        Los usuarios y sus contraseñas se gestionan dentro de la cuenta, en <span class="font-bold">Usuarios y Accesos</span> (podés entrar como la cuenta para dar soporte).
+      </p>
 
       <!-- Slug -->
       <div>
@@ -163,7 +161,7 @@
         Cancelar
       </button>
       <button (click)="guardar()" [disabled]="gestion.saving()"
-              class="px-5 py-2.5 rounded-xl text-sm font-bold bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 transition-colors">
+              class="px-5 py-2.5 rounded-xl text-sm font-bold bg-menta-400 hover:bg-menta-500 text-teal-950 border border-menta-500 disabled:opacity-50 transition-colors">
         {{ gestion.saving() ? 'Guardando…' : (esNueva ? 'Crear cuenta' : 'Guardar cambios') }}
       </button>
     </div>

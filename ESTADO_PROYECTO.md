@@ -1,60 +1,91 @@
 # Sistema Web para Profesionales — Estado del Proyecto
 
-Registro vivo del estado del proyecto. Última actualización: 20/09/2026 (segundo sprint del día: login del equipo por DNI + recuperación, secretarías asignadas por profesional, vencimiento de turnos sin confirmar, avisos de WhatsApp simulados, historia clínica confidencial). FRONTEND CERRADO: lo que sigue es el backend Laravel.
+Registro vivo del estado del proyecto. Última actualización: 06/10/2026 (aviso de solicitud nueva al profesional y a su secretaría; paleta petróleo + menta aplicada en todas las vistas). Antes: 26/09 modelo de usuarios (personas + membresías + roles combinables, multi-centro). FRONTEND CERRADO.
 
 ## 🛠️ Stack
-- **Frontend:** Angular 21 (standalone, signals) + TailwindCSS 3 · diseño flat pastel (blanco/gris/verde)
+- **Frontend:** Angular 21 (standalone, signals) + TailwindCSS 3 · diseño flat azul petróleo + verde menta (escalas `teal` y `menta` en `tailwind.config.js`)
 - **Base de datos simulada:** json-server sobre `frontend/db.json` en `localhost:3000`
-- **Backend definitivo (próximo paso):** Laravel + MySQL · multi-tenant (SaaS) · tablas y atributos en español · auth con Sanctum
 
 ## ▶️ Cómo correr (desde `frontend/`)
 ```bash
 npm install      # una sola vez
 npm run dev      # API (localhost:3000) + web (localhost:4200)
-npm run seed     # regenera db.json con las 2 cuentas demo (¡pisa los datos!)
+npm run seed     # regenera db.json con las 2 cuentas demo y sus personas (¡pisa los datos!)
 ```
 
-## 🔑 Cuentas y rutas (multi-tenant en el frontend)
-El sistema maneja **cuentas** (`cuentas` en db.json): cada cuenta es un **consultorio** (varios profesionales, con especialidades) o un **profesional independiente**. Cada cuenta tiene su login, su panel y su página pública propia.
+## 🔑 Cuentas, personas y roles (multi-tenant en el frontend)
+El sistema separa la **organización** de las **personas**:
+- **`cuentas`**: la organización (un **consultorio** con varios profesionales o un **profesional independiente**), con su plan, su slug y su página pública. Su `email` es solo de contacto: **no es un login**.
+- **`usuarios`**: **personas**. Entran con **su DNI o su email** + contraseña (ambos únicos en toda la plataforma).
+- **`miembros`**: la **membresía** que une a una persona con una cuenta: `rol` (`administrador` | `secretaria` | `profesional`) + `profesionalId` (el profesional del equipo que ES esa persona) + `profesionalesAsignados` (agendas de una secretaría) + `activo`.
 
-| Cuenta | Login (`/login`) | Página pública |
+| Rol | Qué ve / hace |
+|---|---|
+| **Administrador** | Todo: equipo, **usuarios y accesos**, configuración, servicios, perfiles. Puede haber varios. Si además **atiende** (`profesionalId`), ve la historia clínica de SUS pacientes. |
+| **Profesional** | Solo lo suyo: agenda, pacientes que atendió, disponibilidad, servicios, perfil e historia clínica. |
+| **Secretaría** | Agendas y pacientes de todo el centro o de los profesionales asignados. Sin configuración ni historia clínica. |
+
+- **Multi-centro:** una misma persona puede tener membresías en varias cuentas (p. ej. un profesional que atiende en dos centros). Al entrar **elige el centro**, y en el panel tiene **"Cambiar de centro"**.
+- **Independientes con equipo:** una cuenta de profesional independiente también puede sumar secretarías (su administradora es la profesional, que atiende).
+- **Reglas** (en `EquipoUsuariosService`): siempre queda ≥1 administrador activo (incluso frente a soporte), nadie cambia su propio rol ni se quita su acceso, un profesional se vincula a una sola persona, y la contraseña de una persona multi-centro no la resetea un centro (la gestiona ella).
+
+| Persona (login DNI o email) | Contraseña | Acceso |
 |---|---|---|
-| **Centro Médico San Martín** (consultorio · 5 profesionales: psicología, psiquiatría, odontología, nutrición, kinesiología) | `admin@centrosanmartin.com.ar` / `consultorio123` | `/c/centro-san-martin` |
-| **Dra. Elena Ramos** (profesional independiente · psicología) | DNI `24853917` / `elena123` | `/p/dra-elena-ramos` |
-| **Administrador de la Plataforma** (back-office · gestión de cuentas) | `admin@plataforma.com` / `admin123` | `/gestion` |
-| Rocío Méndez (secretaría · **todo el centro**) | DNI `28456123` / `secretaria123` | `/admin` |
-| Valeria Suárez (secretaría **asignada solo a la Od. Ríos**) | DNI `33780415` / `valeria123` | `/admin` |
-| Lic. Carolina Funes (rol profesional) | DNI `27912384` / `carolina123` | `/admin` |
+| Laura Benítez · `30112233` / `admin@centrosanmartin.com.ar` | `consultorio123` | Administradora de San Martín (no atiende) |
+| Dr. Gustavo Lema · `20345678` | `lema1234` | Administrador de San Martín **+ atiende** (psiquiatría) |
+| Rocío Méndez · `28456123` | `secretaria123` | Secretaría de todo San Martín |
+| Valeria Suárez · `33780415` | `valeria123` | Secretaría de San Martín, solo la Od. Ríos |
+| Lic. Carolina Funes · `27912384` | `carolina123` | Profesional en San Martín |
+| Dra. Elena Ramos · `24853917` | `elena123` | **Multi-centro:** administradora + atiende en su cuenta, y profesional en San Martín (jueves) |
+| Julieta Paz · `36544210` | `julieta123` | Secretaría de la cuenta de la Dra. Ramos |
+| Administrador de la Plataforma · `admin@plataforma.com` | `admin123` | Back-office `/gestion` |
 
-> El **equipo interno entra con DNI + contraseña** (mínimo esfuerzo para el personal); el email del usuario queda para avisos y recuperación. **Credencial de las CUENTAS (alta desde /gestion → Nueva cuenta):** las de **profesional independiente van siempre con DNI** (`Cuenta.dni`, campo obligatorio en el alta) y las de **consultorio eligen** en el alta si acceden con email o con DNI (selector "Credencial de acceso"). El DNI es único en toda la plataforma (cuentas + usuarios, validado en el modal); el email siempre se pide (avisos/recuperación) y el login por email sigue aceptándose por compatibilidad. San Martín eligió email; Elena accede con DNI. "¿Olvidaste tu contraseña?" muestra el flujo de recuperación (simulado; el envío real por email/WhatsApp lo hará el backend), con respuesta neutra que no revela si la cuenta existe.
+Páginas públicas: `/c/centro-san-martin` (consultorio) y `/p/dra-elena-ramos` (independiente).
 
-- `/login`: pantalla de ingreso (mock contra `cuentas` de json-server; sesión en localStorage). Las cards de demo completan las credenciales con un clic y **solo aparecen si `environment.demoCredenciales` es `true`** (ponerlo en `false` antes de mostrar el sistema).
-- `/admin` está protegido por guard: sin sesión redirige a `/login`. "Cerrar Sesión" funciona.
-- **Todos los datos** (profesionales, servicios, turnos, pacientes, disponibilidades, bloqueos) llevan `cuentaId` y el panel/las páginas públicas solo ven lo de su cuenta. El padrón de pacientes es por cuenta (compartido entre los profesionales del consultorio).
+- `/login`: una sola pantalla para todos (mock contra json-server; sesión en localStorage con persona + membresía activa). Las cards de demo **solo aparecen si `environment.demoCredenciales` es `true`** (ponerlo en `false` antes de mostrar el sistema).
+- `/admin` está protegido por guard y cada sección por rol (`rolGuard`). **Todos los datos** llevan `cuentaId` y el panel/las páginas públicas solo ven lo de su cuenta.
+- **Alta de cuentas (`/gestion` → Nueva cuenta):** crea la cuenta **y su administrador** (persona nueva, o se **vincula** una existente por DNI, que conserva su contraseña). Los usuarios y contraseñas se gestionan dentro de la cuenta en **Usuarios y Accesos** (soporte puede entrar como la cuenta).
 
 ---
 
 ## ✅ Lo que está hecho y verificado
 
-### Roles dentro del consultorio (colección `usuarios`)
-- El email de la **Cuenta** es el **DUEÑO** (todo, como siempre). El dueño crea usuarios del equipo desde **Mi Equipo → Usuarios**: **Secretaría** y **Profesional** (atado a un profesional del equipo: solo su agenda, los pacientes que él atendió, su disponibilidad, sus servicios y su perfil; sin selector global).
-- **Secretarías asignadas:** cada secretaría puede gestionar **todo el centro** (sin asignación) o **solo las agendas de los profesionales que el dueño le marque** (`Usuario.profesionalesAsignados`; chips en el alta y botón "Agendas" en el listado). El alcance limita agenda, pacientes, selector global y alta de turnos (`alcanceSecretaria` / `profesionalesOperables` / `turnosAlcance` en AdminService). Verificado: Valeria solo ve lo de la Od. Ríos.
+### Usuarios y Accesos (colecciones `usuarios` + `miembros`) — 26/09
+- Pantalla **Usuarios y Accesos** (`/admin/usuarios`, solo administradores, en consultorios **e independientes**): alta de persona por **DNI** — si ya existe en la plataforma se **vincula** sin duplicarla —, rol (Administrador / Profesional / Secretaría), "¿También atiende?" para administradores, agendas para secretarías, editar acceso, activar/desactivar por cuenta y reset de contraseña (bloqueado para personas multi-centro). Chips "Vos", "Atiende" y "Multi-centro". Mi Equipo tiene un atajo.
+- **Login** por DNI o email para todas las personas; con varias membresías aparece **"¿En qué centro vas a trabajar?"** y en el panel **"Cambiar de centro"** (recarga los datos de la otra cuenta). La sesión recuerda el centro elegido.
+- **Secretarías asignadas:** `Miembro.profesionalesAsignados` limita agenda, pacientes, selector global y alta de turnos (`alcanceSecretaria` / `profesionalesOperables` / `turnosAlcance`). Verificado: Valeria solo ve lo de la Od. Ríos.
+- **Alcance vs. acceso clínico:** `AuthService.profesionalAtado` (solo rol profesional: el panel queda clavado en lo suyo) y `AuthService.profesionalPropio` (rol profesional o administrador que atiende: define la historia clínica). La impersonación de soporte nunca tiene acceso clínico.
 - Guards por rol en las rutas (`rolGuard`): entrar por URL a una sección prohibida redirige al dashboard. El menú además la esconde.
-- Alta con **DNI (credencial de login, único)** + email (avisos) + contraseña inicial, activar/desactivar acceso y reset de contraseña. Un usuario desactivado (o de cuenta suspendida) no puede iniciar sesión.
-- El mismo `/login` resuelve las cuatro identidades: identificador numérico → usuario por DNI; si no, administrador de plataforma → cuenta (dueño) → usuario por email (compatibilidad).
+- Verificado con E2E Playwright (39 chequeos, 26/09): los 8 perfiles demo, selector y cambio de centro, alta/vinculación de personas, reglas de último administrador / auto-edición / reset multi-centro, alta de cuentas desde /gestion con administrador nuevo y vinculado.
 
 ### Historia clínica (colección `historias`) — dato sensible
 - Entradas `{fecha, motivo, diagnóstico, tratamiento}` por paciente, en el modal del paciente (Mis Pacientes).
-- **Confidencialidad decidida: solo el profesional tratante ve y carga SUS entradas.** Ni el dueño del consultorio, ni las secretarías, ni otros profesionales, ni la impersonación de soporte acceden (`profesionalClinico`/`puedeVerHistoria` en AdminService; el GET carga por cuenta pero la UI solo expone lo propio — la regla dura va en el backend). La cuenta independiente (Elena) es su propio profesional tratante.
+- **Confidencialidad decidida: solo el profesional tratante ve y carga SUS entradas.** Ni un administrador que no atiende, ni las secretarías, ni otros profesionales, ni la impersonación de soporte acceden (`profesionalClinico`/`puedeVerHistoria` en AdminService; el GET carga por cuenta pero la UI solo expone lo propio — la regla dura va en el backend). Un administrador que **atiende** (p. ej. el Dr. Lema, o Elena en su cuenta) sí ve y carga las de SUS pacientes.
 - Verificado: Carolina ve y agrega sus entradas de Romina; la secretaría no ve la sección ni los diagnósticos; Elena ve las suyas.
 
 ### Vencimiento de turnos sin confirmar (estado `EXPIRED`)
 - Un turno **PENDIENTE** que nadie confirmó hasta `Cuenta.horasVencimientoPendiente` horas antes del inicio (default 12; 0 = nunca) pasa a **Vencido** y **libera el lugar** (el turnero público y los chequeos de solapamiento lo ignoran, igual que un cancelado). Los pendientes ya pasados no se tocan (quedan para marcar asistencia).
-- En el mock se aplica al cargar el panel (con PATCH persistido); **en Laravel será un job programado**. Configurable en Mi Equipo → Datos del Centro y en Configuración de la Cuenta (individuales). Chip gris "Vencido" + filtro propio en Agenda Lista y Calendario; el paciente lo ve como "Vencido (sin confirmar)".
+- En el mock se aplica al cargar el panel (con PATCH persistido). Configurable en Mi Equipo → Datos del Centro y en Configuración de la Cuenta (individuales). Chip gris "Vencido" + filtro propio en Agenda Lista y Calendario; el paciente lo ve como "Vencido (sin confirmar)".
 
-### Avisos de WhatsApp (colección `notificaciones`) — simulados
-- Cada **reprogramación o cancelación** registra el aviso correspondiente: los cambios hechos **desde el panel** avisan al **paciente** (incluye cancelar/mover series, con un aviso por turno) y los cambios hechos **por el paciente online** avisan al **profesional**.
-- El dashboard muestra los últimos avisos con badge **"Simulado"**: en el mock solo se registran (mensaje, teléfono, evento, origen, fecha) — **el envío real lo hará el backend vía WhatsApp Business API**, que tiene costo por conversación.
+### Avisos (colección `notificaciones`) — simulados
+- **Solicitud nueva (06/10):** cuando un paciente reserva online se registra un aviso por **WhatsApp al profesional** y un **email a cada secretaría activa que gestiona esa agenda** (sin agendas asignadas = todo el centro; con asignación, solo si incluye a ese profesional). Verificado: una reserva con la Od. Ríos avisa a Ríos, a Rocío (todo el centro) y a Valeria (asignada a Ríos); las de otros profesionales no le llegan a Valeria.
+- Cada **reprogramación o cancelación** registra el aviso correspondiente: los cambios hechos **desde el panel** avisan al **paciente** y los hechos **por el paciente online** avisan al **profesional**.
+- El dashboard muestra los últimos avisos (evento, destinatario, canal) con badge **"Simulado"** y un contador de **solicitudes nuevas de las últimas 24 h**. Cada persona ve los de su alcance (`AdminService.avisosVisibles`); los emails a una secretaría solo los ve ella y los administradores.
+- En el mock el cliente público lee `miembros`/`usuarios` para simular el reparto. El envío real será por WhatsApp Business API y email.
+
+### Obras sociales (colección `obrasSociales` por cuenta) — 06/10
+- **El centro arma su lista** en **Obras Sociales** (`/admin/obras-sociales`): desde el catálogo sugerido de la plataforma (`healthInsurances`) o agregando propias (p. ej. IOSEP). Activar/desactivar (inactiva = no se ofrece a pacientes) y eliminar solo si ningún profesional la atiende.
+- **Cada profesional marca cuáles atiende** y si **acepta particulares** (`ProfessionalProfile.obrasSociales` + `aceptaParticular`, por defecto sí) en una grilla obra social × profesional. El rol profesional solo ve y edita su propia columna.
+- **Turnero:** el paciente solo ve las coberturas del profesional elegido + "Particular" si lo acepta. **Página del centro:** filtro "¿Con qué obra social te atendés?" que deja solo a quienes la atienden y pasa la elección al turnero (`?os=`). **Perfil del profesional:** chips "Obras sociales que atiendo".
+- **Panel:** el alta de pacientes ofrece las obras sociales de la cuenta; al dar un turno, si el profesional no atiende la del paciente, avisa y el turno queda como particular.
+- Lógica compartida en `core/coberturas.ts`; servicio del panel `ObrasSocialesService`. Turnos y pacientes guardan el nombre.
+
+### Paleta y marca (06/10)
+- **Azul petróleo + verde menta, sin negro puro.** En `tailwind.config.js` la escala `teal` es el petróleo y `menta` el acento.
+- **Acción principal = menta** (`.btn-primary` o `bg-menta-400 text-teal-950 border-menta-500`): turnero, página del consultorio, Disponibilidad, Mi Equipo y botones de `/gestion`.
+- **Seleccionado = petróleo sólido** (`bg-teal-600 text-white`): día y horario elegidos, chips de profesional, filtros, frecuencia de series, rol.
+- **Secundario = petróleo muy claro** (`bg-teal-100 text-teal-900`) · avatares e iniciales en `teal-200`.
+- Sidebar, toasts y fondos de modal de `/gestion` pasaron de casi negro a petróleo (`teal-900`/`teal-950`). Los chips de estado (confirmado/pendiente/cancelado) mantienen su semáforo.
 
 ### Panel (`/admin`, según la cuenta y el rol logueados)
 - **Cuenta consultorio:** selector global en el header ("Todos los profesionales" o uno), vista **Mi Equipo** con **catálogo de especialidades administrable** (colección `especialidades` por cuenta: alta, renombrar con actualización en cascada de sus profesionales, activar/desactivar — inactiva no se ofrece en altas nuevas —, eliminar solo si no tiene profesionales), **alta de profesionales eligiendo una especialidad ya cargada** (select; "+ Agregar acá" desde cada grupo la preselecciona) y **equipo agrupado por especialidad** (secciones con contador de activos y grupo "Sin especialidad" para huérfanos). Chips de profesional en Perfil/Servicios/Disponibilidad, y el modal de turnos permite elegir profesional (reglas de solapamiento **por profesional**).
@@ -92,18 +123,12 @@ El sistema maneja **cuentas** (`cuentas` en db.json): cada cuenta es un **consul
 
 ## 🚧 Lo que falta
 
-### Etapa Backend (siguiente)
-1. **Laravel + MySQL** multi-tenant, tablas en español (`cuentas` — con `dni` opcional como credencial —, `usuarios` — con `dni` único y `profesionales_asignados` —, `perfiles`/`profesionales`, `especialidades`, `pacientes`, `turnos` — con `serie_id` y 6 estados incl. `vencido` —, `servicios`, `disponibilidades`, `bloqueos_fechas`, `obras_sociales`, `lugares_atencion`, `historias_clinicas`, `notificaciones`, `planes`, `pagos`, `administradores`).
-2. **Auth real** (Sanctum): registro de cuentas, hash de contraseñas, tokens, **recuperación de cuenta real** con token de un solo uso por email/WhatsApp (hoy simulada) (hoy el login es mock contra json-server y la contraseña viaja en texto plano — solo para desarrollo).
-3. **Validaciones server-side** de todas las reglas de negocio (solapamientos, límite del plan, horas mínimas, alcance de secretarías, **acceso a historias clínicas SOLO del profesional tratante** — hoy la regla vive en la UI).
-4. **Notificaciones automáticas**: WhatsApp (Business API, costo por conversación) y email al confirmar/reprogramar/cancelar — el mock ya registra qué aviso corresponde a cada evento en `notificaciones`.
-5. **Job programado de vencimiento** de turnos pendientes (hoy se aplica al cargar el panel).
-6. Subida real de imágenes a storage (hoy base64 en db.json).
-7. Solicitud de alta desde la landing (formulario de contacto): el alta de cuentas es manual y curada desde `/gestion`, por decisión de producto.
-
 ### Funcional pendiente (frontend)
 - (Ninguno bloqueante: la maqueta está completa, incluidas las definiciones del 20/09: secretarías por profesional, DNI + recuperación, vencimiento, avisos de WhatsApp simulados e historia clínica.)
-- Invitaciones por email para usuarios del equipo (hoy el dueño define la contraseña inicial) — llega con el backend.
+- Invitaciones por email para usuarios del equipo (hoy el administrador define la contraseña inicial).
+- `environment.prod.ts` y `demoCredenciales=false` antes de mostrar el sistema.
+- Roles del back-office (soporte / facturación) y registro de impersonaciones y de accesos a historias clínicas — recomendados, pendientes.
+- "Gestionar mi turno" del paciente solo con DNI: sumar código de un solo uso o link único.
 
 ### Limpieza
 - Borrar carpetas `client/components/booking-wizard` y `landing-home` (stubs vacíos).

@@ -26,16 +26,12 @@ export interface SpecialtyConfig {
 export interface Cuenta {
   id: string;
   tipo: 'consultorio' | 'profesional';
-  /** Email de la cuenta: avisos, recuperación y (si no hay dni) credencial de acceso. */
-  email: string;
   /**
-   * DNI como credencial de acceso (único en la plataforma, junto con los DNI
-   * de usuarios). Las cuentas de PROFESIONAL independiente siempre lo tienen;
-   * los CONSULTORIOS eligen al alta si acceden con email o con DNI.
-   * null/ausente = accede solo con email.
+   * Email de CONTACTO de la organización (avisos de la plataforma).
+   * Ya no es una credencial: quienes entran al panel son USUARIOS
+   * (personas) con una membresía en la cuenta (colección `miembros`).
    */
-  dni?: string | null;
-  password: string; // mock: en el backend real será un hash
+  email: string;
   nombre: string;
   slug: string;
   descripcion: string;
@@ -58,34 +54,68 @@ export interface Cuenta {
 /** @deprecated alias temporal — usar Cuenta. */
 export type Consultorio = Cuenta;
 
-/** Rol de un usuario dentro de una cuenta. El login de la cuenta (email de la Cuenta) es el DUEÑO. */
-export type RolUsuario = 'duenio' | 'secretaria' | 'profesional';
+/**
+ * Rol de una persona DENTRO de una cuenta (membresía):
+ *  - administrador: todo (equipo, usuarios, configuración, servicios, perfiles).
+ *    Puede haber varios por cuenta.
+ *  - secretaria: agendas y pacientes (de todo el centro o de los profesionales
+ *    asignados); no toca configuración, equipo, servicios ni perfiles.
+ *  - profesional: solo lo suyo (agenda, pacientes que atendió, disponibilidad,
+ *    servicios, perfil e historia clínica). Requiere profesionalId.
+ */
+export type RolUsuario = 'administrador' | 'secretaria' | 'profesional';
 
 /**
- * Usuario del equipo de una cuenta (colección `usuarios`), creado por el dueño.
- *  - secretaria: gestiona agendas y pacientes de todos; no toca configuración,
- *    equipo, disponibilidad, servicios ni perfiles públicos.
- *  - profesional: solo su agenda, sus pacientes (los que atendió), su
- *    disponibilidad, sus servicios y su perfil público. Requiere profesionalId.
+ * PERSONA con acceso a la plataforma (colección `usuarios`). Una misma
+ * persona puede pertenecer a varias cuentas (p. ej. un profesional que
+ * atiende en dos centros): cada pertenencia es un `Miembro`.
+ * Entra con DNI o email + contraseña.
  */
 export interface Usuario {
   id: string;
-  cuentaId: string;
   nombre: string;
-  email: string;    // único (para avisos y recuperación de cuenta)
-  /** DNI del usuario: es su credencial de login (único en la plataforma). */
+  /** Único en la plataforma: credencial de login alternativa, avisos y recuperación. */
+  email: string;
+  /** Único en la plataforma: credencial de login principal. */
   dni: string;
   password: string; // mock: hash en el backend real
-  rol: 'secretaria' | 'profesional';
-  /** Solo rol profesional: a qué profesional del equipo corresponde. */
-  profesionalId?: string;
+  /** false = la persona no puede iniciar sesión en ninguna cuenta. */
+  activo: boolean;
+}
+
+/**
+ * Membresía: une una PERSONA (usuario) con una CUENTA, con su rol
+ * (colección `miembros`; en Laravel, tabla `miembros`).
+ */
+export interface Miembro {
+  id: string;
+  cuentaId: string;
+  usuarioId: string;
+  rol: RolUsuario;
   /**
-   * Solo rol secretaria: ids de los profesionales cuyas agendas gestiona.
+   * Profesional del equipo que ES esta persona ("atiende").
+   * Obligatorio para rol profesional; opcional para administrador (el dueño
+   * que también atiende: ve la configuración Y sus historias clínicas).
+   * Nunca para secretaría.
+   */
+  profesionalId?: string | null;
+  /**
+   * Solo secretaría: ids de los profesionales cuyas agendas gestiona.
    * Ausente o vacío = gestiona todo el centro.
    */
   profesionalesAsignados?: string[];
-  /** false = no puede iniciar sesión. */
+  /** false = sin acceso a ESTA cuenta (las demás membresías de la persona siguen). */
   activo: boolean;
+}
+
+/** Membresía con su persona resuelta (para listados de Mi Equipo → Usuarios). */
+export interface MiembroConUsuario extends Miembro {
+  usuario: Usuario;
+}
+
+/** Membresía con su cuenta resuelta (selector de centro al iniciar sesión). */
+export interface MiembroConCuenta extends Miembro {
+  cuenta: Cuenta;
 }
 
 /**
@@ -163,6 +193,27 @@ export interface ProfessionalProfile {
   modalidad: string;
   direcciones: LocationConfig[];
   areas: SpecialtyConfig[];
+  /** Ids de las obras sociales DE LA CUENTA que atiende este profesional. */
+  obrasSociales?: string[];
+  /** true (o ausente) = también atiende pacientes particulares, sin obra social. */
+  aceptaParticular?: boolean;
+}
+
+/** Valor que se guarda en turnos y pacientes cuando no usan obra social. */
+export const PARTICULAR = 'Particular (Sin cobertura)';
+
+/**
+ * Obra social con la que trabaja una cuenta (colección `obrasSociales`).
+ * El centro arma su lista (desde el catálogo sugerido de la plataforma o
+ * agregando propias, p. ej. una obra social provincial) y cada profesional
+ * marca cuáles atiende (ProfessionalProfile.obrasSociales).
+ */
+export interface ObraSocial {
+  id: string;
+  cuentaId: string;
+  nombre: string;
+  /** false = la cuenta dejó de trabajar con ella: no se ofrece a pacientes ni en altas nuevas. */
+  activo: boolean;
 }
 
 export interface Patient {
@@ -245,7 +296,7 @@ export interface Service {
 /**
  * Entrada de HISTORIA CLÍNICA (colección `historias`). Dato sensible
  * (Ley 26.529): la carga y la lee ÚNICAMENTE el profesional tratante
- * que la escribió. Dueño de consultorio y secretaría no acceden.
+ * que la escribió. Un administrador que no atiende y la secretaría no acceden.
  */
 export interface HistoriaClinicaEntry {
   id: string;
@@ -261,26 +312,41 @@ export interface HistoriaClinicaEntry {
   tratamiento: string;
 }
 
+/** Evento que dispara un aviso. */
+export type EventoNotificacion = 'solicitud_nueva' | 'reprogramado' | 'cancelado';
+
+/** A quién va dirigido el aviso. */
+export type DestinatarioNotificacion = 'paciente' | 'profesional' | 'secretaria';
+
 /**
- * Aviso de WhatsApp registrado por el sistema (colección `notificaciones`).
- * MOCK: acá solo se registra; el envío real lo hará el backend vía
- * WhatsApp Business API cuando se reprograme o cancele un turno.
+ * Aviso registrado por el sistema (colección `notificaciones`).
+ * MOCK: acá solo se registra; el envío real lo hará el backend
+ * (WhatsApp Business API y email). Eventos:
+ *  - solicitud_nueva: un paciente reservó online → WhatsApp al profesional
+ *    y email a cada secretaría activa que gestiona esa agenda.
+ *  - reprogramado / cancelado: cambios del panel avisan al paciente y
+ *    los del paciente avisan al profesional.
  */
 export interface Notificacion {
   id: string;
   cuentaId: string;
   turnoId: string;
-  evento: 'reprogramado' | 'cancelado';
-  /** Quién dispara el aviso: cambios del panel avisan al paciente y viceversa. */
+  evento: EventoNotificacion;
+  /** Quién dispara el aviso. */
   origen: 'panel' | 'paciente';
-  canal: 'whatsapp';
+  canal: 'whatsapp' | 'email';
+  destinatarioTipo?: DestinatarioNotificacion;
+  /** Persona destinataria cuando es una secretaría (usuarios.id). */
+  usuarioId?: string;
   destinatario: string; // nombre de quien recibe
-  telefono: string;
+  telefono: string;     // vacío si el canal es email
+  email?: string;       // solo canal email
   mensaje: string;
   fecha: string; // ISO
   estado: 'simulada';
 }
 
+/** Catálogo SUGERIDO de obras sociales de la plataforma (colección `healthInsurances`). */
 export interface HealthInsurance {
   id: string;
   name: string;

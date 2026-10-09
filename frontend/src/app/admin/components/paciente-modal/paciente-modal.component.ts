@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, computed, effect, inject, signa
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
+import { ObrasSocialesService } from '../../services/obras-sociales.service';
 import { Patient } from '../../../core/models';
 import { todayLocal } from '../../../core/date-utils';
 
@@ -18,6 +19,7 @@ import { todayLocal } from '../../../core/date-utils';
 })
 export class PacienteModalComponent {
   adminService = inject(AdminService);
+  private obrasSociales = inject(ObrasSocialesService);
 
   /** Paciente a editar: activa el modo edición con los campos precargados. */
   @Input() set pacienteEditar(pac: Patient | null) {
@@ -43,13 +45,20 @@ export class PacienteModalComponent {
   email = signal('');
   obraSocial = signal('');
 
+  /** Obras sociales de la cuenta (+ la actual del paciente si ya no está en la lista, para no perderla al editar). */
+  opcionesObraSocial = computed(() => {
+    const lista = this.obrasSociales.opcionesCuenta();
+    const actual = this.obraSocial();
+    return actual && !lista.includes(actual) ? [...lista, actual] : lista;
+  });
+
   mostrarErrores = signal(false);
   guardando = signal(false);
 
   constructor() {
-    // Default de obra social cuando llega la lista desde la API.
+    // Default de obra social: particular (la primera opción de la cuenta).
     effect(() => {
-      const lista = this.adminService.healthInsurances();
+      const lista = this.obrasSociales.opcionesCuenta();
       if (!this.obraSocial() && lista.length > 0) {
         this.obraSocial.set(lista[0]);
       }

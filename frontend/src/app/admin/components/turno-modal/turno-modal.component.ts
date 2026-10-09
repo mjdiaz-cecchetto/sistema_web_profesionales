@@ -2,7 +2,8 @@ import { Component, EventEmitter, Input, Output, computed, effect, inject, signa
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
-import { Appointment, AppointmentStatus, Patient } from '../../../core/models';
+import { ObrasSocialesService } from '../../services/obras-sociales.service';
+import { Appointment, AppointmentStatus, PARTICULAR, Patient } from '../../../core/models';
 import { addDaysTo, addMonthsClamped, formatDMY, parseLocalDate, todayLocal } from '../../../core/date-utils';
 
 type Frecuencia = 'SEMANAL' | 'QUINCENAL' | 'MENSUAL';
@@ -46,6 +47,7 @@ interface CeldaMini {
 })
 export class TurnoModalComponent {
   adminService = inject(AdminService);
+  obrasSociales = inject(ObrasSocialesService);
 
   /** Fecha con la que se abre el modal (ej. día seleccionado en el calendario). */
   @Input() set fechaInicial(valor: string | null) {
@@ -94,6 +96,26 @@ export class TurnoModalComponent {
 
   busquedaPaciente = signal('');
   pacienteSeleccionado = signal<Patient | null>(null);
+
+  /**
+   * Cobertura con la que queda el turno: la obra social del paciente si el
+   * profesional la atiende; si no, particular.
+   */
+  coberturaTurno = computed(() => {
+    const pac = this.pacienteSeleccionado();
+    if (!pac) return '';
+    return this.obrasSociales.atiendeCobertura(this.profId(), pac.obraSocial) ? pac.obraSocial : PARTICULAR;
+  });
+
+  /** Aviso cuando el profesional no atiende la obra social del paciente. */
+  avisoCobertura = computed(() => {
+    const pac = this.pacienteSeleccionado();
+    const prof = this.adminService.profesionalPorId(this.profId());
+    if (!pac || !prof || this.obrasSociales.atiendeCobertura(prof.id, pac.obraSocial)) return '';
+    return this.obrasSociales.aceptaParticular(prof)
+      ? `${prof.nombre} no atiende ${pac.obraSocial}: el turno queda como particular.`
+      : `${prof.nombre} no atiende ${pac.obraSocial} ni pacientes particulares.`;
+  });
 
   servicioNombre = signal('Consulta');
   lugar = signal('');
@@ -394,9 +416,7 @@ export class TurnoModalComponent {
     if (/^[0-9]{7,9}$/.test(q)) this.npDni.set(q);
     else if (q) this.npNombre.set(q);
 
-    if (!this.npObraSocial() && this.adminService.healthInsurances().length > 0) {
-      this.npObraSocial.set(this.adminService.healthInsurances()[0]);
-    }
+    if (!this.npObraSocial()) this.npObraSocial.set(PARTICULAR);
     this.npMostrarErrores.set(false);
     this.altaRapidaAbierta.set(true);
   }
@@ -481,7 +501,7 @@ export class TurnoModalComponent {
         status: this.estadoInicial(),
         notes: this.notas().trim(),
         location: this.lugar() || this.lugares()[0],
-        healthInsurance: pac.obraSocial
+        healthInsurance: this.coberturaTurno()
       });
       this.guardando.set(false);
       if (ok) this.actualizado.emit();
@@ -509,7 +529,7 @@ export class TurnoModalComponent {
       status: this.estadoInicial(),
       notes: (this.notas().trim() + serieNota).trim(),
       location: this.lugar() || this.lugares()[0],
-      healthInsurance: pac.obraSocial
+      healthInsurance: this.coberturaTurno()
     }));
 
     this.guardando.set(true);

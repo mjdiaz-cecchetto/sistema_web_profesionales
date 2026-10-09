@@ -1,0 +1,218 @@
+<div class="flex flex-col gap-3 animate-fade-in max-w-5xl">
+
+  <!-- Toast -->
+  <div *ngIf="toast()"
+       class="fixed top-24 left-1/2 -translate-x-1/2 z-[60] bg-emerald-100 border border-emerald-300 text-emerald-900 px-5 py-3 rounded-2xl text-sm font-bold flex items-center gap-2.5 animate-scale-in max-w-[calc(100vw-2rem)]">
+    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <span>{{ toast() }}</span>
+    <button (click)="toast.set('')" class="text-emerald-500 hover:text-emerald-800 font-black leading-none ml-1">×</button>
+  </div>
+
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between gap-2.5">
+    <div class="flex items-center gap-2 min-w-0">
+      <h1 class="text-lg font-extrabold text-stone-800 tracking-tight truncate">Usuarios y Accesos</h1>
+      <span class="chip !text-[10px] bg-teal-100 text-teal-900 border-teal-200">{{ equipo.miembros().length }}</span>
+    </div>
+    <button *ngIf="!altaAbierta()" (click)="abrirAlta()" class="btn-primary !text-xs !py-2.5 flex items-center gap-2 shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+      <span class="hidden sm:inline">Agregar persona</span>
+      <span class="sm:hidden">Agregar</span>
+    </button>
+  </div>
+  <p class="text-xs text-stone-500 -mt-1 leading-relaxed">
+    Cada persona entra con <span class="font-bold">su propio DNI o email</span> y su contraseña. Si trabaja en otro centro de la plataforma, es el mismo usuario: al entrar elige en cuál trabajar.
+  </p>
+
+  <!-- Error general -->
+  <p *ngIf="error()" class="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 flex items-start justify-between gap-2">
+    <span>{{ error() }}</span>
+    <button (click)="error.set('')" class="text-rose-400 hover:text-rose-700 font-black leading-none">×</button>
+  </p>
+
+  <!-- ===== Alta ===== -->
+  <div *ngIf="altaAbierta()" class="card p-5 space-y-4 border-teal-200 animate-fade-in">
+    <div class="flex items-center justify-between gap-2">
+      <h3 class="card-title !text-sm">Nueva persona en el equipo</h3>
+      <button (click)="altaAbierta.set(false)" class="p-2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors" title="Cerrar">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Paso 1: DNI -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+      <div class="space-y-1">
+        <label class="field-label">DNI (credencial) *</label>
+        <input type="text" inputmode="numeric" [ngModel]="dni()" (ngModelChange)="onDni($event)" (blur)="buscarDni()"
+               placeholder="Sin puntos, ej. 28456123" class="input !text-xs">
+      </div>
+      <div *ngIf="buscando() || personaExistente() || busqueda()?.estado === 'ya-es-miembro'" class="md:col-span-2 flex items-end">
+        <p *ngIf="buscando()" class="text-[11px] text-stone-400 pb-2.5">Buscando…</p>
+        <div *ngIf="personaExistente() as p" class="w-full bg-sky-50 border border-sky-200 text-sky-900 rounded-xl px-3 py-2 text-[11px] leading-relaxed">
+          <span class="font-extrabold">{{ p.nombre }}</span> ya tiene usuario en la plataforma ({{ p.email }}).
+          Se le da acceso a esta cuenta y <span class="font-bold">conserva su contraseña</span>.
+        </div>
+        <p *ngIf="busqueda()?.estado === 'ya-es-miembro'" class="w-full text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+          Esta persona ya forma parte del equipo. Editala desde el listado.
+        </p>
+      </div>
+    </div>
+
+    <!-- Paso 2: datos (solo si es una persona nueva) -->
+    <div *ngIf="!personaExistente()" class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+      <div class="space-y-1">
+        <label class="field-label">Nombre y apellido *</label>
+        <input type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Ej. Rocío Méndez" class="input !text-xs">
+      </div>
+      <div class="space-y-1">
+        <label class="field-label">Email *</label>
+        <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" placeholder="persona@mail.com" class="input !text-xs">
+      </div>
+      <div class="space-y-1">
+        <label class="field-label">Contraseña inicial *</label>
+        <input type="text" [ngModel]="password()" (ngModelChange)="password.set($event)" placeholder="Mínimo 6 caracteres" class="input !text-xs">
+      </div>
+    </div>
+
+    <!-- Paso 3: rol -->
+    <div class="space-y-1.5">
+      <label class="field-label">Rol en esta cuenta</label>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <button type="button" *ngFor="let r of roles" (click)="elegirRol(r.valor)"
+                [ngClass]="rol() === r.valor ? 'border-teal-400 bg-teal-50 ring-2 ring-teal-100' : 'border-stone-200 bg-white hover:border-teal-300'"
+                class="text-left border rounded-xl px-3 py-2.5 transition-colors">
+          <span class="block text-xs font-extrabold text-stone-800">{{ r.etiqueta }}</span>
+          <span class="block text-[10px] text-stone-500 leading-snug mt-0.5">{{ r.detalle }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Profesional que es / atiende -->
+    <div *ngIf="rol() !== 'secretaria'" class="space-y-1 max-w-sm">
+      <label class="field-label">{{ rol() === 'profesional' ? '¿Qué profesional del equipo es? *' : '¿También atiende pacientes?' }}</label>
+      <div class="relative">
+        <select [ngModel]="profesionalId()" (ngModelChange)="profesionalId.set($event)" class="input !text-xs appearance-none pr-8">
+          <option *ngIf="rol() === 'administrador'" value="">No atiende (solo administra)</option>
+          <option *ngIf="rol() === 'profesional'" value="" disabled>Elegí…</option>
+          <option *ngFor="let pr of profesionalesLibres()" [value]="pr.id">{{ pr.nombre }}</option>
+        </select>
+        <svg class="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+      </div>
+      <p *ngIf="rol() === 'administrador'" class="text-[10px] text-stone-400">Si atiende, además de administrar ve la historia clínica de SUS pacientes.</p>
+      <p *ngIf="profesionalesLibres().length === 0" class="text-[10px] text-amber-700">Todos los profesionales ya tienen una persona vinculada. Sumá el profesional en Mi Equipo primero.</p>
+    </div>
+
+    <!-- Secretaría: agendas -->
+    <div *ngIf="rol() === 'secretaria' && hayVariasAgendas()" class="space-y-1.5">
+      <label class="field-label">¿Qué agendas gestiona?</label>
+      <div class="flex flex-wrap gap-1.5">
+        <button type="button" (click)="asignados.set([])"
+                [ngClass]="asignados().length === 0 ? 'bg-violet-100 text-violet-900 border-violet-300' : 'bg-white text-stone-500 border-stone-200 hover:border-violet-300'"
+                class="px-3 py-1.5 rounded-full text-[10px] font-extrabold border transition-colors">Todo el centro</button>
+        <button type="button" *ngFor="let pr of adminService.profesionalesActivos()" (click)="toggleAsignado(asignados, pr.id)"
+                [ngClass]="asignados().includes(pr.id) ? 'bg-violet-100 text-violet-900 border-violet-300' : 'bg-white text-stone-500 border-stone-200 hover:border-violet-300'"
+                class="px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors">{{ pr.nombre }}</button>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <button (click)="altaAbierta.set(false)" class="btn-secondary !text-xs !py-2">Cancelar</button>
+      <button (click)="crear()" [disabled]="equipo.guardando() || busqueda()?.estado === 'ya-es-miembro'" class="btn-primary !text-xs !py-2">
+        {{ equipo.guardando() ? 'Guardando…' : (personaExistente() ? 'Dar acceso' : 'Crear usuario') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== Estados ===== -->
+  <div *ngIf="equipo.cargando() && equipo.miembros().length === 0" class="card p-6 text-center text-xs text-stone-400">Cargando usuarios…</div>
+  <div *ngIf="equipo.error()" class="card p-4 text-xs text-rose-700 border-rose-200 bg-rose-50">No se pudo conectar con la API local. Ejecutá <code class="font-mono">npm run api</code> y recargá.</div>
+
+  <!-- ===== Listado ===== -->
+  <div class="space-y-2">
+    <div *ngFor="let m of equipo.ordenados()"
+         class="card px-4 py-3 transition-colors"
+         [ngClass]="m.activo !== false ? '' : 'bg-stone-50 opacity-75'">
+      <div class="flex items-start sm:items-center gap-3 flex-col sm:flex-row">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+          <span class="w-9 h-9 rounded-xl bg-teal-100 border border-teal-200 text-teal-800 text-[11px] font-extrabold flex items-center justify-center shrink-0">
+            {{ iniciales(m.usuario.nombre) }}
+          </span>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-sm font-extrabold text-stone-800 truncate">{{ m.usuario.nombre }}</span>
+              <span class="chip !text-[9px]" [ngClass]="claseRol(m.rol)">{{ etiquetaRol(m.rol) }}</span>
+              <span *ngIf="m.rol === 'administrador' && m.profesionalId" class="chip !text-[9px] bg-sky-50 text-sky-800 border-sky-200">Atiende</span>
+              <span *ngIf="equipo.esYo(m)" class="chip !text-[9px] bg-menta-100 text-teal-900 border-menta-300">Vos</span>
+              <span *ngIf="equipo.esCompartida(m.usuarioId)" class="chip !text-[9px] bg-amber-50 text-amber-800 border-amber-200" title="Esta persona también tiene acceso a otra cuenta de la plataforma">Multi-centro</span>
+              <span *ngIf="m.activo === false" class="chip !text-[9px] bg-stone-100 text-stone-500 border-stone-200">Sin acceso</span>
+            </div>
+            <p class="text-[11px] text-stone-400 truncate mt-0.5">
+              DNI {{ m.usuario.dni }} · {{ m.usuario.email }}
+              <ng-container *ngIf="m.profesionalId"> · <span class="text-stone-600 font-semibold">{{ nombreProfesional(m.profesionalId) }}</span></ng-container>
+              <ng-container *ngIf="m.rol === 'secretaria'"> · <span class="text-stone-600 font-semibold">{{ agendasDe(m) }}</span></ng-container>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+          <button *ngIf="editandoId() !== m.id" (click)="editar(m)"
+                  class="text-[10px] font-bold text-stone-500 hover:text-teal-800 hover:bg-teal-50 border border-stone-200 hover:border-teal-200 px-2.5 py-1 rounded-lg transition-colors">
+            Editar acceso
+          </button>
+          <button *ngIf="resetId() !== m.id" (click)="abrirReset(m)" [disabled]="equipo.esCompartida(m.usuarioId)"
+                  [title]="equipo.esCompartida(m.usuarioId) ? 'Trabaja en otra cuenta: su contraseña la gestiona ella' : ''"
+                  class="text-[10px] font-bold text-stone-500 hover:text-teal-800 hover:bg-teal-50 border border-stone-200 hover:border-teal-200 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 disabled:pointer-events-none">
+            Resetear contraseña
+          </button>
+          <label class="relative inline-flex items-center cursor-pointer select-none"
+                 [class.opacity-40]="equipo.esYo(m)" [class.pointer-events-none]="equipo.esYo(m)"
+                 [title]="equipo.esYo(m) ? 'No podés quitarte tu propio acceso' : (m.activo !== false ? 'Quitar acceso' : 'Dar acceso')">
+            <input type="checkbox" [checked]="m.activo !== false" (change)="toggleAcceso(m)" [disabled]="equipo.esYo(m)" class="sr-only peer">
+            <div class="w-8 h-[18px] bg-stone-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:rounded-full after:h-[13px] after:w-[13px] after:transition-all after:shadow-sm peer-checked:bg-teal-400"></div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Edición inline -->
+      <div *ngIf="editandoId() === m.id" class="mt-3 pt-3 border-t border-stone-100 space-y-3">
+        <div class="flex flex-wrap gap-1.5" [class.opacity-50]="equipo.esYo(m)">
+          <button type="button" *ngFor="let r of roles" (click)="elegirRolEdicion(r.valor, m)" [disabled]="equipo.esYo(m)"
+                  [ngClass]="edRol() === r.valor ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-stone-500 border-stone-200 hover:border-teal-300'"
+                  class="px-3 py-1.5 rounded-full text-[10px] font-extrabold border transition-colors disabled:pointer-events-none">{{ r.etiqueta }}</button>
+          <span *ngIf="equipo.esYo(m)" class="text-[10px] text-stone-400 self-center">Tu rol lo cambia otro administrador.</span>
+        </div>
+
+        <div *ngIf="edRol() !== 'secretaria'" class="relative max-w-sm">
+          <select [ngModel]="edProfesionalId()" (ngModelChange)="edProfesionalId.set($event)" class="input !text-xs appearance-none pr-8">
+            <option *ngIf="edRol() === 'administrador'" value="">No atiende (solo administra)</option>
+            <option *ngIf="edRol() === 'profesional'" value="" disabled>¿Qué profesional es?</option>
+            <option *ngFor="let pr of profesionalesLibres(m.profesionalId)" [value]="pr.id">{{ pr.nombre }}</option>
+          </select>
+          <svg class="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+
+        <div *ngIf="edRol() === 'secretaria' && hayVariasAgendas()" class="flex flex-wrap gap-1.5">
+          <button type="button" (click)="edAsignados.set([])"
+                  [ngClass]="edAsignados().length === 0 ? 'bg-violet-100 text-violet-900 border-violet-300' : 'bg-white text-stone-500 border-stone-200 hover:border-violet-300'"
+                  class="px-3 py-1.5 rounded-full text-[10px] font-extrabold border transition-colors">Todo el centro</button>
+          <button type="button" *ngFor="let pr of adminService.profesionalesActivos()" (click)="toggleAsignado(edAsignados, pr.id)"
+                  [ngClass]="edAsignados().includes(pr.id) ? 'bg-violet-100 text-violet-900 border-violet-300' : 'bg-white text-stone-500 border-stone-200 hover:border-violet-300'"
+                  class="px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors">{{ pr.nombre }}</button>
+        </div>
+
+        <div class="flex items-center gap-2 justify-end">
+          <button (click)="editandoId.set(null)" class="btn-ghost !py-1.5 !px-2.5 !text-[10px]">Cancelar</button>
+          <button (click)="guardarEdicion(m)" [disabled]="equipo.guardando()" class="btn-primary !py-1.5 !px-3 !text-[10px]">Guardar</button>
+        </div>
+      </div>
+
+      <!-- Reset de contraseña inline -->
+      <div *ngIf="resetId() === m.id" class="flex items-center gap-2 mt-3 pt-3 border-t border-stone-100">
+        <input type="text" [ngModel]="resetPassword()" (ngModelChange)="resetPassword.set($event)"
+               placeholder="Nueva contraseña (mín. 6)" class="input !text-xs !py-1.5 flex-1">
+        <button (click)="resetId.set(null)" class="btn-ghost !py-1.5 !px-2.5 !text-[10px] shrink-0">Cancelar</button>
+        <button (click)="confirmarReset(m)" [disabled]="equipo.guardando()" class="btn-primary !py-1.5 !px-3 !text-[10px] shrink-0">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>

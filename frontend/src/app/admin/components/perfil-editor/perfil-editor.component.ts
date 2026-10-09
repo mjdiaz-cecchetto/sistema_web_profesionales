@@ -17,7 +17,7 @@ export class PerfilEditorComponent {
   adminService = inject(AdminService);
   auth = inject(AuthService);
 
-  // ---- Configuración de la cuenta (solo cuentas individuales, rol dueño) ----
+  // ---- Configuración de la cuenta (solo cuentas individuales, rol administrador) ----
   horasMinimas = signal(24);
   horasVencimiento = signal(12);
   private horasInicializadas = false;
@@ -25,7 +25,7 @@ export class PerfilEditorComponent {
 
   /** true si corresponde mostrar la config de la cuenta en esta vista. */
   mostrarConfigCuenta(): boolean {
-    return this.adminService.cuenta()?.tipo === 'profesional' && this.auth.esDuenio();
+    return this.adminService.cuenta()?.tipo === 'profesional' && this.auth.esAdministrador();
   }
 
   async guardarHorasMinimas() {

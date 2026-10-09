@@ -52,7 +52,12 @@
         <div class="absolute -bottom-10 left-6 sm:left-8">
           <div class="relative group/avatar">
             <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden ring-4 ring-white border border-stone-200 bg-stone-100">
-              <img [src]="avatarPreview() || 'dra-elena.jpg'" alt="Foto de perfil" class="w-full h-full object-cover">
+              <img *ngIf="avatarPreview(); else sinFoto" [src]="avatarPreview()" alt="Foto de perfil" class="w-full h-full object-cover">
+              <ng-template #sinFoto>
+                <div class="w-full h-full flex items-center justify-center text-stone-400" title="Sin foto de perfil">
+                  <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </div>
+              </ng-template>
             </div>
             <label class="absolute -bottom-2 -right-2 cursor-pointer w-9 h-9 rounded-xl bg-teal-300 text-teal-950 border border-teal-400 flex items-center justify-center hover:bg-teal-400 transition-colors" title="Cambiar foto de perfil">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>

@@ -33,13 +33,25 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'equipo',
-        canActivate: [rolGuard(['duenio'])],
+        canActivate: [rolGuard(['administrador'])],
         loadComponent: () => import('./components/profesionales/profesionales.component').then(m => m.ProfesionalesComponent),
         title: 'Admin - Mi Equipo'
       },
       {
+        path: 'obras-sociales',
+        canActivate: [rolGuard(['administrador', 'profesional'])],
+        loadComponent: () => import('./components/obras-sociales/obras-sociales.component').then(m => m.ObrasSocialesComponent),
+        title: 'Admin - Obras Sociales'
+      },
+      {
+        path: 'usuarios',
+        canActivate: [rolGuard(['administrador'])],
+        loadComponent: () => import('./components/usuarios/usuarios.component').then(m => m.UsuariosComponent),
+        title: 'Admin - Usuarios y Accesos'
+      },
+      {
         path: 'servicios',
-        canActivate: [rolGuard(['duenio', 'profesional'])],
+        canActivate: [rolGuard(['administrador', 'profesional'])],
         loadComponent: () => import('./components/servicios/servicios.component').then(m => m.ServiciosComponent),
         title: 'Admin - Servicios'
       },
@@ -50,13 +62,13 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'disponibilidad',
-        canActivate: [rolGuard(['duenio', 'profesional'])],
+        canActivate: [rolGuard(['administrador', 'profesional'])],
         loadComponent: () => import('./components/disponibilidad/disponibilidad.component').then(m => m.DisponibilidadComponent),
         title: 'Admin - Configurar Disponibilidad'
       },
       {
         path: 'perfil',
-        canActivate: [rolGuard(['duenio', 'profesional'])],
+        canActivate: [rolGuard(['administrador', 'profesional'])],
         loadComponent: () => import('./components/perfil-editor/perfil-editor.component').then(m => m.PerfilEditorComponent),
         title: 'Admin - Mi Perfil Público'
       }

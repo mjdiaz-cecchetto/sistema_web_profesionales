@@ -37,16 +37,14 @@
     {
       "id": "cta-consultorio-sm",
       "tipo": "consultorio",
-      "email": "admin@centrosanmartin.com.ar",
-      "dni": null,
-      "password": "consultorio123",
+      "email": "contacto@centrosanmartin.com.ar",
       "nombre": "Centro Médico San Martín",
       "slug": "centro-san-martin",
       "descripcion": "Centro de salud interdisciplinario en el corazón de San Martín. Psicología, psiquiatría, odontología, nutrición y kinesiología en un mismo lugar, con turnos online y atención con las principales obras sociales.",
       "bannerUrl": "",
       "estado": "activa",
       "plan": "plan-consultorio",
-      "fechaAlta": "2026-05-23",
+      "fechaAlta": "2026-05-29",
       "horasMinimasCancelacion": 24,
       "horasVencimientoPendiente": 12
     },
@@ -54,37 +52,104 @@
       "id": "cta-elena-ramos",
       "tipo": "profesional",
       "email": "elena.ramos@gmail.com",
-      "dni": "24853917",
-      "password": "elena123",
       "nombre": "Dra. Elena Ramos",
       "slug": "dra-elena-ramos",
       "descripcion": "Psicóloga clínica de adultos. Atención presencial en Palermo y Belgrano, y consultas online.",
       "bannerUrl": "",
       "estado": "activa",
       "plan": "plan-profesional",
-      "fechaAlta": "2026-08-06",
+      "fechaAlta": "2026-08-12",
       "horasMinimasCancelacion": 24,
       "horasVencimientoPendiente": 12
     }
   ],
   "usuarios": [
     {
+      "id": "usr-lema",
+      "nombre": "Dr. Gustavo Lema",
+      "email": "glema@centrosanmartin.com.ar",
+      "dni": "20345678",
+      "password": "lema1234",
+      "activo": true
+    },
+    {
+      "id": "usr-benitez",
+      "nombre": "Laura Benítez",
+      "email": "admin@centrosanmartin.com.ar",
+      "dni": "30112233",
+      "password": "consultorio123",
+      "activo": true
+    },
+    {
       "id": "usr-secretaria-csm",
-      "cuentaId": "cta-consultorio-sm",
       "nombre": "Rocío Méndez",
       "email": "secretaria@centrosanmartin.com.ar",
       "dni": "28456123",
       "password": "secretaria123",
-      "rol": "secretaria",
       "activo": true
     },
     {
       "id": "usr-secretaria-odonto",
-      "cuentaId": "cta-consultorio-sm",
       "nombre": "Valeria Suárez",
       "email": "valeria.suarez@centrosanmartin.com.ar",
       "dni": "33780415",
       "password": "valeria123",
+      "activo": true
+    },
+    {
+      "id": "usr-funes",
+      "nombre": "Carolina Funes",
+      "email": "carolina.funes@centrosanmartin.com.ar",
+      "dni": "27912384",
+      "password": "carolina123",
+      "activo": true
+    },
+    {
+      "id": "usr-elena",
+      "nombre": "Elena Ramos",
+      "email": "elena.ramos@gmail.com",
+      "dni": "24853917",
+      "password": "elena123",
+      "activo": true
+    },
+    {
+      "id": "usr-julieta",
+      "nombre": "Julieta Paz",
+      "email": "julieta.paz@gmail.com",
+      "dni": "36544210",
+      "password": "julieta123",
+      "activo": true
+    }
+  ],
+  "miembros": [
+    {
+      "id": "mbr-csm-lema",
+      "cuentaId": "cta-consultorio-sm",
+      "usuarioId": "usr-lema",
+      "rol": "administrador",
+      "profesionalId": "prof-lema",
+      "activo": true
+    },
+    {
+      "id": "mbr-csm-benitez",
+      "cuentaId": "cta-consultorio-sm",
+      "usuarioId": "usr-benitez",
+      "rol": "administrador",
+      "profesionalId": null,
+      "activo": true
+    },
+    {
+      "id": "mbr-csm-rocio",
+      "cuentaId": "cta-consultorio-sm",
+      "usuarioId": "usr-secretaria-csm",
+      "rol": "secretaria",
+      "profesionalesAsignados": [],
+      "activo": true
+    },
+    {
+      "id": "mbr-csm-valeria",
+      "cuentaId": "cta-consultorio-sm",
+      "usuarioId": "usr-secretaria-odonto",
       "rol": "secretaria",
       "profesionalesAsignados": [
         "prof-rios"
@@ -92,14 +157,36 @@
       "activo": true
     },
     {
-      "id": "usr-funes",
+      "id": "mbr-csm-funes",
       "cuentaId": "cta-consultorio-sm",
-      "nombre": "Carolina Funes",
-      "email": "carolina.funes@centrosanmartin.com.ar",
-      "dni": "27912384",
-      "password": "carolina123",
+      "usuarioId": "usr-funes",
       "rol": "profesional",
       "profesionalId": "prof-funes",
+      "activo": true
+    },
+    {
+      "id": "mbr-csm-elena",
+      "cuentaId": "cta-consultorio-sm",
+      "usuarioId": "usr-elena",
+      "rol": "profesional",
+      "profesionalId": "prof-ramos-csm",
+      "activo": true
+    },
+    {
+      "id": "mbr-ele-elena",
+      "cuentaId": "cta-elena-ramos",
+      "usuarioId": "usr-elena",
+      "rol": "administrador",
+      "profesionalId": "prof-elena",
+      "activo": true,
+      "profesionalesAsignados": []
+    },
+    {
+      "id": "mbr-ele-julieta",
+      "cuentaId": "cta-elena-ramos",
+      "usuarioId": "usr-julieta",
+      "rol": "secretaria",
+      "profesionalesAsignados": [],
       "activo": true
     }
   ],
@@ -190,7 +277,14 @@
           "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
           "detalle": "Un espacio para ordenar lo que pasa y decidir con más claridad."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-2",
+        "os-csm-3",
+        "os-csm-5"
+      ],
+      "aceptaParticular": true
     },
     {
       "id": "prof-lema",
@@ -234,7 +328,12 @@
           "icono": "M13 10V3L4 14h7v7l9-11h-7z",
           "detalle": "Controles cada 4 a 6 semanas, con recetas digitales para tu obra social."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-2"
+      ],
+      "aceptaParticular": true
     },
     {
       "id": "prof-rios",
@@ -277,7 +376,16 @@
           "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
           "detalle": "Presupuesto por escrito y sin compromiso en la primera consulta."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-2",
+        "os-csm-4",
+        "os-csm-6",
+        "os-csm-8",
+        "os-csm-9"
+      ],
+      "aceptaParticular": true
     },
     {
       "id": "prof-salas",
@@ -321,7 +429,14 @@
           "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
           "detalle": "Trabajo coordinado con tu médico de cabecera y tus análisis de laboratorio."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-3",
+        "os-csm-4",
+        "os-csm-5"
+      ],
+      "aceptaParticular": true
     },
     {
       "id": "prof-vega",
@@ -358,7 +473,15 @@
           "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
           "detalle": "Trabajo de fuerza y retorno progresivo a la actividad."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-6",
+        "os-csm-7",
+        "os-csm-8",
+        "os-csm-9"
+      ],
+      "aceptaParticular": false
     },
     {
       "id": "prof-elena",
@@ -415,7 +538,62 @@
           "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
           "detalle": "Brindo un espacio neutral de escucha activa para identificar patrones destructivos y mejorar la empatía."
         }
-      ]
+      ],
+      "obrasSociales": [
+        "os-ele-1",
+        "os-ele-2",
+        "os-ele-3",
+        "os-ele-4"
+      ],
+      "aceptaParticular": true
+    },
+    {
+      "id": "prof-ramos-csm",
+      "cuentaId": "cta-consultorio-sm",
+      "activo": true,
+      "especialidad": "Psicología",
+      "nombre": "Dra. Elena Ramos",
+      "titulo": "Psicología Clínica · Adultos · M.N. 41.207",
+      "avatarUrl": "dra-elena.jpg",
+      "bannerUrl": "",
+      "whatsapp": "5491123456789",
+      "frasePrincipal": "Un espacio seguro para tu bienestar emocional y mental",
+      "biografia": "Soy psicóloga clínica con más de 10 años de experiencia, especializada en Terapia Cognitivo-Conductual (TCC). Mi objetivo es brindarte un espacio seguro, empático y libre de prejuicios donde podamos trabajar juntos para entender tus emociones, superar de la mejor manera tus dificultades y mejorar tu calidad de vida.",
+      "modalidad": "Atención presencial los jueves en el Centro Médico San Martín.",
+      "direcciones": [
+        {
+          "tipo": "Centro Médico San Martín",
+          "detalle": "Atención presencial con turno previo",
+          "direccion": "Av. Balbín 2450 (ex Av. Mitre), San Martín, Buenos Aires",
+          "mapLink": "https://maps.google.com",
+          "icono": "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        }
+      ],
+      "areas": [
+        {
+          "nombre": "Ansiedad y Estrés",
+          "descripcion": "Herramientas prácticas para manejar la sobrecarga emocional y ataques de pánico.",
+          "icono": "M13 10V3L4 14h7v7l9-11h-7z",
+          "detalle": "La terapia cognitivo-conductual ofrece tasas de éxito muy altas en ansiedad. Trabajamos identificando pensamientos distorsionados y desarrollando respuestas adaptativas."
+        },
+        {
+          "nombre": "Desarrollo Personal",
+          "descripcion": "Trabajo focalizado en la autoestima, toma de decisiones difíciles y asertividad.",
+          "icono": "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
+          "detalle": "Ideal para personas que buscan conocerse mejor, potenciar sus habilidades interpersonales o reorientar su carrera."
+        },
+        {
+          "nombre": "Terapia de Pareja",
+          "descripcion": "Resolución de conflictos y construcción de vínculos afectivos más saludables.",
+          "icono": "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+          "detalle": "Brindo un espacio neutral de escucha activa para identificar patrones destructivos y mejorar la empatía."
+        }
+      ],
+      "obrasSociales": [
+        "os-csm-1",
+        "os-csm-2"
+      ],
+      "aceptaParticular": true
     }
   ],
   "availabilities": [
@@ -847,6 +1025,59 @@
           "slots": []
         }
       ]
+    },
+    {
+      "id": "prof-ramos-csm",
+      "cuentaId": "cta-consultorio-sm",
+      "days": [
+        {
+          "day": "Lunes",
+          "dayIndex": 1,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Martes",
+          "dayIndex": 2,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Miércoles",
+          "dayIndex": 3,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Jueves",
+          "dayIndex": 4,
+          "active": true,
+          "slots": [
+            "09:00",
+            "10:00",
+            "11:00",
+            "12:00"
+          ]
+        },
+        {
+          "day": "Viernes",
+          "dayIndex": 5,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Sábado",
+          "dayIndex": 6,
+          "active": false,
+          "slots": []
+        },
+        {
+          "day": "Domingo",
+          "dayIndex": 0,
+          "active": false,
+          "slots": []
+        }
+      ]
     }
   ],
   "services": [
@@ -966,6 +1197,15 @@
       "description": "Sesión conjunta orientada a la resolución de conflictos del vínculo.",
       "durationMinutes": 60,
       "price": 75000
+    },
+    {
+      "id": "srv-csm-12",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-ramos-csm",
+      "name": "Consulta Psicológica",
+      "description": "Sesión individual de psicoterapia para adultos en el centro.",
+      "durationMinutes": 50,
+      "price": 32000
     }
   ],
   "healthInsurances": [
@@ -1008,6 +1248,18 @@
     {
       "id": "hi-10",
       "name": "Unión Personal"
+    },
+    {
+      "id": "hi-11",
+      "name": "OSPRERA"
+    },
+    {
+      "id": "hi-12",
+      "name": "OSPE"
+    },
+    {
+      "id": "hi-13",
+      "name": "Avalian"
     }
   ],
   "appointments": [
@@ -1020,7 +1272,7 @@
       "patientEmail": "rominaferreyra84@gmail.com",
       "patientPhone": "1160254871",
       "patientDni": "31485296",
-      "date": "2026-09-17",
+      "date": "2026-09-23",
       "time": "15:00",
       "status": "ATTENDED",
       "notes": "Sesión de seguimiento.",
@@ -1036,7 +1288,7 @@
       "patientEmail": "hbenitez1958@hotmail.com",
       "patientPhone": "1144762903",
       "patientDni": "12958374",
-      "date": "2026-09-18",
+      "date": "2026-09-24",
       "time": "09:30",
       "status": "ATTENDED",
       "notes": "Paciente de PAMI, trae orden.",
@@ -1053,7 +1305,7 @@
       "patientEmail": "fedeacosta92@gmail.com",
       "patientPhone": "1157983041",
       "patientDni": "36741852",
-      "date": "2026-09-19",
+      "date": "2026-09-25",
       "time": "09:00",
       "status": "ATTENDED",
       "notes": "Post-quirúrgico LCA, sesión 6 de 12.",
@@ -1069,7 +1321,7 @@
       "patientEmail": "marta.villalba@yahoo.com.ar",
       "patientPhone": "1149035782",
       "patientDni": "17203948",
-      "date": "2026-09-20",
+      "date": "2026-09-26",
       "time": "10:00",
       "status": "CONFIRMED",
       "notes": "Derivada por la Lic. Funes.",
@@ -1085,7 +1337,7 @@
       "patientEmail": "julipardes@gmail.com",
       "patientPhone": "1132478569",
       "patientDni": "40185263",
-      "date": "2026-09-20",
+      "date": "2026-09-26",
       "time": "14:45",
       "status": "PENDING",
       "notes": "Dolor en muela de juicio inferior derecha.",
@@ -1102,7 +1354,7 @@
       "patientEmail": "fedeacosta92@gmail.com",
       "patientPhone": "1157983041",
       "patientDni": "36741852",
-      "date": "2026-09-21",
+      "date": "2026-09-27",
       "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Post-quirúrgico LCA, sesión 7 de 12.",
@@ -1118,7 +1370,7 @@
       "patientEmail": "vero.luduena@gmail.com",
       "patientPhone": "1165042183",
       "patientDni": "33629471",
-      "date": "2026-09-21",
+      "date": "2026-09-27",
       "time": "17:30",
       "status": "PENDING",
       "notes": "Derivada por cardiólogo, hipertensión.",
@@ -1134,7 +1386,7 @@
       "patientEmail": "nicoferrero01@gmail.com",
       "patientPhone": "1170392485",
       "patientDni": "43512087",
-      "date": "2026-09-22",
+      "date": "2026-09-28",
       "time": "10:00",
       "status": "PENDING",
       "notes": "Pidió turno por ansiedad ante exámenes.",
@@ -1150,7 +1402,7 @@
       "patientEmail": "marta.villalba@yahoo.com.ar",
       "patientPhone": "1149035782",
       "patientDni": "17203948",
-      "date": "2026-09-29",
+      "date": "2026-10-05",
       "time": "15:45",
       "status": "PENDING",
       "notes": "Control a 10 días del inicio del tratamiento.",
@@ -1166,7 +1418,7 @@
       "patientEmail": "hbenitez1958@hotmail.com",
       "patientPhone": "1144762903",
       "patientDni": "12958374",
-      "date": "2026-09-23",
+      "date": "2026-09-29",
       "time": "08:45",
       "status": "CONFIRMED",
       "notes": "Pieza 26, detectada en la limpieza.",
@@ -1182,7 +1434,7 @@
       "patientEmail": "pgiordano@outlook.com",
       "patientPhone": "1158741296",
       "patientDni": "29384756",
-      "date": "2026-09-24",
+      "date": "2026-09-30",
       "time": "18:15",
       "status": "CONFIRMED",
       "notes": "Control mensual, va bajando bien.",
@@ -1198,7 +1450,7 @@
       "patientEmail": "rominaferreyra84@gmail.com",
       "patientPhone": "1160254871",
       "patientDni": "31485296",
-      "date": "2026-09-24",
+      "date": "2026-09-30",
       "time": "15:00",
       "status": "CONFIRMED",
       "notes": "Sesión semanal.",
@@ -1214,7 +1466,7 @@
       "patientEmail": "silvia.caceres62@gmail.com",
       "patientPhone": "1141936758",
       "patientDni": "16849302",
-      "date": "2026-09-25",
+      "date": "2026-10-01",
       "time": "10:00",
       "status": "PENDING",
       "notes": "Hombro doloroso, trae resonancia.",
@@ -1230,7 +1482,7 @@
       "patientEmail": "cami.ortega@gmail.com",
       "patientPhone": "1163805247",
       "patientDni": "42058613",
-      "date": "2026-09-14",
+      "date": "2026-09-20",
       "time": "16:15",
       "status": "CANCELLED",
       "notes": "Canceló por trabajo, va a reprogramar.",
@@ -1246,7 +1498,7 @@
       "patientEmail": "oscarmedina55@yahoo.com.ar",
       "patientPhone": "1152309864",
       "patientDni": "20174958",
-      "date": "2026-09-28",
+      "date": "2026-10-04",
       "time": "09:15",
       "status": "PENDING",
       "notes": "Primera consulta.",
@@ -1263,7 +1515,7 @@
       "patientEmail": "fedeacosta92@gmail.com",
       "patientPhone": "1157983041",
       "patientDni": "36741852",
-      "date": "2026-09-28",
+      "date": "2026-10-04",
       "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Post-quirúrgico LCA, sesión 8 de 12. [Serie: sesión de 4]",
@@ -1280,7 +1532,7 @@
       "patientEmail": "fedeacosta92@gmail.com",
       "patientPhone": "1157983041",
       "patientDni": "36741852",
-      "date": "2026-10-05",
+      "date": "2026-10-11",
       "time": "09:00",
       "status": "PENDING",
       "notes": "Post-quirúrgico LCA, sesión 9 de 12. [Serie: sesión de 4]",
@@ -1296,7 +1548,7 @@
       "patientEmail": "sofialvarez.psi@gmail.com",
       "patientPhone": "1123456001",
       "patientDni": "30123456",
-      "date": "2026-09-15",
+      "date": "2026-09-21",
       "time": "10:00",
       "status": "CANCELLED",
       "notes": "Canceló por viaje.",
@@ -1312,7 +1564,7 @@
       "patientEmail": "diegotorres78@gmail.com",
       "patientPhone": "1123456002",
       "patientDni": "31123456",
-      "date": "2026-09-18",
+      "date": "2026-09-24",
       "time": "18:00",
       "status": "ATTENDED",
       "notes": "Sesión de seguimiento.",
@@ -1328,7 +1580,7 @@
       "patientEmail": "lu.benavidez@gmail.com",
       "patientPhone": "1123456003",
       "patientDni": "32123456",
-      "date": "2026-09-19",
+      "date": "2026-09-25",
       "time": "19:00",
       "status": "NO_SHOW",
       "notes": "Primera sesión conjunta.",
@@ -1344,7 +1596,7 @@
       "patientEmail": "martin.spin@gmail.com",
       "patientPhone": "1123456789",
       "patientDni": "38123456",
-      "date": "2026-09-20",
+      "date": "2026-09-26",
       "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Paciente indica que está con picos de estrés laboral elevados.",
@@ -1360,7 +1612,7 @@
       "patientEmail": "laurag@live.com.ar",
       "patientPhone": "1198765432",
       "patientDni": "35987654",
-      "date": "2026-09-21",
+      "date": "2026-09-27",
       "time": "09:00",
       "status": "CONFIRMED",
       "notes": "Primera visita presencial.",
@@ -1376,7 +1628,7 @@
       "patientEmail": "andres.men@outlook.com",
       "patientPhone": "1133334444",
       "patientDni": "40111222",
-      "date": "2026-09-22",
+      "date": "2026-09-28",
       "time": "11:00",
       "status": "CONFIRMED",
       "notes": "Sesión online.",
@@ -1392,7 +1644,7 @@
       "patientEmail": "julian.castro@gmail.com",
       "patientPhone": "1123456011",
       "patientDni": "38123457",
-      "date": "2026-09-24",
+      "date": "2026-09-30",
       "time": "19:00",
       "status": "PENDING",
       "notes": "Consulta sobre estrés y ansiedad.",
@@ -1408,9 +1660,9 @@
       "patientEmail": "esteban.rey@gmail.com",
       "patientPhone": "1123456013",
       "patientDni": "40123456",
-      "date": "2026-09-27",
+      "date": "2026-10-03",
       "time": "18:00",
-      "status": "CONFIRMED",
+      "status": "ATTENDED",
       "notes": "",
       "location": "Centro Médico Belgrano",
       "healthInsurance": "OSDE"
@@ -1424,7 +1676,7 @@
       "patientEmail": "pgiordano@outlook.com",
       "patientPhone": "1158741296",
       "patientDni": "29384756",
-      "date": "2026-09-16",
+      "date": "2026-09-22",
       "time": "17:30",
       "status": "EXPIRED",
       "notes": "Pidió turno online y nunca lo confirmó.",
@@ -1440,12 +1692,44 @@
       "patientEmail": "nicoferrero01@gmail.com",
       "patientPhone": "1170392485",
       "patientDni": "43512087",
-      "date": "2026-09-20",
+      "date": "2026-09-26",
       "time": "23:00",
       "status": "EXPIRED",
       "notes": "Reserva online de último momento, sin confirmar.",
       "location": "Centro Médico San Martín",
       "healthInsurance": "Particular (Sin cobertura)"
+    },
+    {
+      "id": "apt-mux4y4y1581",
+      "cuentaId": "cta-consultorio-sm",
+      "profesionalId": "prof-ramos-csm",
+      "serviceName": "Consulta Psicológica",
+      "patientName": "Matias Diaz",
+      "patientEmail": "matidiaz10.md@gmail.com",
+      "patientPhone": "3853115268",
+      "patientDni": "39583171",
+      "date": "2026-10-08",
+      "time": "11:00",
+      "status": "PENDING",
+      "notes": "",
+      "location": "Centro Médico San Martín",
+      "healthInsurance": "OSDE"
+    },
+    {
+      "id": "apt-mux537bc735",
+      "cuentaId": "cta-elena-ramos",
+      "profesionalId": "prof-elena",
+      "serviceName": "Consulta",
+      "patientName": "Matias Diaz",
+      "patientEmail": "matidiaz10.md@gmail.com",
+      "patientPhone": "3853115268",
+      "patientDni": "39583171",
+      "date": "2026-10-07",
+      "time": "08:00",
+      "status": "CONFIRMED",
+      "notes": "",
+      "location": "Consultorio Palermo",
+      "healthInsurance": "OSDE"
     }
   ],
   "patients": [
@@ -1457,7 +1741,7 @@
       "telefono": "1160254871",
       "dni": "31485296",
       "obraSocial": "OSECAC",
-      "fechaAlta": "2026-08-06"
+      "fechaAlta": "2026-08-12"
     },
     {
       "id": "pat-cta-consultorio-sm-12958374",
@@ -1467,7 +1751,7 @@
       "telefono": "1144762903",
       "dni": "12958374",
       "obraSocial": "PAMI",
-      "fechaAlta": "2026-08-08"
+      "fechaAlta": "2026-08-14"
     },
     {
       "id": "pat-cta-consultorio-sm-36741852",
@@ -1477,7 +1761,7 @@
       "telefono": "1157983041",
       "dni": "36741852",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-08-10"
+      "fechaAlta": "2026-08-16"
     },
     {
       "id": "pat-cta-consultorio-sm-17203948",
@@ -1487,7 +1771,7 @@
       "telefono": "1149035782",
       "dni": "17203948",
       "obraSocial": "IOMA",
-      "fechaAlta": "2026-08-12"
+      "fechaAlta": "2026-08-18"
     },
     {
       "id": "pat-cta-consultorio-sm-40185263",
@@ -1497,7 +1781,7 @@
       "telefono": "1132478569",
       "dni": "40185263",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-08-14"
+      "fechaAlta": "2026-08-20"
     },
     {
       "id": "pat-cta-consultorio-sm-33629471",
@@ -1507,7 +1791,7 @@
       "telefono": "1165042183",
       "dni": "33629471",
       "obraSocial": "Galeno",
-      "fechaAlta": "2026-08-18"
+      "fechaAlta": "2026-08-24"
     },
     {
       "id": "pat-cta-consultorio-sm-43512087",
@@ -1517,7 +1801,7 @@
       "telefono": "1170392485",
       "dni": "43512087",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-08-20"
+      "fechaAlta": "2026-08-26"
     },
     {
       "id": "pat-cta-consultorio-sm-29384756",
@@ -1527,7 +1811,7 @@
       "telefono": "1158741296",
       "dni": "29384756",
       "obraSocial": "Medifé",
-      "fechaAlta": "2026-08-26"
+      "fechaAlta": "2026-09-01"
     },
     {
       "id": "pat-cta-consultorio-sm-16849302",
@@ -1537,7 +1821,7 @@
       "telefono": "1141936758",
       "dni": "16849302",
       "obraSocial": "Unión Personal",
-      "fechaAlta": "2026-08-30"
+      "fechaAlta": "2026-09-05"
     },
     {
       "id": "pat-cta-consultorio-sm-42058613",
@@ -1547,7 +1831,7 @@
       "telefono": "1163805247",
       "dni": "42058613",
       "obraSocial": "Sancor Salud",
-      "fechaAlta": "2026-09-01"
+      "fechaAlta": "2026-09-07"
     },
     {
       "id": "pat-cta-consultorio-sm-20174958",
@@ -1557,7 +1841,7 @@
       "telefono": "1152309864",
       "dni": "20174958",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-09-03"
+      "fechaAlta": "2026-09-09"
     },
     {
       "id": "pat-cta-elena-ramos-30123456",
@@ -1567,7 +1851,7 @@
       "telefono": "1123456001",
       "dni": "30123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-09-09"
+      "fechaAlta": "2026-09-15"
     },
     {
       "id": "pat-cta-elena-ramos-31123456",
@@ -1577,7 +1861,7 @@
       "telefono": "1123456002",
       "dni": "31123456",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-09-11"
+      "fechaAlta": "2026-09-17"
     },
     {
       "id": "pat-cta-elena-ramos-32123456",
@@ -1587,7 +1871,7 @@
       "telefono": "1123456003",
       "dni": "32123456",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-09-13"
+      "fechaAlta": "2026-09-19"
     },
     {
       "id": "pat-cta-elena-ramos-38123456",
@@ -1597,7 +1881,7 @@
       "telefono": "1123456789",
       "dni": "38123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-09-15"
+      "fechaAlta": "2026-09-21"
     },
     {
       "id": "pat-cta-elena-ramos-35987654",
@@ -1607,7 +1891,7 @@
       "telefono": "1198765432",
       "dni": "35987654",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-09-17"
+      "fechaAlta": "2026-09-23"
     },
     {
       "id": "pat-cta-elena-ramos-40111222",
@@ -1617,7 +1901,7 @@
       "telefono": "1133334444",
       "dni": "40111222",
       "obraSocial": "Particular (Sin cobertura)",
-      "fechaAlta": "2026-09-19"
+      "fechaAlta": "2026-09-25"
     },
     {
       "id": "pat-cta-elena-ramos-38123457",
@@ -1627,7 +1911,7 @@
       "telefono": "1123456011",
       "dni": "38123457",
       "obraSocial": "Swiss Medical",
-      "fechaAlta": "2026-09-21"
+      "fechaAlta": "2026-09-27"
     },
     {
       "id": "pat-cta-elena-ramos-40123456",
@@ -1637,7 +1921,27 @@
       "telefono": "1123456013",
       "dni": "40123456",
       "obraSocial": "OSDE",
-      "fechaAlta": "2026-09-23"
+      "fechaAlta": "2026-09-29"
+    },
+    {
+      "id": "pat-cta-consultorio-sm-39583171",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Matias Diaz",
+      "email": "matidiaz10.md@gmail.com",
+      "telefono": "3853115268",
+      "dni": "39583171",
+      "obraSocial": "OSDE",
+      "fechaAlta": "2026-10-08"
+    },
+    {
+      "id": "pat-cta-elena-ramos-39583171",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Matias Diaz",
+      "email": "matidiaz10.md@gmail.com",
+      "telefono": "3853115268",
+      "dni": "39583171",
+      "obraSocial": "OSDE",
+      "fechaAlta": "2026-10-07"
     }
   ],
   "historias": [
@@ -1646,7 +1950,7 @@
       "cuentaId": "cta-consultorio-sm",
       "pacienteId": "pat-cta-consultorio-sm-31485296",
       "profesionalId": "prof-funes",
-      "fecha": "2026-08-27",
+      "fecha": "2026-09-02",
       "motivo": "Primera entrevista: consulta por ansiedad generalizada",
       "diagnostico": "Trastorno de ansiedad generalizada (F41.1), intensidad moderada",
       "tratamiento": "TCC semanal. Psicoeducación sobre el ciclo de la ansiedad y registro de pensamientos automáticos."
@@ -1656,7 +1960,7 @@
       "cuentaId": "cta-consultorio-sm",
       "pacienteId": "pat-cta-consultorio-sm-31485296",
       "profesionalId": "prof-funes",
-      "fecha": "2026-09-17",
+      "fecha": "2026-09-23",
       "motivo": "Sesión de seguimiento nº 4",
       "diagnostico": "Evolución favorable: disminución de la frecuencia de crisis",
       "tratamiento": "Continúa TCC semanal. Se incorpora exposición gradual a situaciones sociales evitadas."
@@ -1667,7 +1971,7 @@
       "pacienteId": "pat-cta-consultorio-sm-36741852",
       "profesionalId": "prof-vega",
       "turnoId": "apt-csm-3",
-      "fecha": "2026-09-19",
+      "fecha": "2026-09-25",
       "motivo": "Sesión 6/12 post-quirúrgico LCA rodilla derecha",
       "diagnostico": "Evolución acorde a protocolo: flexión 120°, sin derrame",
       "tratamiento": "Fortalecimiento de cuádriceps e isquiotibiales en cadena cerrada. Continuar con bicicleta fija en casa."
@@ -1678,7 +1982,7 @@
       "pacienteId": "pat-cta-elena-ramos-31123456",
       "profesionalId": "prof-elena",
       "turnoId": "apt-ele-2",
-      "fecha": "2026-09-18",
+      "fecha": "2026-09-24",
       "motivo": "Sesión de seguimiento",
       "diagnostico": "Episodio depresivo leve en remisión",
       "tratamiento": "Se sostiene frecuencia quincenal. Activación conductual: retomó natación dos veces por semana."
@@ -1690,8 +1994,8 @@
       "id": "blk-lema-1",
       "cuentaId": "cta-consultorio-sm",
       "profesionalId": "prof-lema",
-      "startDate": "2026-10-02",
-      "endDate": "2026-10-04",
+      "startDate": "2026-10-08",
+      "endDate": "2026-10-10",
       "reason": "Congreso Argentino de Psiquiatría"
     }
   ],
@@ -1736,6 +2040,86 @@
       "fecha": "2026-08-09",
       "monto": 15000,
       "medio": "transferencia"
+    }
+  ],
+  "obrasSociales": [
+    {
+      "id": "os-csm-1",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "OSDE",
+      "activo": true
+    },
+    {
+      "id": "os-csm-2",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Swiss Medical",
+      "activo": true
+    },
+    {
+      "id": "os-csm-3",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Galeno",
+      "activo": true
+    },
+    {
+      "id": "os-csm-4",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Sancor Salud",
+      "activo": true
+    },
+    {
+      "id": "os-csm-5",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Medifé",
+      "activo": true
+    },
+    {
+      "id": "os-csm-6",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "IOMA",
+      "activo": true
+    },
+    {
+      "id": "os-csm-7",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "PAMI",
+      "activo": true
+    },
+    {
+      "id": "os-csm-8",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "OSECAC",
+      "activo": true
+    },
+    {
+      "id": "os-csm-9",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "Unión Personal",
+      "activo": true
+    },
+    {
+      "id": "os-ele-1",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "OSDE",
+      "activo": true
+    },
+    {
+      "id": "os-ele-2",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Swiss Medical",
+      "activo": true
+    },
+    {
+      "id": "os-ele-3",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Galeno",
+      "activo": true
+    },
+    {
+      "id": "os-ele-4",
+      "cuentaId": "cta-elena-ramos",
+      "nombre": "Medifé",
+      "activo": true
     }
   ]
 }

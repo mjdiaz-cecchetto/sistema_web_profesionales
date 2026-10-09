@@ -1,8 +1,8 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Appointment, Cuenta, MedioPago, Pago, Plan, ProfessionalAvailability, ProfessionalProfile } from '../../core/models';
+import { Appointment, Cuenta, MedioPago, Miembro, Pago, Plan, ProfessionalAvailability, ProfessionalProfile, Usuario } from '../../core/models';
 
 /** Totales agregados de una cuenta — sin datos personales de pacientes/turnos. */
 export interface MetricasCuenta {
@@ -15,13 +15,22 @@ export interface MetricasCuenta {
 /** Estado de cobranza de una cuenta respecto del período actual. */
 export type EstadoCobranza = 'al_dia' | 'vencida' | 'sin_cargo';
 
+/** Persona que administrará la cuenta nueva (se crea, o se vincula si ya existe por DNI). */
+export interface ResponsableAlta {
+  dni: string;
+  /** Si la persona ya tiene usuario en la plataforma: se vincula y se ignoran nombre/email/password. */
+  usuarioExistenteId?: string;
+  nombre: string;
+  email: string;
+  password: string;
+}
+
 export interface AltaCuenta {
   tipo: 'consultorio' | 'profesional';
   nombre: string;
+  /** Email de contacto de la organización (no es credencial). */
   email: string;
-  /** Credencial por DNI: obligatoria para profesionales; opcional (a elección) para consultorios. */
-  dni?: string;
-  password: string;
+  responsable: ResponsableAlta;
   descripcion: string;
   plan: string;
   slug: string;
@@ -148,33 +157,76 @@ export class GestionService {
   }
 
   /**
-   * true si el DNI está libre como credencial en TODA la plataforma:
-   * ni otra cuenta ni un usuario de equipo lo usan para loguearse.
+   * Persona de la plataforma con ese DNI (para vincularla en vez de
+   * duplicarla). null = no existe · undefined = error de conexión.
    */
-  dniDisponible(dni: string, ignorarCuentaId?: string): Promise<boolean> {
+  personaPorDni(dni: string): Promise<Usuario | null | undefined> {
     const limpio = dni.trim();
-    if (this.cuentas().some(c => c.dni === limpio && c.id !== ignorarCuentaId)) return Promise.resolve(false);
     return new Promise(resolve => {
-      this.http.get<{ dni: string }[]>(`${this.api}/usuarios?dni=${encodeURIComponent(limpio)}`).subscribe({
-        next: us => resolve(!us.some(u => u.dni === limpio)),
+      this.http.get<Usuario[]>(`${this.api}/usuarios?dni=${encodeURIComponent(limpio)}`).subscribe({
+        next: us => resolve(us.find(u => u.dni === limpio) ?? null),
+        error: () => resolve(undefined)
+      });
+    });
+  }
+
+  /** true si el email no pertenece a ninguna persona de la plataforma. */
+  emailPersonaDisponible(email: string): Promise<boolean> {
+    const limpio = email.trim().toLowerCase();
+    return new Promise(resolve => {
+      this.http.get<Usuario[]>(`${this.api}/usuarios?email=${encodeURIComponent(limpio)}`).subscribe({
+        next: us => resolve(!us.some(u => u.email.toLowerCase() === limpio)),
         error: () => resolve(true) // sin API igual falla el POST después
       });
     });
   }
 
   /**
-   * Alta de cuenta. Para un profesional independiente crea además su perfil
-   * profesional y su disponibilidad vacía (para que el panel y la página
-   * pública funcionen desde el primer login).
+   * Alta de cuenta + su ADMINISTRADOR (persona nueva, o vinculada si ya
+   * existe por DNI). Para un profesional independiente crea además su perfil
+   * profesional y su disponibilidad vacía, y el administrador queda como el
+   * profesional que atiende (acceso a sus historias clínicas).
    */
-  crearCuenta(datos: AltaCuenta): Promise<Cuenta | null> {
+  async crearCuenta(datos: AltaCuenta): Promise<Cuenta | null> {
+    const cuenta = await this.crearSoloCuenta(datos);
+    if (!cuenta) return null;
+    this.saving.set(true);
+    try {
+      const profesionalId = datos.tipo === 'profesional'
+        ? await new Promise<string | null>(res => this.crearPerfilInicial(cuenta, datos.especialidad || 'General', res))
+        : null;
+      const r = datos.responsable;
+      const usuarioId = r.usuarioExistenteId ?? (await firstValueFrom(this.http.post<Usuario>(`${this.api}/usuarios`, {
+        id: 'usr-' + Date.now().toString(36),
+        nombre: r.nombre.trim(),
+        email: r.email.trim().toLowerCase(),
+        dni: r.dni.trim(),
+        password: r.password,
+        activo: true
+      } satisfies Usuario))).id;
+      await firstValueFrom(this.http.post<Miembro>(`${this.api}/miembros`, {
+        id: 'mbr-' + Date.now().toString(36),
+        cuentaId: cuenta.id,
+        usuarioId,
+        rol: 'administrador',
+        profesionalId,
+        profesionalesAsignados: [],
+        activo: true
+      } satisfies Miembro));
+      return cuenta;
+    } catch {
+      return null;
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private crearSoloCuenta(datos: AltaCuenta): Promise<Cuenta | null> {
     this.saving.set(true);
     const nueva: Cuenta = {
       id: 'cta-' + Date.now().toString(36),
       tipo: datos.tipo,
       email: datos.email.trim().toLowerCase(),
-      dni: datos.dni?.trim() || null,
-      password: datos.password,
       nombre: datos.nombre.trim(),
       slug: datos.slug,
       descripcion: datos.descripcion.trim(),
@@ -188,15 +240,8 @@ export class GestionService {
         next: creada => {
           this.cuentas.update(l => [...l, creada]);
           this.metricas.update(m => ({ ...m, [creada.id]: { profesionales: 0, pacientes: 0, turnosMes: 0, ultimoTurno: '' } }));
-          if (datos.tipo === 'profesional') {
-            this.crearPerfilInicial(creada, datos.especialidad || 'General', () => {
-              this.saving.set(false);
-              resolve(creada);
-            });
-          } else {
-            this.saving.set(false);
-            resolve(creada);
-          }
+          this.saving.set(false);
+          resolve(creada);
         },
         error: () => {
           this.saving.set(false);
@@ -206,7 +251,8 @@ export class GestionService {
     });
   }
 
-  private crearPerfilInicial(cuenta: Cuenta, especialidad: string, done: () => void): void {
+  /** Crea el perfil profesional inicial de una cuenta independiente; `done` recibe su id (null si falló). */
+  private crearPerfilInicial(cuenta: Cuenta, especialidad: string, done: (profesionalId: string | null) => void): void {
     const id = 'prof-' + Date.now().toString(36);
     const perfil: ProfessionalProfile = {
       id,
@@ -242,15 +288,15 @@ export class GestionService {
       next: () => {
         this.metricas.update(m => ({ ...m, [cuenta.id]: { ...m[cuenta.id], profesionales: 1 } }));
         this.http.post<ProfessionalAvailability>(`${this.api}/availabilities`, disponibilidad).subscribe({
-          next: done,
-          error: done
+          next: () => done(id),
+          error: () => done(id)
         });
       },
-      error: done
+      error: () => done(null)
     });
   }
 
-  /** Actualiza datos de una cuenta (edición, suspensión, reset de contraseña). */
+  /** Actualiza datos de una cuenta (edición, suspensión). Las contraseñas son de las personas: se gestionan en Usuarios y Accesos. */
   actualizarCuenta(id: string, cambios: Partial<Cuenta>): Promise<boolean> {
     this.saving.set(true);
     return new Promise(resolve => {
