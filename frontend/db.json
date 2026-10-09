@@ -61,6 +61,18 @@
       "fechaAlta": "2026-08-12",
       "horasMinimasCancelacion": 24,
       "horasVencimientoPendiente": 12
+    },
+    {
+      "id": "cta-mv0gh689",
+      "tipo": "profesional",
+      "email": "edu@gmail.com",
+      "nombre": "Eduardo Ferreyra",
+      "slug": "eduardo-ferreyra",
+      "descripcion": "",
+      "bannerUrl": "",
+      "estado": "activa",
+      "plan": "plan-demo",
+      "fechaAlta": "2026-10-09"
     }
   ],
   "usuarios": [
@@ -224,6 +236,12 @@
     {
       "id": "esp-ele-psico",
       "cuentaId": "cta-elena-ramos",
+      "nombre": "Psicología",
+      "activo": true
+    },
+    {
+      "id": "esp-mv0gh68s",
+      "cuentaId": "cta-mv0gh689",
       "nombre": "Psicología",
       "activo": true
     }
@@ -595,6 +613,22 @@
         "os-csm-2"
       ],
       "aceptaParticular": true
+    },
+    {
+      "id": "prof-mv0gh68s",
+      "cuentaId": "cta-mv0gh689",
+      "activo": true,
+      "especialidad": "Psicología",
+      "nombre": "Eduardo Ferreyra",
+      "titulo": "",
+      "whatsapp": "",
+      "avatarUrl": "",
+      "bannerUrl": "",
+      "frasePrincipal": "",
+      "biografia": "",
+      "modalidad": "",
+      "direcciones": [],
+      "areas": []
     }
   ],
   "availabilities": [
