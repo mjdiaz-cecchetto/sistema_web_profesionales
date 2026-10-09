@@ -282,7 +282,8 @@
         "os-csm-1",
         "os-csm-2",
         "os-csm-3",
-        "os-csm-5"
+        "os-csm-5",
+        "os-mv0dw2kk69"
       ],
       "aceptaParticular": true
     },
@@ -2119,6 +2120,12 @@
       "id": "os-ele-4",
       "cuentaId": "cta-elena-ramos",
       "nombre": "Medifé",
+      "activo": true
+    },
+    {
+      "id": "os-mv0dw2kk69",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "IOSEP",
       "activo": true
     }
   ]
