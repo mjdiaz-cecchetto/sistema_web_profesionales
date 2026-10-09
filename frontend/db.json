@@ -61,6 +61,18 @@
       "fechaAlta": "2026-08-12",
       "horasMinimasCancelacion": 24,
       "horasVencimientoPendiente": 12
+    },
+    {
+      "id": "cta-mv0gh689",
+      "tipo": "profesional",
+      "email": "edu@gmail.com",
+      "nombre": "Eduardo Ferreyra",
+      "slug": "eduardo-ferreyra",
+      "descripcion": "",
+      "bannerUrl": "",
+      "estado": "activa",
+      "plan": "plan-demo",
+      "fechaAlta": "2026-10-09"
     }
   ],
   "usuarios": [
@@ -226,6 +238,12 @@
       "cuentaId": "cta-elena-ramos",
       "nombre": "Psicología",
       "activo": true
+    },
+    {
+      "id": "esp-mv0gh68s",
+      "cuentaId": "cta-mv0gh689",
+      "nombre": "Psicología",
+      "activo": true
     }
   ],
   "professionals": [
@@ -282,7 +300,8 @@
         "os-csm-1",
         "os-csm-2",
         "os-csm-3",
-        "os-csm-5"
+        "os-csm-5",
+        "os-mv0dw2kk69"
       ],
       "aceptaParticular": true
     },
@@ -594,6 +613,22 @@
         "os-csm-2"
       ],
       "aceptaParticular": true
+    },
+    {
+      "id": "prof-mv0gh68s",
+      "cuentaId": "cta-mv0gh689",
+      "activo": true,
+      "especialidad": "Psicología",
+      "nombre": "Eduardo Ferreyra",
+      "titulo": "",
+      "whatsapp": "",
+      "avatarUrl": "",
+      "bannerUrl": "",
+      "frasePrincipal": "",
+      "biografia": "",
+      "modalidad": "",
+      "direcciones": [],
+      "areas": []
     }
   ],
   "availabilities": [
@@ -2119,6 +2154,12 @@
       "id": "os-ele-4",
       "cuentaId": "cta-elena-ramos",
       "nombre": "Medifé",
+      "activo": true
+    },
+    {
+      "id": "os-mv0dw2kk69",
+      "cuentaId": "cta-consultorio-sm",
+      "nombre": "IOSEP",
       "activo": true
     }
   ]

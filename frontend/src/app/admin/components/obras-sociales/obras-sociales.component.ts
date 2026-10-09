@@ -25,6 +25,8 @@ export class ObrasSocialesComponent {
   nueva = signal('');
   error = signal('');
   toast = signal('');
+  /** Id de la obra social recién creada: se resalta para que el usuario marque si la atiende. */
+  recienCreada = signal<string | null>(null);
 
   esAdministrador = this.auth.esAdministrador;
 
@@ -52,10 +54,23 @@ export class ObrasSocialesComponent {
 
   async agregar(nombre = this.nueva()) {
     this.error.set('');
-    const err = await this.os.agregar(nombre);
+    const limpio = nombre.trim().replace(/\s+/g, ' ');
+    const inactiva = this.os.ordenadas().find(o => o.activo === false && o.nombre.trim().toLowerCase() === limpio.toLowerCase());
+    if (inactiva && !this.esAdministrador()) {
+      this.error.set(`${inactiva.nombre} ya existe pero está desactivada en ${this.etiquetaCuenta()}. Pedile al administrador que la active.`);
+      return;
+    }
+    const err = await this.os.agregar(limpio);
     if (err) { this.error.set(err); return; }
     this.nueva.set('');
-    this.mostrarToast(`${nombre.trim()} agregada. Marcá qué profesionales la atienden.`);
+    const creada = this.os.ordenadas().find(o => o.nombre.trim().toLowerCase() === limpio.toLowerCase());
+    if (creada) {
+      this.recienCreada.set(creada.id);
+      setTimeout(() => { if (this.recienCreada() === creada.id) this.recienCreada.set(null); }, 6000);
+    }
+    this.mostrarToast(this.columnas().length > 1
+      ? `${limpio} agregada. Marcá qué profesionales la atienden.`
+      : `${limpio} creada. Marcá la casilla si la atendés.`);
   }
 
   async alternarActiva(o: ObraSocial) {
@@ -72,6 +87,7 @@ export class ObrasSocialesComponent {
   }
 
   async alternar(p: AdminProfile, o: ObraSocial) {
+    if (this.recienCreada() === o.id) this.recienCreada.set(null);
     await this.os.toggleAtiende(p, o.id);
   }
 

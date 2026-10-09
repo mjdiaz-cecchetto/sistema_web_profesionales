@@ -6,5 +6,7 @@ export const environment = {
    */
   demoCredenciales: false,
   /** URL base de la API local (json-server). Reemplazar por la API Laravel cuando exista. */
-  apiUrl: 'https://api.tudominio.com.ar'
+  apiUrl: 'https://api.tudominio.com.ar',
+  /** API real (Laravel): en producción se sirve en el mismo dominio, bajo /api. */
+  backendUrl: '/api'
 };

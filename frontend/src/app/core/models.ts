@@ -127,7 +127,11 @@ export interface Administrador {
   id: string;
   nombre: string;
   email: string;
-  password: string; // mock: en el backend real será un hash
+  /** Credencial alternativa al email. */
+  dni?: string | null;
+  rol?: 'administrador' | 'soporte' | 'facturacion';
+  /** Solo en el mock: el backend nunca devuelve la contraseña. */
+  password?: string;
 }
 
 /** Plan de membresía de la plataforma (colección `planes`). */

@@ -1,0 +1,2 @@
+# Variables locales del entorno Docker (copiar desde .env.example)
+.env

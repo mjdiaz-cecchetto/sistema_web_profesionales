@@ -71,7 +71,7 @@
     <h3 class="card-title !text-sm">{{ columnas().length > 1 ? 'Quién atiende cada una' : 'Qué obras sociales atendés' }}</h3>
 
     <p *ngIf="!os.ordenadas().length" class="text-xs text-stone-400">
-      Todavía no hay obras sociales cargadas.{{ esAdministrador() ? ' Agregalas arriba.' : ' Pedile al administrador que las cargue.' }}
+      Todavía no hay obras sociales cargadas.{{ esAdministrador() ? ' Agregalas arriba.' : ' Creá la primera abajo.' }}
     </p>
 
     <div *ngIf="columnas().length" class="overflow-x-auto -mx-5 px-5">
@@ -102,11 +102,14 @@
               </button>
             </td>
           </tr>
-          <tr *ngFor="let o of filas()" [class.opacity-50]="o.activo === false">
-            <td class="py-2 pr-4 font-bold text-stone-700 border-t border-stone-100 sticky left-0 bg-white z-10 whitespace-nowrap">
+          <tr *ngFor="let o of filas()" [class.opacity-50]="o.activo === false" [attr.data-os]="o.id">
+            <td class="py-2 pr-4 font-bold text-stone-700 border-t border-stone-100 sticky left-0 z-10 whitespace-nowrap transition-colors"
+                [ngClass]="recienCreada() === o.id ? 'bg-menta-100' : 'bg-white'">
               {{ o.nombre }} <span *ngIf="o.activo === false" class="chip !text-[9px] bg-stone-100 text-stone-500 border-stone-200 ml-1">Inactiva</span>
+              <span *ngIf="recienCreada() === o.id" class="chip !text-[9px] bg-menta-400 text-teal-950 border-menta-500 ml-1">Nueva</span>
             </td>
-            <td *ngFor="let p of columnas()" class="text-center border-t border-stone-100 py-1.5">
+            <td *ngFor="let p of columnas()" class="text-center border-t border-stone-100 py-1.5 transition-colors"
+                [ngClass]="recienCreada() === o.id ? 'bg-menta-100' : ''">
               <button type="button" (click)="alternar(p, o)" [attr.aria-pressed]="os.atiende(p, o.id)"
                       [title]="(os.atiende(p, o.id) ? 'Atiende ' : 'No atiende ') + o.nombre + ' — ' + p.nombre"
                       class="w-7 h-7 rounded-lg border inline-flex items-center justify-center transition-colors"
@@ -118,6 +121,18 @@
         </tbody>
       </table>
     </div>
-    <p class="text-[10px] text-stone-400">Los cambios se guardan al tocar cada casilla. Una obra social inactiva no se ofrece a los pacientes aunque esté marcada.</p>
+    <!-- Crear una obra social que no está en la lista (profesional) -->
+    <form *ngIf="!esAdministrador()" class="flex flex-wrap items-center gap-2 pt-3 border-t border-stone-100"
+          (submit)="$event.preventDefault(); agregar()">
+      <label for="os-crear" class="text-[11px] font-bold text-stone-600 w-full sm:w-auto">¿No está en la lista?</label>
+      <input id="os-crear" type="text" [ngModel]="nueva()" (ngModelChange)="nueva.set($event)" name="nueva"
+             list="os-sugeridas-prof" placeholder="Nombre de la obra social, ej. IOSEP" class="input !text-xs flex-1 min-w-0 max-w-xs" autocomplete="off">
+      <datalist id="os-sugeridas-prof">
+        <option *ngFor="let s of os.sugerencias()" [value]="s"></option>
+      </datalist>
+      <button type="submit" [disabled]="os.guardando() || !nueva().trim()" class="btn-primary !text-xs !py-2">Crear obra social</button>
+    </form>
+
+    <p class="text-[10px] text-stone-400">Los cambios se guardan al tocar cada casilla.<ng-container *ngIf="!esAdministrador()"> Las obras sociales que creás quedan disponibles para todo {{ etiquetaCuenta() }}.</ng-container> Una obra social inactiva no se ofrece a los pacientes aunque esté marcada.</p>
   </section>
 </div>
